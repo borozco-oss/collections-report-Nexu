@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collections Performance Report · Nexu 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  background:#F7F7FC;color:#1F1F1F;margin:0;padding:0;line-height:1.5;
+}
+
+/* TOP BAR: tabs + filter como tarjetas flotantes */
+.top-bar{
+  position:sticky;top:0;z-index:200;
+  background:#F7F7FC;
+  padding:20px 24px 0;
+}
+.top-bar-inner{
+  max-width:1100px;margin:0 auto;
+  display:flex;flex-direction:column;gap:12px;
+}
+
+.tabs-bar{
+  background:#FFFFFF;
+  border:0.5px solid rgba(0,0,0,0.08);
+  border-radius:12px;
+  padding:6px 8px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06);
+  display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+}
+.report-title{
+  font-size:13px;font-weight:500;color:#1F1F1F;
+  padding:8px 14px 8px 8px;margin-right:6px;
+  border-right:0.5px solid rgba(0,0,0,0.10);
+  white-space:nowrap;
+}
+.tabs{display:flex;gap:2px;flex:1;flex-wrap:wrap;}
+.tab-btn{
+  font-family:inherit;font-size:12px;font-weight:500;
+  padding:7px 14px;
+  border:none;background:transparent;color:#5F5E5A;
+  border-radius:8px;cursor:pointer;
+  transition:all 0.15s;white-space:nowrap;
+}
+.tab-btn:hover{background:#F7F7FC;color:#1F1F1F;}
+.tab-btn.active{background:#3B3ACA;color:#FFFFFF;}
+
+.filter-bar{
+  background:#FFFFFF;
+  border:0.5px solid rgba(0,0,0,0.08);
+  border-radius:12px;
+  padding:12px 20px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06);
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.filter-label{font-size:13px;font-weight:500;color:#1F1F1F;margin:0;}
+.filter-buttons{display:flex;gap:6px;flex-wrap:wrap;}
+.filter-btn{
+  font-family:inherit;font-size:12px;font-weight:500;
+  padding:6px 14px;
+  border:0.5px solid rgba(0,0,0,0.15);
+  background:#FFFFFF;color:#5F5E5A;border-radius:6px;
+  cursor:pointer;transition:all 0.15s;
+}
+.filter-btn:hover{background:#F7F7FC;border-color:rgba(0,0,0,0.25);}
+.filter-btn.active{background:#3B3ACA;color:#FFFFFF;border-color:#3B3ACA;}
+.filter-hint{font-size:11px;color:#888780;margin-left:auto;}
+
+/* PAGE & SECTIONS */
+.page{max-width:1100px;margin:0 auto;padding:20px 24px 32px;}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+
+.section{
+  background:#FFFFFF;border-radius:12px;
+  padding:32px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  margin-bottom:24px;
+}
+
+h1{font-size:22px;font-weight:500;margin:0 0 4px;color:#1F1F1F;}
+h2{font-size:22px;font-weight:500;margin:0 0 4px;color:#1F1F1F;letter-spacing:-0.01em;}
+h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
+.subtitle{font-size:13px;color:#888780;margin:0 0 24px;}
+.meta{font-size:12px;color:#888780;margin:0 0 14px;}
+
+/* CHARTS */
+.chart-wrap{position:relative;width:100%;height:460px;}
+.chart-wrap-md{position:relative;width:100%;height:320px;}
+.chart-wrap-sm{position:relative;width:100%;height:280px;}
+.chart-wrap-xs{position:relative;width:100%;height:240px;}
+
+/* GRIDS */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+
+/* KPI CARDS — lila pálido como antes */
+.kpi{background:#F7F7FC;border-radius:8px;padding:12px 14px;}
+.kpi-label{font-size:11px;color:#5F5E5A;margin:0 0 2px;}
+.kpi-value{font-size:22px;font-weight:500;margin:0;}
+.kpi-sub{font-size:11px;color:#888780;margin:2px 0 0;}
+
+/* SUMMARY CARDS de cortes — lila pálido */
+#summaryGrid{display:grid;gap:8px;margin-bottom:24px;}
+.summary-card{background:#F7F7FC;border-radius:8px;padding:12px 14px;}
+.summary-label{font-size:11px;color:#5F5E5A;margin:0 0 2px;}
+.summary-value{font-size:13px;font-weight:500;margin:0;}
+.summary-delta{font-size:11px;color:#888780;margin:2px 0 0;}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:#5F5E5A;}
+.legend-item{display:flex;align-items:center;gap:6px;}
+.swatch{width:20px;height:3px;border-radius:2px;}
+.box2{width:14px;height:10px;border-radius:2px;flex-shrink:0;}
+.dot2{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* WEEK CARDS — verde / lila / lila claro / gris */
+.weeks-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;}
+.week-card{padding:10px 8px;border-radius:6px;border:0.5px solid;text-align:center;}
+.week-label{font-size:11px;font-weight:500;margin:0;}
+.week-value{font-size:15px;font-weight:500;margin:4px 0 2px;color:#1F1F1F;}
+.week-note{font-size:10px;color:#888780;margin:0;}
+.w1{background:rgba(29,158,117,0.1);border-color:rgba(29,158,117,0.3);}.w1 .week-label{color:#0F6E56;}
+.w2{background:rgba(59,58,202,0.06);border-color:rgba(59,58,202,0.2);}.w2 .week-label{color:#3B3ACA;}
+.w3{background:rgba(59,58,202,0.03);border-color:rgba(59,58,202,0.12);}.w3 .week-label{color:#534AB7;}
+.w4{background:rgba(136,135,128,0.05);border-color:rgba(136,135,128,0.2);}.w4 .week-label{color:#5F5E5A;}
+
+/* TIME CHARTS GRID */
+.time-charts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
+.time-chart-wrapper{background:#F7F7FC;border-radius:8px;padding:12px;}
+.time-chart-title{font-size:12px;font-weight:500;color:#5F5E5A;margin:0 0 8px;}
+
+/* NOTE / ALERT / INFO BOXES — amarillo, rojo, azul como antes */
+.note-box{
+  background:#FFF8E6;border-left:3px solid #EF9F27;
+  padding:14px 18px;border-radius:0 6px 6px 0;
+  margin-top:20px;font-size:13px;color:#633806;line-height:1.6;
+}
+.note-box strong{font-weight:500;color:#412402;}
+.note-title{font-size:12px;font-weight:500;color:#854F0B;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.5px;}
+
+.alert-box{
+  background:#FEF0F0;border-left:3px solid #D85A30;
+  padding:14px 18px;border-radius:0 6px 6px 0;
+  margin-top:20px;font-size:13px;color:#7A1F0A;line-height:1.6;
+}
+.alert-box strong{font-weight:500;}
+.alert-title{font-size:11px;font-weight:500;color:#A32D2D;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.5px;}
+
+.info-box{
+  background:#E6F1FB;border-left:3px solid #378ADD;
+  padding:12px 16px;border-radius:0 6px 6px 0;
+  margin:16px 0;font-size:12px;color:#0C447C;line-height:1.6;
+}
+.info-box strong{font-weight:500;}
+.info-title{font-size:11px;font-weight:500;color:#185FA5;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.5px;}
+
+.context-box{
+  background:#F7F7FC;padding:12px 16px;border-radius:6px;
+  font-size:12px;color:#5F5E5A;margin-bottom:20px;line-height:1.5;
+}
+.context-box strong{color:#1F1F1F;font-weight:500;}
+
+.divider{border:none;border-top:0.5px solid rgba(0,0,0,0.08);margin:24px 0;}
+.footer{padding-top:16px;border-top:0.5px solid rgba(0,0,0,0.08);font-size:11px;color:#888780;margin-top:20px;line-height:1.5;}
+
+.badge{
+  display:inline-block;font-size:11px;font-weight:500;
+  padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;
+}
+.badge-ok{background:#E8F5E4;color:#2D6E22;}
+.badge-alert{background:#FEE8E8;color:#A32D2D;}
+
+@media (max-width: 768px){
+  .grid-3{grid-template-columns:1fr;}
+  .grid-4{grid-template-columns:repeat(2,1fr);}
+  .weeks-grid{grid-template-columns:repeat(2,1fr);}
+  .time-charts-grid{grid-template-columns:repeat(2,1fr);}
+  .section{padding:20px;}
+  body{padding:0;}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-bar-inner">
+    <div class="tabs-bar">
+      <span class="report-title">Collections Performance · Nexu 2026</span>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="recaudacion">Recaudación</button>
+        <button class="tab-btn" data-tab="domiciliacion">Domiciliación</button>
+        <button class="tab-btn" data-tab="rollover">Roll over</button>
+        <button class="tab-btn" data-tab="adicional">Análisis adicional</button>
+        <button class="tab-btn" data-tab="banco">Banco domiciliado</button>
+        <button class="tab-btn" data-tab="vintage">Cosecha</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-label">Ver cortes:</span>
+      <div class="filter-buttons">
+        <button class="filter-btn active" data-filter="all">Todos</button>
+        <button class="filter-btn" data-filter="day1">Solo día 1</button>
+        <button class="filter-btn" data-filter="day15">Solo día 15</button>
+      </div>
+      <span class="filter-hint" id="filterHint">9 cortes seleccionados</span>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- TAB: RECAUDACIÓN -->
+<div class="tab-panel active" id="tab-recaudacion">
+  <div class="section">
+    <h1>Collections Performance Report · Nexu 2026</h1>
+    <p class="subtitle">Curvas de recaudación acumulada ajustadas por calendario de días hábiles MX. Los 4 intentos de domi ocurren en días hábiles consecutivos desde la fecha del corte.</p>
+    <div id="summaryGrid"></div>
+    <div class="legend" id="summaryLegend"></div>
+    <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+    <div class="weeks-grid" id="weeksGrid"></div>
+    <div class="info-box" style="margin-top:16px;">
+      <p class="info-title">Lectura de la curva</p>
+      <p style="margin:0;">Los 4 intentos de domiciliación ocurren en <strong>días hábiles consecutivos</strong>. Las mesetas son fines de semana y feriados. Todo lo que sube después del último intento es <strong>cobranza manual SPEI</strong>.</p>
+    </div>
+    <p class="footer">Fuente: Resultado de domiciliación (D+0 a último intento) + Cierre de moratorios (D+X a D+30). Mayo 2026 solo tiene los 4 intentos de domi.</p>
+  </div>
+</div>
+
+<!-- TAB: DOMICILIACIÓN -->
+<div class="tab-panel" id="tab-domiciliacion">
+  <div class="section">
+    <h2>Performance de domiciliación · desglose por intento</h2>
+    <p class="subtitle">Contribución incremental de cada uno de los 4 intentos de domi sobre la cartera total.</p>
+    <div class="grid-4" id="domiMetrics"></div>
+    <div class="legend">
+      <span class="legend-item"><span class="box2" style="background:#1D9E75;"></span>1° intento</span>
+      <span class="legend-item"><span class="box2" style="background:#7F77DD;"></span>2° intento</span>
+      <span class="legend-item"><span class="box2" style="background:#EF9F27;"></span>3° intento</span>
+      <span class="legend-item"><span class="box2" style="background:#D4537E;"></span>4° intento</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="domiChart"></canvas></div>
+  </div>
+  <div class="section">
+    <h2>Recuperación por fase · domi + cobranza en el tiempo</h2>
+    <p class="subtitle">Visualización unificada: 4 intentos de domi + cobranza SPEI por semana. La altura total de cada barra es la recaudación final del corte.</p>
+    <div class="legend">
+      <span class="legend-item"><span class="box2" style="background:#1D9E75;"></span>1°</span>
+      <span class="legend-item"><span class="box2" style="background:#7F77DD;"></span>2°</span>
+      <span class="legend-item"><span class="box2" style="background:#EF9F27;"></span>3°</span>
+      <span class="legend-item"><span class="box2" style="background:#D4537E;"></span>4° intento</span>
+      <span class="legend-item"><span class="box2" style="background:#5F5E5A;"></span>Sem 2 (D+8→D+14)</span>
+      <span class="legend-item"><span class="box2" style="background:#9E9D98;"></span>Sem 3 (D+15→D+21)</span>
+      <span class="legend-item"><span class="box2" style="background:#CECDCA;"></span>Sem 4 (D+22→D+30)</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="phaseChart"></canvas></div>
+    <div class="info-box">
+      <p class="info-title">Cómo leer</p>
+      <p style="margin:0;">4 bandas de color = domi automatizada. 3 bandas grises descendentes = cobranza SPEI por semana. Bandas grises vacías en mayo = sin cierre de mora aún.</p>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- TAB: ROLL OVER -->
+<div class="tab-panel" id="tab-rollover">
+  <div class="section">
+    <h2>Roll over · migración entre BKTs</h2>
+    <p class="subtitle">Transiciones de cartera entre cortes, composición de outcomes y evolución temporal por BKT.</p>
+    <div class="context-box">
+      <strong>Cómo leer:</strong> Los clientes al corriente son BKT 1. Los que fallan los 4 intentos de domi y no pagan en 30 días ruedan a BKT 2. Las métricas miden qué % de cada BKT migra al siguiente al cierre del corte.
+    </div>
+    <h3>Roll rates por corte</h3>
+    <div class="grid-3" id="rollMetrics"></div>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:#1D9E75;"></span>BKT1→BKT2</span>
+      <span class="legend-item"><span class="swatch" style="background:#EF9F27;"></span>BKT2→BKT3</span>
+      <span class="legend-item"><span class="swatch" style="background:#D85A30;"></span>BKT3→BKT4+</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="rollChart"></canvas></div>
+    <p style="font-size:11px;color:#888780;margin:6px 0 0;">BKT1→2 calculado sobre cartera total BKT1; BKT2→3 y BKT3→4+ sobre su propio universo.</p>
+
+    <hr class="divider">
+    <h3>Composición de outcomes por BKT · promedio de cortes seleccionados</h3>
+    <div class="chart-wrap-xs"><canvas id="outcomeChart"></canvas></div>
+    <div class="info-box">
+      <p class="info-title">Qué significa "se mantuvo"</p>
+      <p style="margin:0;">Pagó algo pero no lo suficiente para salir completamente de mora. En BKT 4+ el "se mantiene" significa deuda acumulando — ya no es cobranza operativa sino ruta legal/dación.</p>
+    </div>
+
+    <hr class="divider">
+    <h3>Evolución de outcomes por BKT en el tiempo</h3>
+    <div class="time-charts-grid">
+      <div class="time-chart-wrapper"><p class="time-chart-title">BKT 1</p><div style="position:relative;height:210px;"><canvas id="bkt1Time"></canvas></div></div>
+      <div class="time-chart-wrapper"><p class="time-chart-title">BKT 2</p><div style="position:relative;height:210px;"><canvas id="bkt2Time"></canvas></div></div>
+      <div class="time-chart-wrapper"><p class="time-chart-title">BKT 3</p><div style="position:relative;height:210px;"><canvas id="bkt3Time"></canvas></div></div>
+      <div class="time-chart-wrapper"><p class="time-chart-title">BKT 4+</p><div style="position:relative;height:210px;"><canvas id="bkt4Time"></canvas></div></div>
+    </div>
+
+    <div class="note-box">
+      <p class="note-title">Lectura clave</p>
+      <p style="margin:0 0 8px;"><strong>BKT 2 es el punto de quiebre estructural.</strong> ~40% probabilidad de rodar a BKT 3. Si llega a BKT 3, ~53% cae a BKT 4+. Desde BKT 4+ la recuperación operativa es prácticamente nula.</p>
+      <p style="margin:0;">El Collections Center como copiloto puede mover la tasa de recuperación en BKT 2 de ~29% a ~40% — equivale a 10-15 clientes salvados por corte que no entran al ciclo legal.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: ANÁLISIS ADICIONAL -->
+<div class="tab-panel" id="tab-adicional">
+  <div class="section">
+    <h2>Eficiencia por intento de domi en el tiempo</h2>
+    <p class="subtitle">% de la cartera total capturado por cada intento, corte a corte.</p>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:#1D9E75;"></span>1er intento</span>
+      <span class="legend-item"><span class="swatch" style="background:#7F77DD;"></span>2do intento</span>
+      <span class="legend-item"><span class="swatch" style="background:#EF9F27;"></span>3er intento</span>
+      <span class="legend-item"><span class="swatch" style="background:#D4537E;"></span>4to intento</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="efficiencyChart"></canvas></div>
+  </div>
+  <div class="section">
+    <h2>Causas de rechazo en el tiempo</h2>
+    <p class="subtitle">Volumen de rechazos de domi por causa y por corte. Detecta si alguna causa crece sistemáticamente.</p>
+    <div class="legend">
+      <span class="legend-item"><span class="box2" style="background:#D85A30;"></span>Insuficiencia fondos</span>
+      <span class="legend-item"><span class="box2" style="background:#A32D2D;"></span>Cuenta cancelada</span>
+      <span class="legend-item"><span class="box2" style="background:#EF9F27;"></span>Bloqueada</span>
+      <span class="legend-item"><span class="box2" style="background:#7F77DD;"></span>Domi de baja</span>
+      <span class="legend-item"><span class="box2" style="background:#378ADD;"></span>Inexistente</span>
+      <span class="legend-item"><span class="box2" style="background:#888780;"></span>Reverso / Otros</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="causasChart"></canvas></div>
+    <div class="alert-box">
+      <p class="alert-title">Señal importante</p>
+      <p style="margin:0;"><strong>Insuficiencia fondos ~80-86%</strong> — es el negocio, no una alerta. Lo que hay que vigilar: <strong>canceladas + bloqueadas + domi dada de baja</strong> (12-16% combinado). Son problemas estructurales que no se resuelven solos. Un proceso de re-domiciliación proactiva puede recuperar 40-60% de estos clientes.</p>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Cartera por tipo de mensualidad</h2>
+    <p class="subtitle">Distribución entre M1-M3 (clientes nuevos) y M4+ (tramo recurrente). Los M1-M3 son más impredecibles en comportamiento de pago.</p>
+    <div class="legend">
+      <span class="legend-item"><span class="box2" style="background:#9FE1CB;"></span>M1</span>
+      <span class="legend-item"><span class="box2" style="background:#FAC775;"></span>M2</span>
+      <span class="legend-item"><span class="box2" style="background:#F4C0D1;"></span>M3</span>
+      <span class="legend-item"><span class="box2" style="background:#B5D4F4;"></span>M4+ (recurrente)</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="carteraChart"></canvas></div>
+  </div>
+  <div class="section">
+    <h2>Cobranza post-domi · ventana temprana vs tardía</h2>
+    <p class="subtitle">% recuperado por SPEI después del último intento de domi. Ventana temprana (D+4-D+14) = gestión proactiva. Tardía (D+15-D+30) = seguimiento de fin de mes.</p>
+    <div class="legend">
+      <span class="legend-item"><span class="box2" style="background:#9FE1CB;"></span>D+4 a D+14</span>
+      <span class="legend-item"><span class="box2" style="background:#FAC775;"></span>D+15 a D+30</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="windowsChart"></canvas></div>
+    <div class="info-box">
+      <p class="info-title">KPI a optimizar con el Collections Center</p>
+      <p style="margin:0;">Si la barra verde (temprana) crece y la naranja (tardía) se mantiene o baja, es señal de un proceso de cobranza más proactivo y estructurado — menos dependencia de que el cliente pague espontáneamente al cobrar nómina.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: BANCO DOMICILIADO -->
+<div class="tab-panel" id="tab-banco">
+  <div class="section">
+    <h2>Performance por banco domiciliado · BBVA vs Interbancario</h2>
+    <p class="subtitle">Tasa de éxito acumulada de los <strong>4 intentos de domiciliación</strong> por canal bancario — misma métrica para todos los cortes. El filtro de arriba aplica.</p>
+
+    <div class="grid-4">
+      <div class="kpi"><p class="kpi-label">BBVA · promedio global</p><p class="kpi-value" style="color:#3B3ACA;">72.8%</p><p class="kpi-sub">4 intentos acumulados</p></div>
+      <div class="kpi"><p class="kpi-label">Interbancario · promedio global</p><p class="kpi-value" style="color:#D85A30;">78.4%</p><p class="kpi-sub">4 intentos acumulados</p></div>
+      <div class="kpi"><p class="kpi-label">Brecha Inter vs BBVA</p><p class="kpi-value" style="color:#EF9F27;">+5.6pp</p><p class="kpi-sub">consistente en todos los cortes</p></div>
+      <div class="kpi"><p class="kpi-label">Cortes analizados</p><p class="kpi-value" style="color:#888780;">9</p><p class="kpi-sub">ene-may 2026</p></div>
+    </div>
+
+    <div class="info-box">
+      <p class="info-title">Metodología</p>
+      <p style="margin:0;">Para cada corte (día 1 y día 15) se usan los <strong>4 intentos acumulados</strong> del raw sheet BBVA/Interbancario. El denominador es el total de clientes domiciliados a cada banco en ese corte. La anomalía de 15-abr BBVA (96% previo) era un error de fuente — corregida a 71.5%.</p>
+    </div>
+
+    <h3>Tasa de éxito · 4 intentos acumulados por corte</h3>
+    <div class="legend">
+      <span class="legend-item"><span class="dot2" style="background:#3B3ACA;"></span>BBVA</span>
+      <span class="legend-item"><span class="dot2" style="background:#D85A30;"></span>Interbancario</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="bankChart1"></canvas></div>
+
+    <h3>Composición de cartera por banco domiciliado · cortes día 1</h3>
+    <p class="meta">Fuente: hoja Cuentas (cortes día 1) y hoja Bancos (cortes día 15). El filtro de arriba aplica — todos los 9 cortes disponibles.</p>
+    <div class="chart-wrap-md"><canvas id="bankMixChart"></canvas></div>
+
+    <div class="alert-box">
+      <p class="alert-title">Señal de atención · Interbancario supera a BBVA en +5.6pp consistentemente</p>
+      <p style="margin:0 0 8px;">Con la misma métrica (4 intentos), el Interbancario captura más que BBVA en todos los cortes sin excepción. Una hipótesis plausible: mayor proporción de <strong>cuentas nómina</strong> en interbancario (saldo garantizado en quincena) vs cuentas de ahorro/débito BBVA con liquidez más variable.</p>
+      <p style="margin:0;"><strong>Pregunta para IT:</strong> ¿el raw sheet BBVA incluye cuentas obsoletas o canceladas que inflan el denominador? Si se limpia la cartera activa, el gap podría reducirse.</p>
+    </div>
+    <p class="footer">Fuente: Hojas BBVA e Interbancario de los archivos Resultado de domiciliación 2026. 4 intentos acumulados para todos los cortes. 9 cortes ene-may 2026.</p>
+  </div>
+</div>
+
+<!-- TAB: COSECHA / VINTAGE -->
+<div class="tab-panel" id="tab-vintage">
+  <div class="section">
+    <h2>Pirámide de cosechas · composición por mes de originación</h2>
+    <p class="subtitle">Cada barra es una cohorte de clientes originados en ese mes. El color muestra en qué BKT están hoy (corte 01-abr 2026). Cuanto más verde, mejor calidad de cosecha.</p>
+
+    <div class="info-box">
+      <p class="info-title">Cómo leer</p>
+      <p style="margin:0;"><strong>BKT 1 (verde)</strong> = al corriente. <strong>BKT 2/3 (amarillo/naranja)</strong> = 1-2 mensualidades vencidas, aún recuperables. <strong>BKT 4+ (rojo)</strong> = mora grave, ruta legal/dación. Las cosechas recientes (2026) muestran BKT 2/3 altos porque son nuevas y sus clientes aún no han tenido tiempo de salir de mora — no necesariamente indica peor calidad.</p>
+    </div>
+
+    <h3>Composición BKT por cosecha · % del total de la cohorte</h3>
+    <div class="chart-wrap-md"><canvas id="vintageChart1"></canvas></div>
+
+    <hr class="divider">
+
+    <h3>Volumen absoluto + tasa de mora por cosecha</h3>
+    <p class="meta">Las barras muestran el tamaño real de cada cohorte. La línea negra muestra la tasa de mora total (BKT2+3+4+). Una cohorte grande con mora alta es la combinación más riesgosa.</p>
+    <div class="chart-wrap-md"><canvas id="vintageChart2"></canvas></div>
+
+    <div class="note-box">
+      <p class="note-title">Señal que merece atención</p>
+      <p style="margin:0 0 8px;"><strong>Las cosechas H1-2025 (ene-jun) muestran tasas de mora 12-17%</strong> — por encima del rango normal subprime vehicular (~8-10%). Esta generación de créditos ya lleva 10-15 meses de vida y su BKT4+ sigue creciendo. Si el modelo de originación de ese período fue diferente, es el momento de revisarlo.</p>
+      <p style="margin:0;"><strong>Las cosechas H2-2025 muestran mora aún mayor (15-25%)</strong> pero con más BKT2/3 que BKT4+ — lo que significa que muchos aún son recuperables con cobranza activa. El Collections Center tiene su mayor oportunidad aquí.</p>
+    </div>
+    <p class="footer">Fuente: hoja Bancos del Resultado 15-abr-26 (total clientes + mensualidad para inferir cohort) cruzada con Cierre de moratorios 01-abr-26 (BKT actual). Los clientes que no aparecen en Cierre de moratorios se clasifican como BKT 1 (al corriente).</p>
+  </div>
+</div>
+</div><!-- .page -->
+
+<script>
+
+const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may'];
+
+const data = {
+  '01-ene': {
+    color: '#3B3ACA', day: 1, hasCierre: true,
+    pcts: [0.0,64.35,64.35,64.35,72.37,74.9,77.89,77.96,79.87,80.63,81.0,81.9,83.5,84.54,85.79,86.55,86.83,86.91,87.47,88.44,89.22,89.69,90.18,90.32,90.35,90.61,90.77,91.18,91.39,91.77,92.22],
+    intentosDias: [1,4,5,6],
+    startPct: 64.3, endPct: 92.2, delta: 27.9, endDay: 30,
+    domiIntentos: [64.35,8.02,2.53,2.99],
+    roll: {b1b2: 0.91, b2b3: 35.1, b3b4: 73.1},
+    outcomes: {bkt1: {rec: 98.9, man: 0, det: 0.91}, bkt2: {rec: 35.1, man: 29.9, det: 35.1}, bkt3: {rec: 15.4, man: 11.5, det: 73.1}, bkt4: {rec: 1.1, man: 98.9, det: 0}},
+    bkt1Detail: {domi: 84.85, cob: 14.24, no: 0.91}
+  },
+  '15-ene': {
+    color: '#1D9E75', day: 15, hasCierre: true,
+    pcts: [64.54,71.11,71.11,71.11,74.86,76.85,76.92,78.04,79.08,79.46,79.58,80.5,81.89,83.03,83.9,84.72,85.23,85.48,85.63,86.35,87.24,88.05,88.61,88.85,88.9,89.19,89.6,90.02,90.35,90.69,91.09],
+    intentosDias: [0,1,4,5],
+    startPct: 64.5, endPct: 91.1, delta: 26.5, endDay: 30,
+    domiIntentos: [64.54,6.57,3.74,2.0],
+    roll: {b1b2: 1.28, b2b3: 35.8, b3b4: 37.8},
+    outcomes: {bkt1: {rec: 98.72, man: 0, det: 1.28}, bkt2: {rec: 27.0, man: 37.2, det: 35.8}, bkt3: {rec: 24.3, man: 37.8, det: 37.8}, bkt4: {rec: 1.0, man: 99.0, det: 0}},
+    bkt1Detail: {domi: 84.38, cob: 14.34, no: 1.28}
+  },
+  '01-feb': {
+    color: '#EF9F27', day: 1, hasCierre: true,
+    pcts: [0.0,0.0,68.34,73.06,76.61,80.43,80.43,80.43,80.5,81.91,83.08,84.01,85.24,85.79,85.94,86.56,87.55,88.17,88.6,89.25,89.42,89.45,89.68,90.1,90.62,90.98,91.65,92.25,92.26,92.26,92.26],
+    intentosDias: [2,3,4,5],
+    startPct: 68.3, endPct: 92.3, delta: 23.9, endDay: 30,
+    domiIntentos: [68.34,4.73,3.54,3.83],
+    roll: {b1b2: 0.82, b2b3: 40.0, b3b4: 59.3},
+    outcomes: {bkt1: {rec: 99.18, man: 0, det: 0.82}, bkt2: {rec: 25.0, man: 35.0, det: 40.0}, bkt3: {rec: 18.5, man: 22.2, det: 59.3}, bkt4: {rec: 0.0, man: 100.0, det: 0}},
+    bkt1Detail: {domi: 87.29, cob: 11.9, no: 0.82}
+  },
+  '15-feb': {
+    color: '#D4537E', day: 15, hasCierre: true,
+    pcts: [0.0,65.08,70.16,72.87,75.21,75.24,75.28,75.31,76.03,78.34,79.71,81.07,82.19,82.97,83.21,84.09,84.91,85.53,86.15,86.72,87.05,87.11,87.47,88.04,88.31,88.71,89.16,89.55,89.58,89.58,89.58],
+    intentosDias: [1,2,3,4],
+    startPct: 65.1, endPct: 89.6, delta: 24.5, endDay: 30,
+    domiIntentos: [65.08,5.08,2.7,2.35],
+    roll: {b1b2: 1.04, b2b3: 46.3, b3b4: 38.7},
+    outcomes: {bkt1: {rec: 98.96, man: 0, det: 1.04}, bkt2: {rec: 25.7, man: 27.9, det: 46.3}, bkt3: {rec: 27.4, man: 33.9, det: 38.7}, bkt4: {rec: 0.4, man: 99.6, det: 0}},
+    bkt1Detail: {domi: 84.53, cob: 14.43, no: 1.04}
+  },
+  '01-mar': {
+    color: '#888780', day: 1, hasCierre: true,
+    pcts: [0.0,67.53,71.83,75.52,77.86,77.91,77.92,77.92,78.69,80.04,81.12,81.99,83.62,84.45,84.58,84.77,85.49,86.34,87.04,87.55,87.68,87.81,88.24,88.5,88.83,89.09,89.3,89.38,89.39,89.57,90.1],
+    intentosDias: [1,2,3,4],
+    startPct: 67.5, endPct: 90.1, delta: 22.6, endDay: 30,
+    domiIntentos: [67.53,4.3,3.7,2.34],
+    roll: {b1b2: 1.23, b2b3: 33.3, b3b4: 50.0},
+    outcomes: {bkt1: {rec: 98.77, man: 0, det: 1.23}, bkt2: {rec: 36.8, man: 29.8, det: 33.3}, bkt3: {rec: 23.1, man: 26.9, det: 50.0}, bkt4: {rec: 1.7, man: 98.3, det: 0}},
+    bkt1Detail: {domi: 86.55, cob: 12.23, no: 1.23}
+  },
+  '15-mar': {
+    color: '#7F77DD', day: 15, hasCierre: true,
+    pcts: [0.0,0.0,62.4,68.37,72.83,76.91,76.94,76.94,77.21,78.9,80.39,81.53,82.48,82.91,83.12,83.9,85.26,86.28,86.74,86.94,86.99,87.03,87.31,87.87,88.4,89.06,89.47,89.66,89.67,89.89,90.78],
+    intentosDias: [2,3,4,5],
+    startPct: 62.4, endPct: 90.8, delta: 28.4, endDay: 30,
+    domiIntentos: [62.4,5.96,4.46,4.08],
+    roll: {b1b2: 1.07, b2b3: 47.6, b3b4: 59.3},
+    outcomes: {bkt1: {rec: 98.93, man: 0, det: 1.07}, bkt2: {rec: 27.6, man: 24.8, det: 47.6}, bkt3: {rec: 14.8, man: 25.9, det: 59.3}, bkt4: {rec: 0.6, man: 99.4, det: 0}},
+    bkt1Detail: {domi: 84.91, cob: 14.02, no: 1.07}
+  },
+  '01-abr': {
+    color: '#534AB7', day: 1, hasCierre: true,
+    pcts: [66.89,66.89,66.89,66.89,66.89,75.15,78.4,80.31,80.36,81.67,82.47,82.8,84.26,85.62,86.76,87.77,88.6,88.95,89.02,89.43,89.9,90.23,90.59,90.85,91.02,91.08,91.16,91.28,91.51,92.19,92.19],
+    intentosDias: [0,5,6,7],
+    startPct: 66.9, endPct: 92.2, delta: 25.3, endDay: 30,
+    domiIntentos: [66.89,8.25,3.26,1.91],
+    roll: {b1b2: 0.69, b2b3: 43.0, b3b4: 53.6},
+    outcomes: {bkt1: {rec: 99.31, man: 0, det: 0.69}, bkt2: {rec: 11.4, man: 45.6, det: 43.0}, bkt3: {rec: 10.7, man: 35.7, det: 53.6}, bkt4: {rec: 2.3, man: 97.7, det: 0}}
+  },
+  '15-abr': {
+    color: '#D85A30', day: 15, hasCierre: false,
+    pcts: [60.31,70.6,74.86,74.86,74.86,77.42],
+    intentosDias: [0,1,2,5],
+    startPct: 60.3, endPct: 77.4, delta: 17.1, endDay: 5,
+    domiIntentos: [60.31,10.29,4.25,2.56],
+    roll: null,
+    outcomes: null,
+    bkt1Detail: null
+  },
+  '01-may': {
+    color: '#2E8B57', day: 1, hasCierre: false,
+    pcts: [0.0,0.0,0.0,68.2,73.27,75.79,78.97],
+    intentosDias: [3,4,5,6],
+    startPct: 68.2, endPct: 79.0, delta: 10.8, endDay: 6,
+    domiIntentos: [68.2,5.08,2.52,3.18],
+    roll: null, outcomes: null
+  },
+};
+const extraData = {
+  '01-ene': {cartera: {m1: 314, m2: 211, m3: 228, m4: 5009}, causas: {insuficiencia:1002,cancelada:88,bloqueada:56,domibaja:15,inexistente:22,reverso:21,otros:11}, totalRechazos: 1215, windowEarly: 7.9, windowLate: 6.44, combined: {i1: 64.35, i2: 8.02, i3: 2.53, i4: 2.99, s2: 7.83, s3: 3.9, s4: 2.53, hasC: true}},
+  '15-ene': {cartera: {m1: 280, m2: 275, m3: 216, m4: 6682}, causas: {insuficiencia:1450,cancelada:91,bloqueada:91,domibaja:19,inexistente:15,reverso:13,otros:9}, totalRechazos: 1688, windowEarly: 7.04, windowLate: 7.19, combined: {i1: 64.54, i2: 6.57, i3: 3.74, i4: 2.0, s2: 5.86, s3: 4.15, s4: 3.05, hasC: true}},
+  '01-feb': {cartera: {m1: 347, m2: 316, m3: 211, m4: 5136}, causas: {insuficiencia:876,cancelada:89,bloqueada:113,domibaja:16,inexistente:19,reverso:15,otros:14}, totalRechazos: 1142, windowEarly: 5.51, windowLate: 6.32, combined: {i1: 68.34, i2: 4.73, i3: 3.54, i4: 3.83, s2: 5.51, s3: 3.51, s4: 2.81, hasC: true}},
+  '15-feb': {cartera: {m1: 257, m2: 281, m3: 273, m4: 6770}, causas: {insuficiencia:1586,cancelada:96,bloqueada:93,domibaja:22,inexistente:20,reverso:10,otros:9}, totalRechazos: 1836, windowEarly: 7.99, windowLate: 6.37, combined: {i1: 65.08, i2: 5.08, i3: 2.7, i4: 2.35, s2: 7.9, s3: 3.9, s4: 2.47, hasC: true}},
+  '01-mar': {cartera: {m1: 313, m2: 347, m3: 315, m4: 5276}, causas: {insuficiencia:1074,cancelada:101,bloqueada:65,domibaja:25,inexistente:22,reverso:20,otros:16}, totalRechazos: 1323, windowEarly: 6.72, windowLate: 5.52, combined: {i1: 67.53, i2: 4.3, i3: 3.7, i4: 2.34, s2: 6.65, s3: 3.23, s4: 2.29, hasC: true}},
+  '15-mar': {cartera: {m1: 335, m2: 258, m3: 281, m4: 6922}, causas: {insuficiencia:1507,cancelada:92,bloqueada:91,domibaja:23,inexistente:17,reverso:9,otros:12}, totalRechazos: 1751, windowEarly: 6.21, windowLate: 7.66, combined: {i1: 62.4, i2: 5.96, i3: 4.46, i4: 4.08, s2: 6.18, s3: 3.91, s4: 3.75, hasC: true}},
+  '01-abr': {cartera: {m1: 310, m2: 312, m3: 346, m4: 5514}, causas: {insuficiencia:1018,cancelada:83,bloqueada:52,domibaja:21,inexistente:17,reverso:17,otros:1}, totalRechazos: 1223, totalOperados: 5195, windowEarly: 6.45, windowLate: 5.43, combined: {i1: 66.89, i2: 8.25, i3: 3.26, i4: 1.91, s2: 6.45, s3: 3.47, s4: 1.96, hasC: true}},
+  '15-abr': {cartera: {m1: 326, m2: 334, m3: 258, m4: 7052}, causas: {insuficiencia:1431,cancelada:139,bloqueada:95,domibaja:33,inexistente:25,reverso:16,otros:15}, totalRechazos: 1754, windowEarly: null, windowLate: null, combined: {i1: 60.31, i2: 10.29, i3: 4.25, i4: 2.56, s2: 0, s3: 0, s4: 0, hasC: false}},
+  '01-may': {cartera: {m1: 353, m2: 306, m3: 312, m4: 5767}, causas: {insuficiencia:1176,cancelada:73,bloqueada:58,domibaja:20,inexistente:14,reverso:9,otros:12},totalRechazos: 1362, totalOperados: 5321, windowEarly: null, windowLate: null, combined: {i1: 68.2, i2: 5.08, i3: 2.52, i4: 3.18, s2: 0, s3: 0, s4: 0, hasC: false}},
+};
+
+const bankDataV2 = {
+  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may'],
+  bbva: [74.6, 71.3, 76.1, 70.0, 72.9, 71.5, 73.8, 71.5, 73.1], inter: [78.6, 77.5, 80.8, 75.9, 79.3, 76.8, 79.5, 77.9, 79.1],
+  bbvaN: [1932, 2534, 1996, 2577, 2108, 2569, 1980, 2640, 2160], interN: [3381, 4292, 3472, 4402, 3611, 4398, 3442, 4532, 3723],
+  methods: ['4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.'], days: [1, 15, 1, 15, 1, 15, 1, 15, 1],
+};
+
+const allMixLabels = ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may'];
+const allMixTotals = [5751, 7446, 5999, 7570, 6240, 7785, 6471, 7957, 6727];
+const allMixDatasets = [
+  {label:'BBVA Bancomer',data:[2097, 2751, 2180, 2778, 2274, 2858, 2350, 2900, 2435],backgroundColor:'#3B3ACA',borderWidth:0,stack:'s'},
+        {label:'Santander',data:[827, 955, 868, 971, 906, 991, 939, 1023, 970],backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
+        {label:'Banorte',data:[778, 927, 825, 956, 859, 984, 898, 1008, 938],backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
+        {label:'Banamex',data:[808, 1048, 833, 1086, 861, 1124, 892, 1149, 923],backgroundColor:'#1D9E75',borderWidth:0,stack:'s'},
+        {label:'HSBC',data:[363, 512, 379, 520, 397, 536, 412, 552, 437],backgroundColor:'#D4537E',borderWidth:0,stack:'s'},
+        {label:'Azteca',data:[271, 357, 282, 358, 290, 367, 306, 374, 318],backgroundColor:'#7F77DD',borderWidth:0,stack:'s'},
+        {label:'Scotiabank',data:[145, 223, 157, 224, 161, 234, 163, 240, 177],backgroundColor:'#854F0B',borderWidth:0,stack:'s'},
+        {label:'BanCoppel',data:[137, 168, 136, 170, 140, 172, 148, 181, 153],backgroundColor:'#378ADD',borderWidth:0,stack:'s'},
+        {label:'Inbursa',data:[107, 166, 115, 165, 119, 162, 123, 169, 126],backgroundColor:'#888780',borderWidth:0,stack:'s'},
+        {label:'Bajío',data:[81, 131, 84, 132, 89, 141, 90, 141, 94],backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
+        {label:'Banregio',data:[65, 92, 67, 96, 65, 100, 66, 102, 67],backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
+        {label:'Otros',data:[72, 116, 73, 114, 79, 116, 84, 118, 89],backgroundColor:'#CECDCA',borderWidth:0,stack:'s'}
+];
+
+const vintageData = {
+  labels: ['Ene-24', 'Feb-24', 'Mar-24', 'Abr-24', 'May-24', 'Jun-24', 'Jul-24', 'Ago-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dic-24', 'Ene-25', 'Feb-25', 'Mar-25', 'Abr-25', 'May-25', 'Jun-25', 'Jul-25', 'Ago-25', 'Sep-25', 'Oct-25', 'Nov-25', 'Dic-25', 'Ene-26', 'Feb-26', 'Mar-26', 'Abr-26'], totals: [114, 118, 149, 163, 162, 155, 161, 163, 185, 256, 365, 207, 269, 232, 242, 250, 173, 191, 218, 223, 256, 194, 214, 266, 279, 258, 334, 326],
+  bkt1: [88.6, 86.4, 90.6, 92.6, 93.2, 87.7, 91.9, 90.2, 90.3, 91.8, 92.9, 88.9, 91.8, 90.1, 86.4, 87.2, 82.7, 84.3, 80.3, 84.3, 84.4, 80.4, 76.6, 74.1, 58.4, 46.5, 76.3, 100.0], bkt2: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 8.3, 7.2, 42.6, 23.7, 0.0], bkt3: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.3, 1.5, 29.4, 10.9, 0.0, 0.0], bkt4: [11.4, 13.6, 9.4, 7.4, 6.8, 12.3, 8.1, 9.8, 9.7, 8.2, 7.1, 11.1, 8.2, 9.9, 13.6, 12.8, 17.3, 15.7, 19.7, 15.7, 15.6, 19.6, 20.1, 16.2, 5.0, 0.0, 0.0, 0.0],
+  moraRates: [11.4, 13.6, 9.4, 7.4, 6.8, 12.3, 8.1, 9.8, 9.7, 8.2, 7.1, 11.1, 8.2, 9.9, 13.6, 12.8, 17.3, 15.7, 19.7, 15.7, 15.6, 19.6, 23.4, 25.9, 41.6, 53.5, 23.7, 0.0],
+  bkt1n: [101, 102, 135, 151, 151, 136, 148, 147, 167, 235, 339, 184, 247, 209, 209, 218, 143, 161, 175, 188, 216, 156, 164, 197, 163, 120, 255, 326], bkt2n: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 20, 110, 79, 0], bkt3n: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 4, 82, 28, 0, 0], bkt4n: [13, 16, 14, 12, 11, 19, 13, 16, 18, 21, 26, 23, 22, 23, 33, 32, 30, 30, 43, 35, 40, 38, 43, 43, 14, 0, 0, 0],
+};
+
+
+let currentFilter = 'all';
+let charts = {};
+
+function getSelectedCortes() {
+  if (currentFilter === 'all') return allCortes;
+  const targetDay = currentFilter === 'day1' ? 1 : 15;
+  return allCortes.filter(c => data[c].day === targetDay);
+}
+
+function getCortesWithCierre() {
+  return getSelectedCortes().filter(c => data[c].hasCierre);
+}
+
+function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0) / arr.length : 0; }
+
+function renderSummaryGrid() {
+  const cortes = getSelectedCortes();
+  const grid = document.getElementById('summaryGrid');
+  grid.style.gridTemplateColumns = `repeat(${Math.min(cortes.length, 9)}, 1fr)`;
+  grid.innerHTML = cortes.map(c => {
+    const d = data[c];
+    const suffix = d.hasCierre ? '30d' : `D+${d.endDay}`;
+    return `<div class="summary-card">
+      <p class="summary-label">${c}${!d.hasCierre ? ' *' : ''}</p>
+      <p class="summary-value" style="color:${d.color};">${d.startPct}% → ${d.endPct}%</p>
+      <p class="summary-delta">intentos: D+${d.intentosDias.join(', D+')}</p>
+    </div>`;
+  }).join('');
+  
+  const legend = document.getElementById('summaryLegend');
+  legend.innerHTML = cortes.map(c =>
+    `<span class="legend-item"><span class="legend-swatch" style="background:${data[c].color};"></span>${c}${!data[c].hasCierre ? ' *' : ''}</span>`
+  ).join('') + '<span style="font-size:11px;color:#888780;margin-left:auto;">* sin cierre de mora aún</span>';
+}
+
+function renderWeeksGrid() {
+  const cortes = getCortesWithCierre();
+  if (cortes.length === 0) {
+    document.getElementById('weeksGrid').innerHTML = '<p style="font-size:12px;color:#888780;grid-column:1/-1;text-align:center;padding:16px;">No hay datos de D+4 a D+30 para los cortes seleccionados.</p>';
+    return;
+  }
+  const pcts = cortes.map(c => data[c].pcts);
+  const s1 = avg(pcts.map(p => p[7] - p[0]));
+  const s2 = avg(pcts.map(p => p[14] - p[7]));
+  const s3 = avg(pcts.map(p => p[21] - p[14]));
+  const s4 = avg(pcts.map(p => p[30] - p[21]));
+  
+  document.getElementById('weeksGrid').innerHTML = `
+    <div class="week-card week-1"><p class="week-label">Sem 1 · D+0→D+7</p><p class="week-value">+${s1.toFixed(1)}pp</p><p class="week-note">4 intentos de domi</p></div>
+    <div class="week-card week-2"><p class="week-label">Sem 2 · D+8→D+14</p><p class="week-value">+${s2.toFixed(1)}pp</p><p class="week-note">cobranza SPEI activa</p></div>
+    <div class="week-card week-3"><p class="week-label">Sem 3 · D+15→D+21</p><p class="week-value">+${s3.toFixed(1)}pp</p><p class="week-note">seguimiento</p></div>
+    <div class="week-card week-4"><p class="week-label">Sem 4 · D+22→D+30</p><p class="week-value">+${s4.toFixed(1)}pp</p><p class="week-note">rendimiento marginal</p></div>
+  `;
+}
+
+function renderDomiMetrics() {
+  const cortes = getSelectedCortes();
+  const i1 = avg(cortes.map(c => data[c].domiIntentos[0]));
+  const i2 = avg(cortes.map(c => data[c].domiIntentos[1]));
+  const i3 = avg(cortes.map(c => data[c].domiIntentos[2]));
+  const i4 = avg(cortes.map(c => data[c].domiIntentos[3]));
+  
+  document.getElementById('domiMetrics').innerHTML = `
+    <div class="summary-card"><p class="summary-label">1° intento</p><p class="summary-value-big" style="color:#1D9E75;">${i1.toFixed(1)}%</p><p class="summary-delta">de la cartera</p></div>
+    <div class="summary-card"><p class="summary-label">2° intento</p><p class="summary-value-big" style="color:#7F77DD;">+${i2.toFixed(1)}pp</p><p class="summary-delta">incremental</p></div>
+    <div class="summary-card"><p class="summary-label">3° intento</p><p class="summary-value-big" style="color:#EF9F27;">+${i3.toFixed(1)}pp</p><p class="summary-delta">incremental</p></div>
+    <div class="summary-card"><p class="summary-label">4° intento</p><p class="summary-value-big" style="color:#D4537E;">+${i4.toFixed(1)}pp</p><p class="summary-delta">incremental</p></div>
+  `;
+}
+
+function renderRollMetrics() {
+  const cortes = getCortesWithCierre();
+  if (cortes.length === 0) {
+    document.getElementById('rollMetrics').innerHTML = '<p style="font-size:12px;color:#888780;grid-column:1/-1;text-align:center;padding:16px;">No hay datos de migración para los cortes seleccionados.</p>';
+    return;
+  }
+  const b1b2 = avg(cortes.map(c => data[c].roll.b1b2));
+  const b2b3 = avg(cortes.map(c => data[c].roll.b2b3));
+  const b3b4 = avg(cortes.map(c => data[c].roll.b3b4));
+  
+  document.getElementById('rollMetrics').innerHTML = `
+    <div class="summary-card"><p class="summary-label">BKT 1 → BKT 2</p><p class="summary-value-big" style="color:#1D9E75;">${b1b2.toFixed(1)}%</p><p class="summary-delta">% de cartera BKT 1 total</p></div>
+    <div class="summary-card"><p class="summary-label">BKT 2 → BKT 3</p><p class="summary-value-big" style="color:#EF9F27;">${b2b3.toFixed(1)}%</p><p class="summary-delta">roll rate promedio</p></div>
+    <div class="summary-card"><p class="summary-label">BKT 3 → BKT 4+</p><p class="summary-value-big" style="color:#D85A30;">${b3b4.toFixed(1)}%</p><p class="summary-delta">roll rate promedio</p></div>
+  `;
+}
+
+
+const daysLabels = Array.from({length:31},(_,i)=>'D+'+i);
+
+function buildMainChart() {
+  const cortes = getSelectedCortes();
+  const datasets = cortes.map(c => {
+    const d = data[c];
+    const padded = [];
+    for (let i = 0; i < 31; i++) {
+      if (i < d.pcts.length) padded.push(d.pcts[i]);
+      else padded.push(null);
+    }
+    return {
+      label: c + (d.hasCierre ? '' : ' *'),
+      data: padded,
+      borderColor: d.color,
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      tension: 0.2,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: d.color,
+      borderDash: d.hasCierre ? [] : [4, 3],
+      spanGaps: false
+    };
+  });
+  
+  if (charts.main) charts.main.destroy();
+  charts.main = new Chart(document.getElementById('mainChart'), {
+    type: 'line',
+    data: { labels: daysLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { 
+            label: ctx => ctx.parsed.y !== null ? ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` : null 
+          },
+          backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { color: '#888780', font: { size: 11 },
+            callback: (v,i) => [0,3,7,14,21,28,30].includes(i) ? daysLabels[i] : '',
+            autoSkip: false, maxRotation: 0 }
+        },
+        y: { min: 0, max: 95, grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { color: '#888780', font: { size: 12 }, stepSize: 10, callback: v => v + '%' } }
+      }
+    }
+  });
+}
+
+function buildDomiChart() {
+  const cortes = getSelectedCortes();
+  const i1 = cortes.map(c => data[c].domiIntentos[0]);
+  const i2 = cortes.map(c => data[c].domiIntentos[1]);
+  const i3 = cortes.map(c => data[c].domiIntentos[2]);
+  const i4 = cortes.map(c => data[c].domiIntentos[3]);
+  
+  if (charts.domi) charts.domi.destroy();
+  charts.domi = new Chart(document.getElementById('domiChart'), {
+    type: 'bar',
+    data: {
+      labels: cortes,
+      datasets: [
+        { label:'1° intento', data:i1, backgroundColor:'#1D9E75', borderWidth:0 },
+        { label:'2° intento', data:i2, backgroundColor:'#7F77DD', borderWidth:0 },
+        { label:'3° intento', data:i3, backgroundColor:'#EF9F27', borderWidth:0 },
+        { label:'4° intento', data:i4, backgroundColor:'#D4537E', borderWidth:0 },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:ctx=>` ${ctx.dataset.label}: +${ctx.parsed.y.toFixed(2)}pp`,
+            footer: items => {
+              const sum = items.reduce((a,b) => a + b.parsed.y, 0);
+              return `Acumulado: ${sum.toFixed(1)}%`;
+            }
+          },
+          backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
+        y:{stacked:true,min:0,max:90,grid:{color:'rgba(0,0,0,0.05)'},
+           ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
+      }
+    }
+  });
+}
+
+function buildRollChart() {
+  const cortes = getCortesWithCierre();
+  if (cortes.length === 0) return;
+  const b1b2 = cortes.map(c => data[c].roll.b1b2);
+  const b2b3 = cortes.map(c => data[c].roll.b2b3);
+  const b3b4 = cortes.map(c => data[c].roll.b3b4);
+  
+  if (charts.roll) charts.roll.destroy();
+  charts.roll = new Chart(document.getElementById('rollChart'), {
+    type: 'line',
+    data: {
+      labels: cortes,
+      datasets: [
+        { label:'BKT1→BKT2', data:b1b2, borderColor:'#1D9E75', backgroundColor:'transparent', borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#1D9E75' },
+        { label:'BKT2→BKT3', data:b2b3, borderColor:'#EF9F27', backgroundColor:'transparent', borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#EF9F27', borderDash:[5,4] },
+        { label:'BKT3→BKT4+', data:b3b4, borderColor:'#D85A30', backgroundColor:'transparent', borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#D85A30', borderDash:[3,3] },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`}, backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6}
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
+        y:{min:0,max:80,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
+      }
+    }
+  });
+}
+
+function buildOutcomeChart() {
+  const cortes = getCortesWithCierre();
+  if (cortes.length === 0) return;
+  const getAvg = (bkt, key) => avg(cortes.map(c => data[c].outcomes[bkt][key]));
+  
+  const recovered = [getAvg('bkt1','rec'), getAvg('bkt2','rec'), getAvg('bkt3','rec'), getAvg('bkt4','rec')];
+  const sameBkt =   [getAvg('bkt1','man'), getAvg('bkt2','man'), getAvg('bkt3','man'), getAvg('bkt4','man')];
+  const rolled =    [getAvg('bkt1','det'), getAvg('bkt2','det'), getAvg('bkt3','det'), getAvg('bkt4','det')];
+  
+  if (charts.outcome) charts.outcome.destroy();
+  charts.outcome = new Chart(document.getElementById('outcomeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['BKT 1 *', 'BKT 2', 'BKT 3', 'BKT 4+'],
+      datasets: [
+        { label:'Se recuperó', data:recovered, backgroundColor:'#9FE1CB', borderColor:'#1D9E75', borderWidth:1 },
+        { label:'Se mantuvo', data:sameBkt, backgroundColor:'#D3D1C7', borderColor:'#888780', borderWidth:1 },
+        { label:'Se deterioró', data:rolled, backgroundColor:'#F5C4B3', borderColor:'#D85A30', borderWidth:1 },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      indexAxis:'y',
+      plugins:{
+        legend:{display:true,position:'top',labels:{color:'#5F5E5A',font:{size:11},boxWidth:10,boxHeight:10}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.x.toFixed(1)}%`},backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6}
+      },
+      scales:{
+        x:{stacked:true,min:0,max:100,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:11},callback:v=>v+'%'}},
+        y:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}}
+      }
+    }
+  });
+}
+
+function buildTimeChart(canvasId, bktKey, chartKey) {
+  const cortes = getCortesWithCierre();
+  if (cortes.length === 0) return;
+  const rec = cortes.map(c => data[c].outcomes[bktKey].rec);
+  const man = cortes.map(c => data[c].outcomes[bktKey].man);
+  const det = cortes.map(c => data[c].outcomes[bktKey].det);
+  
+  if (charts[chartKey]) charts[chartKey].destroy();
+  charts[chartKey] = new Chart(document.getElementById(canvasId), {
+    type: 'bar',
+    data: {
+      labels: cortes,
+      datasets: [
+        { label:'Recuperó', data:rec, backgroundColor:'#9FE1CB', borderColor:'#1D9E75', borderWidth:1 },
+        { label:'Se mantuvo', data:man, backgroundColor:'#D3D1C7', borderColor:'#888780', borderWidth:1 },
+        { label:'Se deterioró', data:det, backgroundColor:'#F5C4B3', borderColor:'#D85A30', borderWidth:1 },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:10},boxWidth:8,boxHeight:8,padding:8}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`},backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6}
+      },
+      scales:{
+        x:{stacked:true,grid:{display:false},ticks:{color:'#888780',font:{size:10}}},
+        y:{stacked:true,min:0,max:100,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:10},callback:v=>v+'%'}}
+      }
+    }
+  });
+}
+
+
+
+
+function buildEfficiencyChart() {
+  const cortes = getSelectedCortes();
+  const i1 = cortes.map(c => data[c].domiIntentos[0]);
+  const i2 = cortes.map(c => data[c].domiIntentos[1]);
+  const i3 = cortes.map(c => data[c].domiIntentos[2]);
+  const i4 = cortes.map(c => data[c].domiIntentos[3]);
+  
+  if (charts.efficiency) charts.efficiency.destroy();
+  charts.efficiency = new Chart(document.getElementById('efficiencyChart'), {
+    type: 'line',
+    data: {
+      labels: cortes,
+      datasets: [
+        { label:'1er intento', data:i1, borderColor:'#1D9E75', backgroundColor:'transparent', borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#1D9E75' },
+        { label:'2do intento', data:i2, borderColor:'#7F77DD', backgroundColor:'transparent', borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#7F77DD', borderDash:[6,4] },
+        { label:'3er intento', data:i3, borderColor:'#EF9F27', backgroundColor:'transparent', borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#EF9F27', borderDash:[4,3] },
+        { label:'4to intento', data:i4, borderColor:'#D4537E', backgroundColor:'transparent', borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#D4537E', borderDash:[2,2] },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%`},backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6}
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
+        y:{min:0,max:75,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
+      }
+    }
+  });
+}
+
+function buildCausasChart() {
+  const cortes = getSelectedCortes();
+  const causas = cortes.map(c => extraData[c].causas);
+  
+  if (charts.causas) charts.causas.destroy();
+  charts.causas = new Chart(document.getElementById('causasChart'), {
+    type: 'bar',
+    data: {
+      labels: cortes,
+      datasets: [
+        { label:'Insuficiencia fondos', data:causas.map(c=>c.insuficiencia), backgroundColor:'#D85A30' },
+        { label:'Cuenta cancelada', data:causas.map(c=>c.cancelada), backgroundColor:'#A32D2D' },
+        { label:'Cuenta bloqueada', data:causas.map(c=>c.bloqueada), backgroundColor:'#EF9F27' },
+        { label:'Domi dada de baja', data:causas.map(c=>c.domibaja), backgroundColor:'#7F77DD' },
+        { label:'Cuenta inexistente', data:causas.map(c=>c.inexistente), backgroundColor:'#378ADD' },
+        { label:'Reverso / Otros', data:causas.map(c=>c.reverso + c.otros), backgroundColor:'#888780' },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y}`,
+            footer: items => {
+              const sum = items.reduce((a,b) => a + b.parsed.y, 0);
+              return `Total rechazos: ${sum}`;
+            }
+          },
+          backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
+        y:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}}
+      }
+    }
+  });
+}
+
+function buildCarteraChart() {
+  const cortes = getSelectedCortes();
+  const c = cortes.map(corte => extraData[corte].cartera);
+  
+  if (charts.cartera) charts.cartera.destroy();
+  charts.cartera = new Chart(document.getElementById('carteraChart'), {
+    type: 'bar',
+    data: {
+      labels: cortes,
+      datasets: [
+        { label:'M1 (1ra)', data:c.map(x=>x.m1), backgroundColor:'#9FE1CB', borderColor:'#1D9E75', borderWidth:1 },
+        { label:'M2 (2da)', data:c.map(x=>x.m2), backgroundColor:'#FAC775', borderColor:'#EF9F27', borderWidth:1 },
+        { label:'M3 (3ra)', data:c.map(x=>x.m3), backgroundColor:'#F4C0D1', borderColor:'#D4537E', borderWidth:1 },
+        { label:'M4+ (recurrente)', data:c.map(x=>x.m4), backgroundColor:'#B5D4F4', borderColor:'#378ADD', borderWidth:1 },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} clientes`,
+            footer: items => {
+              const sum = items.reduce((a,b) => a + b.parsed.y, 0);
+              return `Cartera total: ${sum.toLocaleString()}`;
+            }
+          },
+          backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
+        y:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12},callback:v=>v.toLocaleString()}}
+      }
+    }
+  });
+}
+
+function buildWindowsChart() {
+  const cortes = getSelectedCortes().filter(c => extraData[c].windowEarly !== null);
+  const early = cortes.map(c => extraData[c].windowEarly);
+  const late = cortes.map(c => extraData[c].windowLate);
+  
+  if (charts.windows) charts.windows.destroy();
+  charts.windows = new Chart(document.getElementById('windowsChart'), {
+    type: 'bar',
+    data: {
+      labels: cortes,
+      datasets: [
+        { label:'D+4 a D+14', data:early, backgroundColor:'#9FE1CB', borderColor:'#1D9E75', borderWidth:1 },
+        { label:'D+15 a D+30', data:late, backgroundColor:'#FAC775', borderColor:'#EF9F27', borderWidth:1 },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: +${ctx.parsed.y.toFixed(2)}pp`},
+          backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
+        y:{min:0,max:10,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
+      }
+    }
+  });
+}
+
+
+
+function buildPhaseChart() {
+  const cortes = getSelectedCortes();
+  const d = cortes.map(c => extraData[c].combined);
+  
+  if (charts.phase) charts.phase.destroy();
+  charts.phase = new Chart(document.getElementById('phaseChart'), {
+    type: 'bar',
+    data: {
+      labels: cortes,
+      datasets: [
+        { label:'1° intento', data:d.map(x=>x.i1), backgroundColor:'#1D9E75', borderWidth:0, stack:'stack1' },
+        { label:'2° intento', data:d.map(x=>x.i2), backgroundColor:'#7F77DD', borderWidth:0, stack:'stack1' },
+        { label:'3° intento', data:d.map(x=>x.i3), backgroundColor:'#EF9F27', borderWidth:0, stack:'stack1' },
+        { label:'4° intento', data:d.map(x=>x.i4), backgroundColor:'#D4537E', borderWidth:0, stack:'stack1' },
+        { label:'Sem 2 (D+8-D+14)', data:d.map(x=>x.s2), backgroundColor:'#5F5E5A', borderWidth:0, stack:'stack1' },
+        { label:'Sem 3 (D+15-D+21)', data:d.map(x=>x.s3), backgroundColor:'#9E9D98', borderWidth:0, stack:'stack1' },
+        { label:'Sem 4 (D+22-D+30)', data:d.map(x=>x.s4), backgroundColor:'#CECDCA', borderWidth:0, stack:'stack1' },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}pp`,
+            footer: items => {
+              const sum = items.reduce((a,b) => a + b.parsed.y, 0);
+              return `Total recaudado: ${sum.toFixed(1)}%`;
+            }
+          },
+          backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
+        y:{stacked:true,min:0,max:100,grid:{color:'rgba(0,0,0,0.05)'},
+           ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
+      }
+    }
+  });
+}
+
+
+let chartsBuilt = {};
+
+function renderAll() {
+  const cortes = getSelectedCortes();
+  document.getElementById('filterHint').textContent =
+    cortes.length === 1 ? '1 corte seleccionado' : `${cortes.length} cortes seleccionados`;
+  
+  renderSummaryGrid();
+  renderWeeksGrid();
+  renderDomiMetrics();
+  renderRollMetrics();
+  buildMainChart();
+  buildDomiChart();
+  buildRollChart();
+  buildOutcomeChart();
+  buildTimeChart('bkt1Time', 'bkt1', 'time1');
+  buildTimeChart('bkt2Time', 'bkt2', 'time2');
+  buildTimeChart('bkt3Time', 'bkt3', 'time3');
+  buildTimeChart('bkt4Time', 'bkt4', 'time4');
+  buildEfficiencyChart();
+  buildCausasChart();
+  buildCarteraChart();
+  buildWindowsChart();
+  buildPhaseChart();
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderAll();
+  });
+});
+
+renderAll();
+
+function buildBankCharts() {
+  const cortes = getSelectedCortes();
+  const idxs = cortes.map(c => bankDataV2.labels.indexOf(c)).filter(i => i >= 0);
+  const labels = idxs.map(i => bankDataV2.labels[i]);
+  const bbva  = idxs.map(i => bankDataV2.bbva[i]);
+  const inter = idxs.map(i => bankDataV2.inter[i]);
+  const meths = idxs.map(i => bankDataV2.methods[i]);
+  if (charts.bank1) charts.bank1.destroy();
+  charts.bank1 = new Chart(document.getElementById('bankChart1'), {
+    type:'bar', data:{labels, datasets:[
+      {label:'BBVA',data:bbva,backgroundColor:'rgba(59,58,202,0.8)',borderColor:'#3B3ACA',borderWidth:1,borderRadius:4},
+      {label:'Interbancario',data:inter,backgroundColor:'rgba(216,90,48,0.8)',borderColor:'#D85A30',borderWidth:1,borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`,
+        footer:items=>`Método: ${meths[items[0].dataIndex]}`
+      },backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
+        y:{min:55,max:100,grid:{color:'rgba(0,0,0,0.05)'},
+            ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'},
+            title:{display:true,text:'Tasa éxito (4 intentos)',color:'#888780',font:{size:11}}}
+      }
+    }
+  });
+  const mixIdxs = cortes.map(c => allMixLabels.indexOf(c)).filter(i => i >= 0);
+  const mixLabels = mixIdxs.map(i => allMixLabels[i]);
+  const mixTotals = mixIdxs.map(i => allMixTotals[i]);
+  const mixDatasets = allMixDatasets.map(ds => ({...ds, data: mixIdxs.map(i => ds.data[i])}));
+  if (charts.bankMix) charts.bankMix.destroy();
+  charts.bankMix = new Chart(document.getElementById('bankMixChart'), {
+    type:'bar', data:{labels:mixLabels, datasets:mixDatasets},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:true,position:'top',labels:{color:'#5F5E5A',font:{size:11},boxWidth:10,boxHeight:10,padding:8}},
+        tooltip:{callbacks:{
+          label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`,
+          footer:items=>`Total: ${mixTotals[items[0].dataIndex].toLocaleString()} clientes`
+        },backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6}},
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',font:{size:12}}},
+        y:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},
+            ticks:{color:'#888780',font:{size:12},callback:v=>v.toLocaleString()},
+            title:{display:true,text:'Clientes',color:'#888780',font:{size:11}}}
+      }
+    }
+  });
+}
+
+function buildVintageCharts() {
+  if (charts.v1) charts.v1.destroy();
+  charts.v1 = new Chart(document.getElementById('vintageChart1'), {
+    type:'bar',
+    data:{labels:vintageData.labels,datasets:[
+      {label:'Al corriente (BKT 1)',data:vintageData.bkt1,backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
+      {label:'BKT 2 (1 mes atraso)',data:vintageData.bkt2,backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
+      {label:'BKT 3 (2 meses atraso)',data:vintageData.bkt3,backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
+      {label:'BKT 4+ (mora grave)',data:vintageData.bkt4,backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',labels:{color:'#5F5E5A',font:{size:11},boxWidth:10,boxHeight:10,padding:10}},
+        tooltip:{callbacks:{
+          title:items=>`Cosecha ${items[0].label} · n=${vintageData.totals[items[0].dataIndex].toLocaleString()}`,
+          label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`,
+          footer:items=>`Mora total: ${vintageData.moraRates[items[0].dataIndex]}%`
+        },backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6}
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',font:{size:11},maxRotation:45}},
+        y:{stacked:true,min:0,max:100,grid:{color:'rgba(0,0,0,0.05)'},
+            ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
+      }
+    }
+  });
+  if (charts.v2) charts.v2.destroy();
+  charts.v2 = new Chart(document.getElementById('vintageChart2'), {
+    type:'bar',
+    data:{labels:vintageData.labels,datasets:[
+      {label:'Al corriente',data:vintageData.bkt1n,backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
+      {label:'BKT 2',data:vintageData.bkt2n,backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
+      {label:'BKT 3',data:vintageData.bkt3n,backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
+      {label:'BKT 4+',data:vintageData.bkt4n,backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
+      {label:'Tasa mora %',data:vintageData.moraRates,type:'line',
+        borderColor:'#1F1F1F',backgroundColor:'transparent',borderWidth:2.5,
+        pointRadius:4,pointBackgroundColor:'#1F1F1F',tension:0.3,yAxisID:'y2'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',labels:{color:'#5F5E5A',font:{size:11},boxWidth:10,boxHeight:10,padding:10}},
+        tooltip:{callbacks:{
+          title:items=>`Cosecha ${items[0].label}`,
+          label:ctx=>ctx.dataset.label==='Tasa mora %'
+            ? ` Mora: ${ctx.parsed.y}%`
+            : ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} clientes`
+        },backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6}
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',font:{size:11},maxRotation:45}},
+        y:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},
+            ticks:{color:'#888780',font:{size:12},callback:v=>v.toLocaleString()},
+            title:{display:true,text:'Clientes',color:'#888780',font:{size:11}}},
+        y2:{position:'right',min:0,max:60,grid:{display:false},
+             ticks:{color:'#1F1F1F',font:{size:12},callback:v=>v+'%'},
+             title:{display:true,text:'Tasa mora',color:'#1F1F1F',font:{size:11}}}
+      }
+    }
+  });
+}
+
+function renderAll() {
+  const cortes = getSelectedCortes();
+  document.getElementById('filterHint').textContent =
+    cortes.length === 1 ? '1 corte seleccionado' : `${cortes.length} cortes seleccionados`;
+  renderSummaryGrid(); renderWeeksGrid(); renderDomiMetrics(); renderRollMetrics();
+  buildMainChart(); buildDomiChart(); buildPhaseChart(); buildRollChart(); buildOutcomeChart();
+  buildTimeChart('bkt1Time','bkt1','time1'); buildTimeChart('bkt2Time','bkt2','time2');
+  buildTimeChart('bkt3Time','bkt3','time3'); buildTimeChart('bkt4Time','bkt4','time4');
+  buildEfficiencyChart(); buildCausasChart(); buildCarteraChart(); buildWindowsChart();
+  if (chartsBuilt['banco']) buildBankCharts();
+}
+
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabPanels  = document.querySelectorAll('.tab-panel');
+
+function switchTab(tabId) {
+  tabButtons.forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  tabPanels.forEach(p  => p.classList.toggle('active',  p.id === 'tab-' + tabId));
+  if (!chartsBuilt[tabId]) {
+    chartsBuilt[tabId] = true;
+    if (tabId === 'banco')   buildBankCharts();
+    if (tabId === 'vintage') buildVintageCharts();
+  }
+}
+
+tabButtons.forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderAll();
+  });
+});
+
+chartsBuilt['recaudacion'] = true;
+renderAll();
+
+</script>
+</body>
+</html>
