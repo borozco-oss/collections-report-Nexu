@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexu Lead Rescue · Visual Proposal</title>
+  <style>
+    :root{
+      --blue:#4238e8;
+      --blue2:#6d67ff;
+      --lime:#caff4d;
+      --ink:#101217;
+      --muted:#656b7d;
+      --line:#dfe2f1;
+      --bg:#f5f6fb;
+      --green:#00875a;
+      --red:#d44533;
+      --orange:#c57a00;
+      --soft:#f8f9fe;
+      --soft-blue:#efefff;
+      --shadow:0 28px 80px rgba(16,18,23,.09);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(circle at 6% 8%, rgba(66,56,232,.12), transparent 24%),
+        radial-gradient(circle at 96% 2%, rgba(202,255,77,.22), transparent 22%),
+        radial-gradient(circle at 75% 95%, rgba(66,56,232,.10), transparent 28%),
+        var(--bg);
+      color:var(--ink);
+    }
+
+    .page{max-width:1580px;margin:0 auto;padding:28px;}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+    .brand{display:flex;gap:14px;align-items:center;}
+    .logo{width:48px;height:48px;background:var(--lime);border-radius:14px;display:grid;place-items:center;font-weight:950;font-size:26px;box-shadow:0 14px 30px rgba(66,56,232,.14)}
+    .brand h1{margin:0;color:var(--blue);font-size:34px;letter-spacing:-.06em;line-height:.95;font-weight:950}
+    .brand p{margin:4px 0 0;color:var(--muted);font-weight:750;font-size:14px}
+    .tag{background:white;border:1px solid var(--line);border-radius:999px;padding:12px 18px;color:var(--blue);font-weight:900;box-shadow:0 12px 30px rgba(16,18,23,.05)}
+    .glass{background:rgba(255,255,255,.92);border:1px solid var(--line);box-shadow:var(--shadow);backdrop-filter:blur(10px)}
+    .eyebrow{text-transform:uppercase;letter-spacing:.18em;color:var(--blue);font-size:12px;font-weight:950;margin-bottom:14px}
+
+    /* HERO */
+    .hero{border-radius:34px;padding:34px;margin-bottom:24px;overflow:hidden;position:relative;}
+    .hero:after{content:"";position:absolute;right:-130px;top:-120px;width:430px;height:430px;border-radius:50%;background:radial-gradient(circle,rgba(202,255,77,.32),transparent 66%)}
+    .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px;align-items:stretch;}
+    .hero h2{font-size:clamp(50px,4.2vw,66px);line-height:1.02;letter-spacing:-.062em;margin:0;max-width:100%;font-weight:900}
+    .hero h2 span{color:var(--blue)}
+    .pain-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:28px}
+    .pain-card{background:white;border:1px solid var(--line);border-radius:24px;padding:22px;min-height:178px;position:relative;overflow:hidden}
+    .pain-card:after{content:"";position:absolute;right:-34px;bottom:-34px;width:110px;height:110px;border-radius:50%;background:#f0efff}
+    .pain-card h3{font-size:22px;margin:12px 0 8px;letter-spacing:-.045em}
+    .pain-card p{font-size:15px;line-height:1.38;color:var(--muted);margin:0;position:relative;z-index:1}
+    .problem-visual{margin-top:18px;background:#fafbff;border:1px solid var(--line);border-radius:24px;padding:20px 22px;overflow:hidden;position:relative}
+    .problem-visual:after{content:"";position:absolute;right:-35px;bottom:-35px;width:110px;height:110px;border-radius:50%;background:rgba(66,56,232,.06)}
+    .problem-visual-title{font-size:13px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:14px;position:relative;z-index:1}
+    .problem-visual-track{display:grid;grid-template-columns:1fr 34px 1fr 34px 1fr;align-items:center;gap:8px;position:relative;z-index:1}
+    .problem-node{background:white;border:1px solid var(--line);border-radius:18px;padding:16px;min-height:110px;display:flex;flex-direction:column;justify-content:center}
+    .problem-node .node-kicker{font-size:11px;font-weight:900;letter-spacing:.10em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    .problem-node h4{margin:0 0 6px;font-size:20px;line-height:1.02;letter-spacing:-.04em;font-weight:950}
+    .problem-node p{margin:0;font-size:13.5px;line-height:1.35;color:var(--muted);font-weight:650}
+    .problem-arrow{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:var(--blue);color:white;font-size:18px;font-weight:950;box-shadow:0 10px 20px rgba(66,56,232,.18)}
+    .problem-node.highlight{background:linear-gradient(135deg,var(--blue),var(--blue2));border-color:transparent;color:white}
+    .problem-node.highlight .node-kicker{color:#e5e7ff}
+    .problem-node.highlight p{color:#edf0ff}
+    .icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-weight:950;position:relative;z-index:1}
+    .red{background:#fff0ef;color:var(--red)}.orange{background:#fff7e7;color:var(--orange)}.green{background:#e8fff5;color:var(--green)}
+
+    .product-card{background:#fff;border:1px solid var(--line);border-radius:30px;padding:32px;position:relative;overflow:hidden;height:100%;display:flex;flex-direction:column;justify-content:space-between}
+    .product-card h3{font-size:clamp(44px,3.6vw,56px);line-height:.98;letter-spacing:-.065em;margin:0 0 18px;font-weight:950;max-width:100%}
+    .product-card h3 span{color:var(--blue)}
+    .product-card p{font-size:clamp(18px,1.45vw,22px);line-height:1.32;color:var(--muted);font-weight:600;margin:0 0 18px}
+    .hero-proof{margin-top:30px;border-radius:24px;padding:24px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;position:relative;overflow:hidden;min-height:190px;display:flex;flex-direction:column;justify-content:space-between}
+    .hero-proof:after{content:"";position:absolute;right:-60px;bottom:-70px;width:190px;height:190px;border-radius:50%;background:rgba(202,255,77,.18)}
+    .hero-proof-label{font-size:12px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;color:#e8e9ff;position:relative;z-index:1}
+    .hero-proof h4{font-size:36px;line-height:1.02;letter-spacing:-.055em;margin:14px 0 0;position:relative;z-index:1}
+    .hero-proof p{font-size:18px!important;line-height:1.32!important;color:#eef0ff!important;margin:18px 0 0!important;max-width:620px;position:relative;z-index:1}
+    .value-pill{display:inline-flex;padding:14px 16px;border-radius:18px;background:var(--soft-blue);border:1px solid #d2d5ff;color:#2522a8;font-weight:950;font-size:17px}
+
+    /* ORCHESTRATION */
+    .orchestration{border-radius:34px;padding:32px;margin-bottom:24px;}
+    .section-title{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:26px}
+    .section-title h2{font-size:50px;letter-spacing:-.065em;margin:0;line-height:.98}
+    .section-title p{margin:0;color:var(--muted);font-size:18px;font-weight:750;max-width:460px;text-align:right}
+    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:28px}
+    .step{background:#fff;border:1px solid var(--line);border-radius:26px;padding:20px;min-height:210px;position:relative;overflow:visible}
+    .step:not(:last-child):after{content:"→";position:absolute;right:-25px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:999px;background:var(--blue);color:white;font-weight:950;font-size:18px;line-height:24px;text-align:center;z-index:8;box-shadow:0 10px 24px rgba(66,56,232,.22)}
+    .num{width:44px;height:44px;border-radius:15px;background:var(--soft-blue);color:var(--blue);display:grid;place-items:center;font-weight:950;font-size:22px;margin-bottom:18px}
+    .step .emoji{font-size:30px;margin-bottom:14px}
+    .step h3{margin:0 0 8px;font-size:22px;letter-spacing:-.04em}
+    .step p{margin:0;color:var(--muted);font-size:15px;line-height:1.35}
+
+    /* PRODUCT DEMO */
+    .business-case{border-radius:34px;padding:32px;margin-top:24px;margin-bottom:24px;position:relative;overflow:hidden}
+    .business-case:after{content:"";position:absolute;right:-100px;top:-110px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(202,255,77,.24),transparent 68%)}
+    .business-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:24px;position:relative;z-index:1}
+    .business-head h2{font-size:48px;line-height:.98;letter-spacing:-.065em;margin:0;max-width:760px}
+    .business-head p{margin:0;color:var(--muted);font-size:18px;font-weight:750;max-width:460px;text-align:right}
+    .impact-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:18px;position:relative;z-index:1}
+    .target-card{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;border-radius:28px;padding:28px;position:relative;overflow:hidden;min-height:310px;display:flex;flex-direction:column;justify-content:space-between}
+    .target-card:after{content:"";position:absolute;right:-65px;bottom:-80px;width:220px;height:220px;border-radius:50%;background:rgba(202,255,77,.18)}
+    .target-label{font-size:13px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;color:#e6e8ff;position:relative;z-index:1}
+    .target-card h3{font-size:56px;line-height:.98;letter-spacing:-.07em;margin:14px 0;position:relative;z-index:1}
+    .target-card p{font-size:21px;line-height:1.32;color:#eef0ff;margin:0;position:relative;z-index:1}
+    .math-card{background:#fff;border:1px solid var(--line);border-radius:28px;padding:24px;display:grid;gap:14px}
+    .math-row{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;background:#fafbff;border:1px solid var(--line);border-radius:18px;padding:16px}
+    .math-row span{color:var(--muted);font-size:15px;font-weight:800}
+    .math-row strong{font-size:24px;letter-spacing:-.04em;color:var(--ink);text-align:right}
+    .math-row.highlight{background:#e8fff5;border-color:#bfeeda}
+    .math-row.highlight strong{color:var(--green)}
+    .conversion-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:4px}
+    .conversion-box{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;min-height:128px}
+    .conversion-box span{display:block;color:var(--muted);font-size:11px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+    .conversion-box strong{display:block;font-size:28px;letter-spacing:-.05em;margin-bottom:6px;color:var(--blue)}
+    .conversion-box p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.35;font-weight:650}
+
+    .demo{display:grid;grid-template-columns:1.05fr .95fr;gap:24px;margin-top:36px;margin-bottom:24px;align-items:start}
+    .team{border-radius:34px;padding:24px;overflow:hidden}
+    .team-frame{border:1px solid var(--line);border-radius:26px;overflow:hidden;background:#fff;display:grid;grid-template-columns:72px 1fr;min-height:480px}
+    .sidebar{background:#f7f8fc;border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:14px;align-items:center}
+    .side-logo{width:36px;height:36px;border-radius:10px;background:var(--blue)}
+    .nav{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#71778a;font-weight:950}
+    .nav.active{background:var(--soft-blue);color:var(--blue);box-shadow:inset 3px 0 0 var(--blue)}
+    .team-main{padding:22px;background:#fff}
+    .team-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .team-head h3{margin:0;font-size:32px;letter-spacing:-.06em}
+    .ai-live{background:#e8fff5;color:var(--green);border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}
+    .tabs{display:flex;gap:10px;margin-bottom:16px}
+    .tab{padding:10px 13px;border:1px solid var(--line);border-radius:999px;font-size:13px;font-weight:850;color:var(--muted)}
+    .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .team-table{border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:16px}
+    .row{display:grid;grid-template-columns:1.2fr .85fr .8fr .8fr;gap:10px;align-items:center;padding:14px;border-bottom:1px solid #edf0f7;font-size:14px}
+    .row:last-child{border-bottom:0}.row.head{background:#f8f9fd;color:#5e6477;text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:950}
+    .row strong{display:block}.row small{display:block;color:var(--muted);margin-top:3px}.bar{height:8px;border-radius:999px;background:#e7e9f1;overflow:hidden}.bar i{display:block;height:100%;border-radius:999px;background:var(--blue)}
+    .chip{justify-self:start;padding:7px 10px;border-radius:999px;font-size:11px;font-weight:950}.chip.blue{background:var(--soft-blue);color:var(--blue)}.chip.green{background:#e8fff5;color:var(--green)}.chip.gray{background:#eef1f5;color:#5a6070}
+    .side-panel{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .insight{border:1px solid var(--line);background:#fbfbff;border-radius:18px;padding:16px}.insight h4{margin:0 0 8px;font-size:17px}.insight p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.35}
+
+    .phone-card{border-radius:34px;padding:24px;display:grid;grid-template-columns:1fr;gap:16px}
+    .phone-head{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px}.avatar{width:46px;height:46px;border-radius:50%;background:var(--soft-blue);color:var(--blue);display:grid;place-items:center;font-weight:950}
+    .bubble{max-width:88%;border-radius:18px;padding:14px 16px;margin:10px 0;font-size:15.5px;line-height:1.38}.bubble.ai{margin-left:auto;background:var(--purple-soft);color:#18155f}.bubble.user{background:#eef1f5;color:var(--ink)}
+    .decision{border:1px solid #bcc0ff;background:#fbfbff;border-radius:22px;padding:18px}.decision .pill{display:inline-flex;background:#e8fff5;color:var(--green);border-radius:999px;padding:8px 11px;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}.decision h3{font-size:30px;letter-spacing:-.055em;margin:0 0 8px}.decision p{margin:0;color:var(--muted);font-size:15px;line-height:1.35}
+
+    .close{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin-top:40px;margin-bottom:40px;align-items:stretch}
+    .quote{border-radius:34px;padding:34px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;min-height:260px;height:100%;position:relative;overflow:hidden}.quote:after{content:"";position:absolute;right:-90px;bottom:-90px;width:260px;height:260px;border-radius:50%;background:rgba(202,255,77,.18)}.quote h2{font-size:clamp(42px,3.4vw,54px);line-height:1.02;letter-spacing:-.065em;margin:0 0 18px;position:relative;z-index:1}.quote p{font-size:20px;color:#e8e9ff;margin:0;position:relative;z-index:1}
+    .why{border-radius:34px;padding:34px;height:100%}.why h2{font-size:clamp(34px,2.8vw,44px);letter-spacing:-.06em;margin:0 0 18px}.why-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.why-item{background:#fafbff;border:1px solid var(--line);border-radius:18px;padding:18px;font-weight:900;min-height:92px;display:flex;align-items:center;font-size:clamp(15px,1.15vw,18px)}
+
+    @media(max-width:1300px){
+      .hero-grid{grid-template-columns:1fr;}
+      .product-card{min-height:360px;}
+    }
+
+    .hero > .hero-grid > div,.close > div{height:100%}
+
+    @media(max-width:1100px){.hero-grid,.demo,.close,.impact-grid{grid-template-columns:1fr}.pain-cards,.flow,.why-grid,.problem-visual-track,.conversion-strip{grid-template-columns:1fr}.business-head{display:block}.business-head p{text-align:left;margin-top:12px}.step:not(:last-child):after{display:none}.hero h2,.product-card h3{font-size:48px}.section-title{display:block}.section-title p{text-align:left;margin-top:12px}.team-frame{grid-template-columns:1fr}.sidebar{display:none}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">✕</div>
+        <div>
+          <h1>Nexu TEAM</h1>
+          <p>Lead Rescue · Sistema autónomo de recuperación comercial</p>
+        </div>
+      </div>
+      <div class="tag">Nexu AI Hackathon · Propuesta visual V2</div>
+    </header>
+
+    <section class="hero glass">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">La problemática actual</div>
+          <h2>Nexu ya genera <span>LEADS.</span><br>El reto es convertirlos antes de que se enfríen.</h2>
+          <div class="pain-cards">
+            <article class="pain-card"><div class="icon red">⚠</div><h3>Dolor actual</h3><p>Clientes interesados se detienen por dudas, fricciones o falta de seguimiento oportuno.</p></article>
+            <article class="pain-card"><div class="icon orange">↘</div><h3>Impacto</h3><p>Cada lead frío es una oportunidad menos de colocar financiamiento.</p></article>
+            <article class="pain-card"><div class="icon green">✦</div><h3>Oportunidad</h3><p>Recuperar demanda ya generada sin seguimiento manual humano.</p></article>
+          </div>
+
+          <div class="problem-visual">
+            <div class="problem-visual-title">La oportunidad comercial</div>
+            <div class="problem-visual-track">
+              <div class="problem-node">
+                <div class="node-kicker">Hoy</div>
+                <h4>Lead detenido</h4>
+                <p>El cliente se enfría por fricción, dudas o falta de seguimiento.</p>
+              </div>
+              <div class="problem-arrow">→</div>
+              <div class="problem-node highlight">
+                <div class="node-kicker">Oportunidad</div>
+                <h4>Recuperar intención</h4>
+                <p>Reactivar conversaciones antes de que el cliente pierda interés.</p>
+              </div>
+              <div class="problem-arrow">→</div>
+              <div class="problem-node">
+                <div class="node-kicker">Meta</div>
+                <h4>Más solicitudes</h4>
+                <p>Convertir demanda existente en oportunidades listas para cierre.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="eyebrow">Nuestra propuesta</div>
+          <h3>Nosotros creamos <span>Lead Rescue.</span></h3>
+          <p>Un sistema autónomo que recupera oportunidades de financiamiento detenidas en el funnel.</p>
+          <p>La IA detecta intención, conversa por WhatsApp y activa al asesor correcto cuando existe posibilidad real de cierre.</p>
+          <div class="value-pill">IA recupera la conversación. El asesor convierte.</div>
+
+          <div class="hero-proof">
+            <div>
+              <div class="hero-proof-label">El cambio clave</div>
+              <h4>De perseguir leads manualmente a recuperar intención automáticamente.</h4>
+            </div>
+            <p>Lead Rescue convierte conversaciones detenidas en oportunidades listas para que un asesor las cierre.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="orchestration glass">
+      <div class="section-title">
+        <div><div class="eyebrow">Cómo funciona</div><h2>De abandono a oportunidad lista para cerrar</h2></div>
+        <p>Un sistema autónomo, medible y producible conectado a TEAM.</p>
+      </div>
+      <div class="flow">
+        <div class="step"><div class="num">1</div><div class="emoji">🔎</div><h3>Detecta</h3><p>El lead abandona documentos, cotización o solicitud.</p></div>
+        <div class="step"><div class="num">2</div><div class="emoji">🧠</div><h3>Analiza</h3><p>Evalúa intención, fricción y urgencia.</p></div>
+        <div class="step"><div class="num">3</div><div class="emoji">💬</div><h3>Contacta</h3><p>Envía WhatsApp personalizado de financiamiento.</p></div>
+        <div class="step"><div class="num">4</div><div class="emoji">📈</div><h3>Entiende</h3><p>Interpreta interés, dudas u objeciones.</p></div>
+        <div class="step"><div class="num">5</div><div class="emoji">🤝</div><h3>Escala</h3><p>Activa al asesor con contexto para cerrar.</p></div>
+      </div>
+    </section>
+    <section class="close">
+      <div class="quote">
+        <div class="eyebrow" style="color:#e8e9ff">Tesis del producto</div>
+        <h2>Autónomo donde sea posible. Humano donde sea valioso.</h2>
+        <p>Lead Rescue recupera intención automáticamente y activa al asesor solo cuando hay oportunidad real de cierre.</p>
+      </div>
+      <div class="why glass">
+        <h2>Por qué importa para Nexu</h2>
+        <div class="why-grid">
+          <div class="why-item">Más financiamientos colocados</div>
+          <div class="why-item">Menos leads perdidos</div>
+          <div class="why-item">IA que opera</div>
+          <div class="why-item">WhatsApp contextual</div>
+          <div class="why-item">Escalamiento inteligente</div>
+          <div class="why-item">Camino corto a producción</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="business-case glass">
+      <div class="business-head">
+        <div>
+          <div class="eyebrow">Objetivo del piloto</div>
+          <h2>Convertir más preautorizaciones en solicitudes y cierres.</h2>
+        </div>
+        <p>Con el volumen actual, el objetivo es ambicioso pero defendible: recuperar intención antes de que se pierda.</p>
+      </div>
+
+      <div class="impact-grid">
+        <div class="target-card">
+          <div>
+            <div class="target-label">Meta de conversión</div>
+            <h3>20.8% → 25.2%</h3>
+            <p>Subir la conversión de preautorizaciones a solicitudes mediante seguimiento autónomo por WhatsApp y escalamiento inteligente.</p>
+          </div>
+          <p><strong>Impacto esperado:</strong> +50 cierres incrementales al mes sin aumentar headcount comercial.</p>
+        </div>
+
+        <div class="math-card">
+          <div class="math-row"><span>Preautorizaciones actuales</span><strong>8,185</strong></div>
+          <div class="math-row"><span>Solicitudes actuales</span><strong>1,702</strong></div>
+          <div class="math-row"><span>Solicitudes con meta 25.2%</span><strong>2,063</strong></div>
+          <div class="math-row highlight"><span>Incremento estimado</span><strong>+360 solicitudes · +50 cierres</strong></div>
+        </div>
+      </div>
+
+      <div class="conversion-strip">
+        <div class="conversion-box"><span>Hoy</span><strong>20.8%</strong><p>Conversión actual de preautorización a solicitud.</p></div>
+        <div class="conversion-box"><span>Meta piloto</span><strong>25.2%</strong><p>Objetivo de recuperación con Lead Rescue.</p></div>
+        <div class="conversion-box"><span>Referencia</span><strong>Marzo</strong><p>Nexu ya demostró mayor volumen y capacidad de cierre.</p></div>
+      </div>
+    </section>
+
+    <section class="demo">
+      <div class="team glass">
+        <div class="section-title" style="margin-bottom:18px">
+          <div><div class="eyebrow">Producto</div><h2>Así se ve en TEAM</h2></div>
+          <p>Recuperación autónoma visible, controlada y accionable.</p>
+        </div>
+        <div class="team-frame">
+          <aside class="sidebar"><div class="side-logo"></div><div class="nav active">▣</div><div class="nav">◷</div><div class="nav">▤</div><div class="nav">$</div></aside>
+          <div class="team-main">
+            <div class="team-head"><h3>Recovery Dashboard</h3><div class="ai-live">IA activa</div></div>
+            <div class="tabs"><div class="tab active">En recuperación</div><div class="tab">Escalados</div><div class="tab">Recuperados</div></div>
+            <div class="team-table">
+              <div class="row head"><span>Cliente</span><span>Vehículo</span><span>Intención</span><span>Estatus</span></div>
+              <div class="row"><span><strong>Juan A. Márquez</strong><small>Docs pendientes</small></span><span>Mazda CX-5</span><span><div class="bar"><i style="width:85%"></i></div></span><span class="chip blue">En curso</span></div>
+              <div class="row"><span><strong>Natasha P. Ramírez</strong><small>Pregunta por enganche</small></span><span>Honda Civic</span><span><div class="bar"><i style="width:92%;background:var(--green)"></i></div></span><span class="chip green">Escalado</span></div>
+              <div class="row"><span><strong>David M. Salazar</strong><small>Cotización vista</small></span><span>Ford F-150</span><span><div class="bar"><i style="width:68%;background:#f59e0b"></i></div></span><span class="chip gray">Esperando</span></div>
+            </div>
+            <div class="side-panel">
+              <div class="insight"><h4>Insight IA</h4><p>Alta intención por actividad reciente y dudas sobre enganche.</p></div>
+              <div class="insight"><h4>Acción recomendada</h4><p>Escalar al asesor previo con contexto de conversación.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone-card glass">
+        <div class="phone-head"><div class="avatar">JM</div><div><strong>Juan Antonio Márquez</strong><div class="tiny">Financiamiento Mazda CX-5 · Activo</div></div></div>
+        <div>
+          <div class="bubble ai">Hola Juan Antonio, vimos que dejaste pendiente tu solicitud para financiar tu Mazda CX-5. ¿Quieres revisar enganche, mensualidad o documentos?</div>
+          <div class="bubble user">Sí me interesa, pero me dio desconfianza subir mi comprobante por la página.</div>
+          <div class="bubble ai">Te entiendo. Podemos conectarte con un asesor Nexu para validar tus documentos y revisar una mensualidad cómoda.</div>
+          <div class="bubble user">Sí, por favor. Quiero aclarar lo del enganche.</div>
+        </div>
+        <div class="decision"><div class="pill">Alta intención detectada</div><h3>Transferir a asesor comercial</h3><p>La IA detecta interés real y fricción específica: seguridad documental + duda de enganche.</p></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
