@@ -214,6 +214,44 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
 
 <!-- TAB: RECAUDACIÓN -->
 <div class="tab-panel active" id="tab-recaudacion">
+
+  <!-- ★ NORTH STAR: Pago a tiempo -->
+  <div class="section" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <span style="font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:#854F0B;background:#FFF8E6;border:0.5px solid #EF9F27;border-radius:4px;padding:2px 8px;">⭐ North Star</span>
+          <h2 style="margin:0;font-size:18px;">Pago a tiempo · % recuperado al cierre de domiciliación</h2>
+        </div>
+        <p class="subtitle" style="margin:0;">% de la cartera pagada al término del 4° intento de domi. Cada corte cierra en un D+ distinto según calendario hábil MX — el filtro de arriba aplica.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="kpi" style="border-left:3px solid #1D9E75;min-width:120px;">
+          <p class="kpi-label">Promedio día 1</p>
+          <p class="kpi-value" style="color:#1D9E75;" id="nsPayD1">—</p>
+          <p class="kpi-sub" id="nsPayD1Sub">al cierre de domi</p>
+        </div>
+        <div class="kpi" style="border-left:3px solid #3B3ACA;min-width:120px;">
+          <p class="kpi-label">Promedio día 15</p>
+          <p class="kpi-value" style="color:#3B3ACA;" id="nsPayD15">—</p>
+          <p class="kpi-sub" id="nsPayD15Sub">al cierre de domi</p>
+        </div>
+        <div class="kpi" style="border-left:3px solid #EF9F27;min-width:120px;">
+          <p class="kpi-label">Último corte</p>
+          <p class="kpi-value" style="color:#EF9F27;" id="nsPayLast">—</p>
+          <p class="kpi-sub" id="nsPayLastSub">—</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-wrap-md"><canvas id="nsPayChart"></canvas></div>
+
+    <div class="info-box" style="margin-top:14px;">
+      <p class="info-title">Cómo leer esta gráfica</p>
+      <p style="margin:0;">Cada punto es el <strong>% recuperado exactamente al cerrar el 4° intento de domi</strong> — antes de que entre cualquier SPEI. La anotación en cada punto indica en qué D+ cayó ese cierre (varía por fines de semana y feriados). Una línea que sube = el equipo de domi está mejorando. Si la línea baja pero el D+ es mayor, el calendario pudo haber influido.</p>
+    </div>
+  </div>
+
   <div class="section">
     <h1>Collections Performance Report · Nexu 2026</h1>
     <p class="subtitle">Curvas de recaudación acumulada ajustadas por calendario de días hábiles MX. Los 4 intentos de domi ocurren en días hábiles consecutivos desde la fecha del corte.</p>
@@ -270,9 +308,40 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
   <div class="section">
     <h2>Roll over · migración entre BKTs</h2>
     <p class="subtitle">Transiciones de cartera entre cortes, composición de outcomes y evolución temporal por BKT.</p>
-    <div class="context-box">
-      <strong>Cómo leer:</strong> Los clientes al corriente son BKT 1. Los que fallan los 4 intentos de domi y no pagan en 30 días ruedan a BKT 2. Las métricas miden qué % de cada BKT migra al siguiente al cierre del corte.
+
+    <div class="context-box" style="background:#FFF3E0;border-left-color:#EF9F27;">
+      <strong>⭐ North Star · BKT 1 → BKT 2</strong><br>
+      Esta es la métrica que estamos monitoreando como north star del proyecto de cobranza. Se mide de dos formas complementarias: la versión operativa (sobre BKT 1 con fricción de pago) es lo que el equipo de Collections puede mover con su trabajo; la versión de salud de cartera (sobre BKT 1 total) es lo que reportamos al negocio.
     </div>
+
+    <h3>BKT 1 → BKT 2 · doble métrica north star</h3>
+    <div class="grid-2" style="margin:12px 0 16px;">
+      <div class="kpi" style="border-left:3px solid #D85A30;">
+        <p class="kpi-label">North Star Collections · % sobre BKT 1 con fricción</p>
+        <p class="kpi-value" style="color:#D85A30;" id="northStarOperativo">—</p>
+        <p class="kpi-sub">de los clientes BKT 1 que tuvieron al menos una falla de pago, ¿cuántos rolaron a BKT 2?</p>
+      </div>
+      <div class="kpi" style="border-left:3px solid #3B3ACA;">
+        <p class="kpi-label">Salud de cartera · % sobre BKT 1 total</p>
+        <p class="kpi-value" style="color:#3B3ACA;" id="northStarSalud">—</p>
+        <p class="kpi-sub">de toda la cartera BKT 1 viva, ¿qué % migró a BKT 2 al cierre del corte?</p>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:#D85A30;"></span>% sobre BKT 1 con fricción (operativo)</span>
+      <span class="legend-item"><span class="swatch" style="background:#3B3ACA;"></span>% sobre BKT 1 total (salud cartera)</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="northStarChart"></canvas></div>
+    <p style="font-size:11px;color:#888780;margin:6px 0 0;">Ambas métricas comparten el mismo numerador (clientes que rolaron de BKT 1 a BKT 2). Cambia el denominador: la línea naranja usa solo los BKT 1 que aparecieron en cobranza activa; la azul usa toda la cartera BKT 1 viva.</p>
+
+    <div class="info-box" style="margin-top:14px;">
+      <p class="info-title">Por qué dos métricas</p>
+      <p style="margin:0;">Una sola métrica oculta información. La <strong>operativa (naranja)</strong> es sensible al trabajo del Collections Center: si recuperamos al doble de los que fallan, baja directo. La <strong>de salud (azul)</strong> conecta con la cartera vencida del negocio pero se mueve poco porque el denominador es enorme. Si la naranja baja pero la azul no se mueve, probablemente está entrando más fricción nueva (más fallos de domi) — un problema diferente al de cobranza.</p>
+    </div>
+
+    <hr class="divider">
+
     <h3>Roll rates por corte</h3>
     <div class="grid-3" id="rollMetrics"></div>
     <div class="legend">
@@ -434,7 +503,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
 
 <script>
 
-const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may'];
+const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may','15-may'];
 
 const data = {
   '01-ene': {
@@ -523,6 +592,14 @@ const data = {
     domiIntentos: [68.2,5.08,2.52,3.18],
     roll: null, outcomes: null
   },
+  '15-may': {
+    color: '#D4537E', day: 15, hasCierre: false,
+    pcts: [60.96,60.96,60.96,71.32,73.35,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38,76.38],
+    intentosDias: [0, 3, 4, 5],
+    startPct: 61.0, endPct: 76.4, delta: 15.4, endDay: 5,
+    domiIntentos: [60.96,10.36,2.03,3.04],
+    roll: null, outcomes: null
+  },
 };
 const extraData = {
   '01-ene': {cartera: {m1: 314, m2: 211, m3: 228, m4: 5009}, causas: {insuficiencia:1002,cancelada:88,bloqueada:56,domibaja:15,inexistente:22,reverso:21,otros:11}, totalRechazos: 1215, windowEarly: 7.9, windowLate: 6.44, combined: {i1: 64.35, i2: 8.02, i3: 2.53, i4: 2.99, s2: 7.83, s3: 3.9, s4: 2.53, hasC: true}},
@@ -534,31 +611,43 @@ const extraData = {
   '01-abr': {cartera: {m1: 310, m2: 312, m3: 346, m4: 5514}, causas: {insuficiencia:1018,cancelada:83,bloqueada:52,domibaja:21,inexistente:17,reverso:17,otros:1}, totalRechazos: 1223, totalOperados: 5195, windowEarly: 6.45, windowLate: 5.43, combined: {i1: 66.89, i2: 8.25, i3: 3.26, i4: 1.91, s2: 6.45, s3: 3.47, s4: 1.96, hasC: true}},
   '15-abr': {cartera: {m1: 326, m2: 334, m3: 258, m4: 7052}, causas: {insuficiencia:1431,cancelada:139,bloqueada:95,domibaja:33,inexistente:25,reverso:16,otros:15}, totalRechazos: 1754, windowEarly: 6.21, windowLate: 6.5, combined: {i1:60.31,i2:10.29,i3:4.25,i4:2.56,s2:6.21,s3:4.09,s4:2.41,hasC:true}},
   '01-may': {cartera: {m1: 353, m2: 306, m3: 312, m4: 5767}, causas: {insuficiencia:1176,cancelada:73,bloqueada:58,domibaja:20,inexistente:14,reverso:9,otros:12},totalRechazos: 1362, totalOperados: 5321, windowEarly: null, windowLate: null, combined: {i1: 68.2, i2: 5.08, i3: 2.52, i4: 3.18, s2: 0, s3: 0, s4: 0, hasC: false}},
+  '15-may': {cartera: {m1: 222, m2: 325, m3: 334, m4: 7156}, causas: {insuficiencia:1617,cancelada:157,bloqueada:104,domibaja:42,inexistente:29,reverso:20,otros:17}, totalRechazos: 1986, totalOperados: 6140, windowEarly: null, windowLate: null, combined: {i1: 60.96, i2: 10.36, i3: 2.03, i4: 3.04, s2: 0, s3: 0, s4: 0, hasC: false}}
 };
 
 const bankDataV2 = {
-  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may'],
-  bbva: [74.6, 71.3, 76.1, 70.0, 72.9, 71.5, 73.8, 71.5, 73.1], inter: [78.6, 77.5, 80.8, 75.9, 79.3, 76.8, 79.5, 77.9, 79.1],
-  bbvaN: [1932, 2534, 1996, 2577, 2108, 2569, 1980, 2640, 2160], interN: [3381, 4292, 3472, 4402, 3611, 4398, 3442, 4532, 3723],
-  methods: ['4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.'], days: [1, 15, 1, 15, 1, 15, 1, 15, 1],
+  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may'],
+  bbva: [74.6, 71.3, 76.1, 70.0, 72.9, 71.5, 73.8, 71.5, 73.1,70.8], inter: [78.6, 77.5, 80.8, 75.9, 79.3, 76.8, 79.5, 77.9, 79.1,76.7],
+  bbvaN: [1932, 2534, 1996, 2577, 2108, 2569, 1980, 2640, 2160,2624], interN: [3381, 4292, 3472, 4402, 3611, 4398, 3442, 4532, 3723,4584],
+  methods: ['4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.','4 intentos acum.'], days: [1, 15, 1, 15, 1, 15, 1, 15, 1,15],
 };
 
-const allMixLabels = ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may'];
-const allMixTotals = [5751, 7446, 5999, 7570, 6240, 7785, 6471, 7957, 6727];
+const allMixLabels = ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may'];
+const allMixTotals = [5762, 7453, 6010, 7581, 6251, 7796, 6482, 7970, 6738,8037];
 const allMixDatasets = [
-  {label:'BBVA Bancomer',data:[2097, 2751, 2180, 2778, 2274, 2858, 2350, 2900, 2435],backgroundColor:'#3B3ACA',borderWidth:0,stack:'s'},
-        {label:'Santander',data:[827, 955, 868, 971, 906, 991, 939, 1023, 970],backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
-        {label:'Banorte',data:[778, 927, 825, 956, 859, 984, 898, 1008, 938],backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
-        {label:'Banamex',data:[808, 1048, 833, 1086, 861, 1124, 892, 1149, 923],backgroundColor:'#1D9E75',borderWidth:0,stack:'s'},
-        {label:'HSBC',data:[363, 512, 379, 520, 397, 536, 412, 552, 437],backgroundColor:'#D4537E',borderWidth:0,stack:'s'},
-        {label:'Azteca',data:[271, 357, 282, 358, 290, 367, 306, 374, 318],backgroundColor:'#7F77DD',borderWidth:0,stack:'s'},
-        {label:'Scotiabank',data:[145, 223, 157, 224, 161, 234, 163, 240, 177],backgroundColor:'#854F0B',borderWidth:0,stack:'s'},
-        {label:'BanCoppel',data:[137, 168, 136, 170, 140, 172, 148, 181, 153],backgroundColor:'#378ADD',borderWidth:0,stack:'s'},
-        {label:'Inbursa',data:[107, 166, 115, 165, 119, 162, 123, 169, 126],backgroundColor:'#888780',borderWidth:0,stack:'s'},
-        {label:'Bajío',data:[81, 131, 84, 132, 89, 141, 90, 141, 94],backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
-        {label:'Banregio',data:[65, 92, 67, 96, 65, 100, 66, 102, 67],backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
-        {label:'Otros',data:[72, 116, 73, 114, 79, 116, 84, 118, 89],backgroundColor:'#CECDCA',borderWidth:0,stack:'s'}
+  {label:'BBVA Bancomer',data:[2097, 2751, 2180, 2778, 2274, 2858, 2350, 2900, 2435,2918],backgroundColor:'#3B3ACA',borderWidth:0,stack:'s'},
+        {label:'Santander',data:[827, 955, 868, 971, 906, 991, 939, 1023, 970,1037],backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
+        {label:'Banorte',data:[778, 927, 825, 956, 859, 984, 898, 1008, 938,1020],backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
+        {label:'Banamex',data:[808, 1048, 833, 1086, 861, 1124, 892, 1149, 923,1158],backgroundColor:'#1D9E75',borderWidth:0,stack:'s'},
+        {label:'HSBC',data:[363, 512, 379, 520, 397, 536, 412, 552, 437,551],backgroundColor:'#D4537E',borderWidth:0,stack:'s'},
+        {label:'Azteca',data:[271, 357, 282, 358, 290, 367, 306, 374, 318,375],backgroundColor:'#7F77DD',borderWidth:0,stack:'s'},
+        {label:'Scotiabank',data:[145, 223, 157, 224, 161, 234, 163, 240, 177,245],backgroundColor:'#854F0B',borderWidth:0,stack:'s'},
+        {label:'BanCoppel',data:[137, 168, 136, 170, 140, 172, 148, 181, 153,185],backgroundColor:'#378ADD',borderWidth:0,stack:'s'},
+        {label:'Inbursa',data:[107, 166, 115, 165, 119, 162, 123, 169, 126,173],backgroundColor:'#888780',borderWidth:0,stack:'s'},
+        {label:'Bajío',data:[81, 131, 84, 132, 89, 141, 90, 141, 94,142],backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
+        {label:'Banregio',data:[65, 92, 67, 96, 65, 100, 66, 102, 67,101],backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
+        {label:'Otros',data:[72, 116, 73, 114, 79, 116, 84, 118, 89,119],backgroundColor:'#CECDCA',borderWidth:0,stack:'s'}
 ];
+
+const northStarData = {
+  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may'],
+  bkt1Total: [5385, 6791, 5641, 6897, 5872, 7099, 6074, 7265, null,null],
+  bkt1Active: [817, 1067, 719, 1073, 794, 1077, 782, 1077, null,null],
+  rolled: [47, 91, 46, 70, 70, 86, 59, 102, null,null],
+  pctOperativo: [5.75, 8.53, 6.4, 6.52, 8.82, 7.99, 7.54, 9.47, null,null],
+  pctSalud: [0.87, 1.34, 0.82, 1.01, 1.19, 1.21, 0.97, 1.4, null,null],
+  avgOperativo: 7.63,
+  avgSalud: 1.1,
+};
 
 const vintageData = {
   labels: ['Ene-24', 'Feb-24', 'Mar-24', 'Abr-24', 'May-24', 'Jun-24', 'Jul-24', 'Ago-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dic-24', 'Ene-25', 'Feb-25', 'Mar-25', 'Abr-25', 'May-25', 'Jun-25', 'Jul-25', 'Ago-25', 'Sep-25', 'Oct-25', 'Nov-25', 'Dic-25', 'Ene-26', 'Feb-26', 'Mar-26', 'Abr-26'], totals: [114, 118, 149, 163, 162, 155, 161, 163, 185, 256, 365, 207, 269, 232, 242, 250, 173, 191, 218, 223, 256, 194, 214, 266, 279, 258, 334, 326],
@@ -1052,11 +1141,257 @@ function buildPhaseChart() {
 
 let chartsBuilt = {};
 
+function buildNorthStarChart() {
+  // Filter northStarData to match the selected cortes
+  const cortes = getCortesWithCierre();
+  const allNS = northStarData.labels;
+
+  const filteredLabels    = [];
+  const filteredOperativo = [];
+  const filteredSalud     = [];
+  const filteredRolled    = [];
+  const filteredActive    = [];
+  const filteredTotal     = [];
+
+  cortes.forEach(c => {
+    const i = allNS.indexOf(c);
+    if (i >= 0 && northStarData.pctOperativo[i] !== null) {
+      filteredLabels.push(c);
+      filteredOperativo.push(northStarData.pctOperativo[i]);
+      filteredSalud.push(northStarData.pctSalud[i]);
+      filteredRolled.push(northStarData.rolled[i]);
+      filteredActive.push(northStarData.bkt1Active[i]);
+      filteredTotal.push(northStarData.bkt1Total[i]);
+    }
+  });
+
+  // Update KPI cards with filtered averages
+  const validOp = filteredOperativo.filter(v => v !== null);
+  const validSa = filteredSalud.filter(v => v !== null);
+  const avgOp = validOp.length ? validOp.reduce((a,b)=>a+b,0)/validOp.length : 0;
+  const avgSa = validSa.length ? validSa.reduce((a,b)=>a+b,0)/validSa.length : 0;
+  document.getElementById('northStarOperativo').textContent = avgOp.toFixed(1) + '%';
+  document.getElementById('northStarSalud').textContent     = avgSa.toFixed(2) + '%';
+
+  if (charts.northStar) charts.northStar.destroy();
+  charts.northStar = new Chart(document.getElementById('northStarChart'), {
+    type:'line',
+    data:{
+      labels: filteredLabels,
+      datasets:[
+        {label:'% sobre BKT 1 con fricción (operativo)',
+         data: filteredOperativo,
+         borderColor:'#D85A30', backgroundColor:'rgba(216,90,48,0.08)',
+         borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#D85A30',
+         yAxisID:'y1', fill:false, spanGaps:false},
+        {label:'% sobre BKT 1 total (salud cartera)',
+         data: filteredSalud,
+         borderColor:'#3B3ACA', backgroundColor:'rgba(59,58,202,0.08)',
+         borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#3B3ACA',
+         borderDash:[5,4], yAxisID:'y2', fill:false, spanGaps:false},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            title: items=>'Corte ' + items[0].label,
+            label: ctx=>{
+              const i = ctx.dataIndex;
+              if (filteredRolled[i] === null) return ' (sin cierre disponible)';
+              if (ctx.datasetIndex === 0) {
+                return ' Operativo: ' + ctx.parsed.y.toFixed(2) + '% (' +
+                       filteredRolled[i] + ' de ' + filteredActive[i].toLocaleString() + ' con fricción)';
+              } else {
+                return ' Salud cartera: ' + ctx.parsed.y.toFixed(2) + '% (' +
+                       filteredRolled[i] + ' de ' + filteredTotal[i].toLocaleString() + ' total)';
+              }
+            }
+          },
+          backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,0.05)'}, ticks:{color:'#888780', font:{size:12}}},
+        y1:{position:'left', min:0, max:12,
+            grid:{color:'rgba(0,0,0,0.05)'},
+            ticks:{color:'#D85A30', font:{size:12}, callback:v=>v+'%'},
+            title:{display:true, text:'Operativo (sobre BKT1 con fricción)', color:'#D85A30', font:{size:11}}},
+        y2:{position:'right', min:0, max:2,
+            grid:{display:false},
+            ticks:{color:'#3B3ACA', font:{size:12}, callback:v=>v.toFixed(2)+'%'},
+            title:{display:true, text:'Salud cartera (sobre BKT1 total)', color:'#3B3ACA', font:{size:11}}}
+      }
+    }
+  });
+}
+
+function buildNsPayChart() {
+  const cortes = getSelectedCortes();
+
+  function payAt(c) {
+    const d = data[c];
+    return {
+      pct: +d.domiIntentos.reduce((a, b) => a + b, 0).toFixed(2),
+      closingDay: d.intentosDias[3]
+    };
+  }
+
+  // Separar por día, solo dentro de los cortes seleccionados
+  const cortesD1  = cortes.filter(c => data[c].day === 1);
+  const cortesD15 = cortes.filter(c => data[c].day === 15);
+
+  const seriesD1  = cortesD1.map(c => ({ label: c, ...payAt(c) }));
+  const seriesD15 = cortesD15.map(c => ({ label: c, ...payAt(c) }));
+
+  // KPI cards
+  const avgD1  = seriesD1.length  ? seriesD1.reduce((a,s)=>a+s.pct,0)/seriesD1.length   : null;
+  const avgD15 = seriesD15.length ? seriesD15.reduce((a,s)=>a+s.pct,0)/seriesD15.length : null;
+
+  document.getElementById('nsPayD1').textContent  = avgD1  !== null ? avgD1.toFixed(1)+'%'  : '—';
+  document.getElementById('nsPayD15').textContent = avgD15 !== null ? avgD15.toFixed(1)+'%' : '—';
+
+  // Último corte visible
+  const allSeries = [...seriesD1, ...seriesD15].sort((a,b) => cortes.indexOf(a.label) - cortes.indexOf(b.label));
+  const last = allSeries[allSeries.length - 1];
+  document.getElementById('nsPayLast').textContent    = last ? last.pct.toFixed(1)+'%' : '—';
+  document.getElementById('nsPayLastSub').textContent = last ? `${last.label} · cierra D+${last.closingDay}` : '—';
+
+  const showD1  = currentFilter !== 'day15';
+  const showD15 = currentFilter !== 'day1';
+
+  // Eje X: los meses (ene, feb, mar...) como categorías compartidas
+  // Usamos el mes extraído del label para alinear ambas series
+  const monthOf = c => c.split('-')[1]; // '01-ene' → 'ene'
+  const allMonths = [...new Set(cortes.map(monthOf))]; // ['ene','feb','mar','abr','may']
+
+  // Construir datos por mes para cada serie
+  const d1ByMonth  = {};
+  const d15ByMonth = {};
+  const metaD1ByMonth  = {};
+  const metaD15ByMonth = {};
+  seriesD1.forEach(s  => { d1ByMonth[monthOf(s.label)]  = s.pct; metaD1ByMonth[monthOf(s.label)]  = s; });
+  seriesD15.forEach(s => { d15ByMonth[monthOf(s.label)] = s.pct; metaD15ByMonth[monthOf(s.label)] = s; });
+
+  const datasets = [];
+
+  if (showD1 && seriesD1.length) {
+    datasets.push({
+      label: 'Día 1',
+      data: allMonths.map(m => d1ByMonth[m] ?? null),
+      borderColor: '#1D9E75',
+      backgroundColor: 'rgba(29,158,117,0.10)',
+      borderWidth: 2.5,
+      tension: 0.3,
+      pointRadius: allMonths.map(m => d1ByMonth[m] != null ? 6 : 0),
+      pointHoverRadius: 8,
+      pointBackgroundColor: '#1D9E75',
+      fill: false,
+      spanGaps: true,
+      nsMeta: allMonths.map(m => metaD1ByMonth[m] ?? null),
+    });
+  }
+  if (showD15 && seriesD15.length) {
+    datasets.push({
+      label: 'Día 15',
+      data: allMonths.map(m => d15ByMonth[m] ?? null),
+      borderColor: '#3B3ACA',
+      backgroundColor: 'rgba(59,58,202,0.08)',
+      borderWidth: 2.5,
+      tension: 0.3,
+      pointRadius: allMonths.map(m => d15ByMonth[m] != null ? 6 : 0),
+      pointHoverRadius: 8,
+      pointBackgroundColor: '#3B3ACA',
+      borderDash: [5,4],
+      fill: false,
+      spanGaps: true,
+      nsMeta: allMonths.map(m => metaD15ByMonth[m] ?? null),
+    });
+  }
+
+  const minVal = Math.min(...[...seriesD1,...seriesD15].map(s=>s.pct));
+  const maxVal = Math.max(...[...seriesD1,...seriesD15].map(s=>s.pct));
+  const yMin = Math.floor(minVal - 3);
+  const yMax = Math.ceil(maxVal + 3);
+
+  if (charts.nsPay) charts.nsPay.destroy();
+  charts.nsPay = new Chart(document.getElementById('nsPayChart'), {
+    type: 'line',
+    data: { labels: allMonths, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: showD1 && showD15,
+          position: 'top',
+          labels: { color:'#5F5E5A', font:{size:12}, boxWidth:16, boxHeight:3, padding:14 }
+        },
+        tooltip: {
+          callbacks: {
+            title: items => {
+              const m = items[0].label;
+              const parts = [];
+              if (showD1 && metaD1ByMonth[m])   parts.push(`01-${m}`);
+              if (showD15 && metaD15ByMonth[m])  parts.push(`15-${m}`);
+              return parts.join(' · ');
+            },
+            label: ctx => {
+              if (ctx.parsed.y == null) return null;
+              const m = allMonths[ctx.dataIndex];
+              const meta = ctx.dataset.nsMeta ? ctx.dataset.nsMeta[ctx.dataIndex] : null;
+              const dStr = meta ? ` — cierra D+${meta.closingDay}` : '';
+              return ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%${dStr}`;
+            }
+          },
+          backgroundColor: 'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
+        }
+      },
+      scales: {
+        x: {
+          grid: { color:'rgba(0,0,0,0.05)' },
+          ticks: { color:'#888780', font:{size:13} }
+        },
+        y: {
+          min: yMin, max: yMax,
+          grid: { color:'rgba(0,0,0,0.05)' },
+          ticks: { color:'#888780', font:{size:12}, callback: v => v+'%' },
+          title: { display:true, text:'% recuperado al cierre del 4° intento', color:'#888780', font:{size:11} }
+        }
+      }
+    },
+    plugins: [{
+      id: 'dPlusLabels',
+      afterDatasetDraw(chart, args) {
+        const ds = chart.data.datasets[args.index];
+        if (!ds.nsMeta) return;
+        const ctx2 = chart.ctx;
+        const meta2 = chart.getDatasetMeta(args.index);
+        meta2.data.forEach((pt, i) => {
+          const info = ds.nsMeta[i];
+          if (!info || ds.data[i] == null) return;
+          ctx2.save();
+          ctx2.font = 'bold 10px -apple-system,BlinkMacSystemFont,sans-serif';
+          ctx2.fillStyle = ds.borderColor;
+          ctx2.textAlign = 'center';
+          ctx2.fillText(`D+${info.closingDay}`, pt.x, pt.y - 12);
+          ctx2.restore();
+        });
+      }
+    }]
+  });
+}
+
 function renderAll() {
   const cortes = getSelectedCortes();
   document.getElementById('filterHint').textContent =
     cortes.length === 1 ? '1 corte seleccionado' : `${cortes.length} cortes seleccionados`;
   
+  buildNsPayChart();
   renderSummaryGrid();
   renderWeeksGrid();
   renderDomiMetrics();
@@ -1074,18 +1409,9 @@ function renderAll() {
   buildCarteraChart();
   buildWindowsChart();
   buildPhaseChart();
+  buildNorthStarChart();
+  if (chartsBuilt['banco']) buildBankCharts();
 }
-
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    renderAll();
-  });
-});
-
-renderAll();
 
 function buildBankCharts() {
   const cortes = getSelectedCortes();
@@ -1195,18 +1521,6 @@ function buildVintageCharts() {
       }
     }
   });
-}
-
-function renderAll() {
-  const cortes = getSelectedCortes();
-  document.getElementById('filterHint').textContent =
-    cortes.length === 1 ? '1 corte seleccionado' : `${cortes.length} cortes seleccionados`;
-  renderSummaryGrid(); renderWeeksGrid(); renderDomiMetrics(); renderRollMetrics();
-  buildMainChart(); buildDomiChart(); buildPhaseChart(); buildRollChart(); buildOutcomeChart();
-  buildTimeChart('bkt1Time','bkt1','time1'); buildTimeChart('bkt2Time','bkt2','time2');
-  buildTimeChart('bkt3Time','bkt3','time3'); buildTimeChart('bkt4Time','bkt4','time4');
-  buildEfficiencyChart(); buildCausasChart(); buildCarteraChart(); buildWindowsChart();
-  if (chartsBuilt['banco']) buildBankCharts();
 }
 
 const tabButtons = document.querySelectorAll('.tab-btn');
