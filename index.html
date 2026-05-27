@@ -311,34 +311,94 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
 
     <div class="context-box" style="background:#FFF3E0;border-left-color:#EF9F27;">
       <strong>⭐ North Star · BKT 1 → BKT 2</strong><br>
-      Esta es la métrica que estamos monitoreando como north star del proyecto de cobranza. Se mide de dos formas complementarias: la versión operativa (sobre BKT 1 con fricción de pago) es lo que el equipo de Collections puede mover con su trabajo; la versión de salud de cartera (sobre BKT 1 total) es lo que reportamos al negocio.
+      Monitoreamos el rolo BKT1→BKT2 desde tres ángulos complementarios que corresponden a distintos actores y momentos del proceso de cobro.
     </div>
 
-    <h3>BKT 1 → BKT 2 · doble métrica north star</h3>
-    <div class="grid-2" style="margin:12px 0 16px;">
-      <div class="kpi" style="border-left:3px solid #D85A30;">
-        <p class="kpi-label">North Star Collections · % sobre BKT 1 con fricción</p>
-        <p class="kpi-value" style="color:#D85A30;" id="northStarOperativo">—</p>
-        <p class="kpi-sub">de los clientes BKT 1 que tuvieron al menos una falla de pago, ¿cuántos rolaron a BKT 2?</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #3B3ACA;">
+    <!-- MÉTRICA 1: SALUD DE CARTERA (primero, es la de negocio) -->
+    <h3 style="margin-top:24px;">Métrica 1 · Salud de cartera BKT 1 → BKT 2 (métrica de negocio)</h3>
+    <div class="context-box" style="margin-bottom:12px;">
+      <strong>¿Qué mide?</strong> De toda la cartera BKT 1, ¿qué % migró a BKT 2 al cierre del corte?<br>
+      <strong>Denominador:</strong> todos los clientes BKT 1 · <strong>Numerador:</strong> los que rolaron a BKT 2<br>
+      <strong>Actor:</strong> refleja la salud general del portafolio. Es el número que se reporta al negocio.
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="kpi" style="border-left:3px solid #3B3ACA;flex:1;min-width:130px;">
         <p class="kpi-label">Salud de cartera · % sobre BKT 1 total</p>
         <p class="kpi-value" style="color:#3B3ACA;" id="northStarSalud">—</p>
-        <p class="kpi-sub">de toda la cartera BKT 1 viva, ¿qué % migró a BKT 2 al cierre del corte?</p>
+        <p class="kpi-sub">de toda la cartera BKT 1 viva, ¿qué % migró a BKT 2?</p>
       </div>
     </div>
-
     <div class="legend">
-      <span class="legend-item"><span class="swatch" style="background:#D85A30;"></span>% sobre BKT 1 con fricción (operativo)</span>
-      <span class="legend-item"><span class="swatch" style="background:#3B3ACA;"></span>% sobre BKT 1 total (salud cartera)</span>
+      <span class="legend-item"><span class="swatch" style="background:#3B3ACA;"></span>% BKT1→BKT2 / total BKT1</span>
     </div>
     <div class="chart-wrap-md"><canvas id="northStarChart"></canvas></div>
-    <p style="font-size:11px;color:#888780;margin:6px 0 0;">Ambas métricas comparten el mismo numerador (clientes que rolaron de BKT 1 a BKT 2). Cambia el denominador: la línea naranja usa solo los BKT 1 que aparecieron en cobranza activa; la azul usa toda la cartera BKT 1 viva.</p>
+    <p style="font-size:11px;color:#888780;margin:6px 0 0;">Solo disponible para cortes con cierre de moratorios (ene–abr). Se mueve poco porque el denominador es la cartera completa.</p>
 
-    <div class="info-box" style="margin-top:14px;">
-      <p class="info-title">Por qué dos métricas</p>
-      <p style="margin:0;">Una sola métrica oculta información. La <strong>operativa (naranja)</strong> es sensible al trabajo del Collections Center: si recuperamos al doble de los que fallan, baja directo. La <strong>de salud (azul)</strong> conecta con la cartera vencida del negocio pero se mueve poco porque el denominador es enorme. Si la naranja baja pero la azul no se mueve, probablemente está entrando más fricción nueva (más fallos de domi) — un problema diferente al de cobranza.</p>
+    <hr class="divider">
+
+    <!-- MÉTRICA 2: ROLO EFECTIVO entre los que llegaron a cobranza -->
+    <h3>Métrica 2 · % que roló a BKT 2 entre los que llegaron a cobranza</h3>
+    <div class="context-box" style="margin-bottom:12px;">
+      <strong>¿Qué mide?</strong> De los clientes BKT1 que no pagaron ni por domi ni por transferencia durante el proceso de domiciliación y pasaron a cobranza interna, ¿qué % terminó en BKT 2 al cierre del periodo?<br>
+      <strong>Denominador:</strong> clientes BKT1 que llegaron a cobranza (sin pago en todo el proceso de domi) · <strong>Numerador:</strong> los que rolaron a BKT 2 (excl. consigna/resguardo)<br>
+      <strong>Actor:</strong> resultado del proceso completo de cobranza interna (D+7 a D+30). Solo disponible con cierre de moratorios.
     </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="kpi" style="border-left:3px solid #D85A30;flex:1;min-width:130px;">
+        <p class="kpi-label">Promedio cortes día 1</p>
+        <p class="kpi-value" style="color:#D85A30;" id="nsNoPayD1">—</p>
+        <p class="kpi-sub">de los que llegaron a cobranza, rolaron a BKT2</p>
+      </div>
+      <div class="kpi" style="border-left:3px solid #EF9F27;flex:1;min-width:130px;">
+        <p class="kpi-label">Promedio cortes día 15</p>
+        <p class="kpi-value" style="color:#EF9F27;" id="nsNoPayD15">—</p>
+        <p class="kpi-sub">de los que llegaron a cobranza, rolaron a BKT2</p>
+      </div>
+      <div class="kpi" style="border-left:3px solid #888780;flex:1;min-width:130px;">
+        <p class="kpi-label">Último corte</p>
+        <p class="kpi-value" style="color:#888780;" id="nsNoPayLast">—</p>
+        <p class="kpi-sub" id="nsNoPayLastSub">—</p>
+      </div>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:#D85A30;"></span>Día 1 · % rolaron a BKT2 / llegaron a cobranza</span>
+      <span class="legend-item"><span class="swatch" style="background:#EF9F27;"></span>Día 15 · % rolaron a BKT2 / llegaron a cobranza</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="nsNoPayChart"></canvas></div>
+    <p style="font-size:11px;color:#888780;margin:6px 0 14px;">Solo disponible para cortes con cierre de moratorios. Una baja en esta línea significa que el equipo de cobranza interna está rescatando más clientes del universo que no pagó durante la domi.</p>
+
+    <hr class="divider">
+
+    <!-- MÉTRICA 3: COMUNICACIONES -->
+    <h3>Métrica 3 · Efectividad de comunicaciones durante domiciliación</h3>
+    <div class="context-box" style="margin-bottom:12px;">
+      <strong>¿Qué mide?</strong> De los clientes que la domi no pudo cobrar, ¿qué % pagó por transferencia <em>durante el mismo periodo de domi</em> gracias a las comunicaciones de fallo que gestiona Collections?<br>
+      <strong>Denominador:</strong> clientes que no pagaron por domi · <strong>Numerador:</strong> SPEI recibidos antes del cierre del 4° intento<br>
+      <strong>Actor:</strong> equipo de Collections (comunicaciones automáticas y gestión de canales durante domi). Disponible para todos los cortes.
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="kpi" style="border-left:3px solid #1D9E75;flex:1;min-width:130px;">
+        <p class="kpi-label">Promedio cortes día 1</p>
+        <p class="kpi-value" style="color:#1D9E75;" id="nsCommsD1">—</p>
+        <p class="kpi-sub">rescatados con comunicaciones</p>
+      </div>
+      <div class="kpi" style="border-left:3px solid #3B3ACA;flex:1;min-width:130px;">
+        <p class="kpi-label">Promedio cortes día 15</p>
+        <p class="kpi-value" style="color:#3B3ACA;" id="nsCommsD15">—</p>
+        <p class="kpi-sub">rescatados con comunicaciones</p>
+      </div>
+      <div class="kpi" style="border-left:3px solid #EF9F27;flex:1;min-width:130px;">
+        <p class="kpi-label">Último corte</p>
+        <p class="kpi-value" style="color:#EF9F27;" id="nsCommsLast">—</p>
+        <p class="kpi-sub" id="nsCommsLastSub">—</p>
+      </div>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:#1D9E75;"></span>Día 1 · % SPEI durante domi / no-domi</span>
+      <span class="legend-item"><span class="swatch" style="background:#3B3ACA;"></span>Día 15 · % SPEI durante domi / no-domi</span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="nsCommsChart"></canvas></div>
+    <p style="font-size:11px;color:#888780;margin:6px 0 14px;">Una línea que sube = las comunicaciones durante domi son más efectivas rescatando clientes. El denominador son solo los que fallaron domi, por lo que la métrica no se ve afectada por el tamaño de la cartera.</p>
 
     <hr class="divider">
 
@@ -571,7 +631,7 @@ const data = {
     pcts: [66.89,66.89,66.89,66.89,66.89,75.15,78.4,80.31,80.36,81.67,82.47,82.8,84.26,85.62,86.76,87.77,88.6,88.95,89.02,89.43,89.9,90.23,90.59,90.85,91.02,91.08,91.16,91.28,91.51,92.19,92.19],
     intentosDias: [0,5,6,7],
     startPct: 66.9, endPct: 92.2, delta: 25.3, endDay: 30,
-    domiIntentos: [66.89,8.25,3.26,1.91],
+    domiIntentos: [66.89,8.25,3.26,0.96],
     roll: {b1b2: 0.69, b2b3: 43.0, b3b4: 53.6},
     outcomes: {bkt1: {rec: 99.31, man: 0, det: 0.69}, bkt2: {rec: 11.4, man: 45.6, det: 43.0}, bkt3: {rec: 10.7, man: 35.7, det: 53.6}, bkt4: {rec: 2.3, man: 97.7, det: 0}}
   },
@@ -640,13 +700,25 @@ const allMixDatasets = [
 
 const northStarData = {
   labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may'],
-  bkt1Total: [5385, 6791, 5641, 6897, 5872, 7099, 6074, 7265, null,null],
-  bkt1Active: [817, 1067, 719, 1073, 794, 1077, 782, 1077, null,null],
-  rolled: [47, 91, 46, 70, 70, 86, 59, 102, null,null],
-  pctOperativo: [5.75, 8.53, 6.4, 6.52, 8.82, 7.99, 7.54, 9.47, null,null],
-  pctSalud: [0.87, 1.34, 0.82, 1.01, 1.19, 1.21, 0.97, 1.4, null,null],
-  avgOperativo: 7.63,
-  avgSalud: 1.1,
+  // BKT1 total at corte date (from Cierre Análisis row "BKT 1")
+  // 01-mar, 15-abr, may: sin cierre disponible
+  bkt1Total:  [5385, 6791, 5641, 6897, 5872, 7099, 6074, 7265, null, null],
+  // Clients rolled BKT1→BKT2: from "BKT ACTUALIZADO AL SIGUIENTE CORTE" column
+  // in the Data sheet of each Cierre de moratorios file (all 8 cortes confirmed)
+  // Rolled = BKT1→BKT2 excluyendo En Consigna y Resguardo (labor terminada, no roll operativo)
+  // Rolled: tabla "Cartera sin daciones" del Análisis, BKT1→BKT2 (excluye consigna/resguardo/daciones)
+  rolled:     [31,   74,   29,   58,   47,   68,   44,   80,   null, null],
+  // M1: % BKT1→BKT2 / total BKT1 (salud de cartera — métrica de negocio)
+  pctSalud:   [0.58, 1.09, 0.51, 0.84, 0.80, 0.96, 0.72, 1.10, null, null],
+  // M2: % BKT1→BKT2 / cobranza (de los que llegaron a cobranza sin pagar, cuántos rolaron a BKT2)
+  cobranza:   [934, 1127, 842, 1243, 1032, 1155, 898, 1150, null, null],
+  pctRoloSinPago: [3.3, 6.6, 3.4, 4.7, 4.6, 5.9, 4.9, 7.0, null, null],
+  // M3: % SPEI durante domi / no-domi (efectividad comunicaciones — todos los cortes)
+  pctComms:   [25.9, 26.8, 31.5, 24.1, 27.7, 31.4, 42.6, 30.6, 37.6, 30.3],
+  // Raw counts
+  noDomi:     [1717, 2358, 1718, 2477, 1914, 2623, 2332, 2593, 2270, 2723],
+  speiDur:    [445,  633,  542,  598,  530,  823,  994,  793,  853,  825],
+  sinPago:    [1271, 1725, 1176, 1876, 1384, 1794, 1276, 1800, 1417, 1898],
 };
 
 const vintageData = {
@@ -1142,91 +1214,222 @@ function buildPhaseChart() {
 let chartsBuilt = {};
 
 function buildNorthStarChart() {
-  // Filter northStarData to match the selected cortes
-  const cortes = getCortesWithCierre();
   const allNS = northStarData.labels;
+  const cortes = getCortesWithCierre();
 
-  const filteredLabels    = [];
-  const filteredOperativo = [];
-  const filteredSalud     = [];
-  const filteredRolled    = [];
-  const filteredActive    = [];
-  const filteredTotal     = [];
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const monthOf = c => c.split('-')[1];
+  const allMonths = [...new Set(allNS.map(monthOf))]; // ene feb mar abr may
 
-  cortes.forEach(c => {
-    const i = allNS.indexOf(c);
-    if (i >= 0 && northStarData.pctOperativo[i] !== null) {
-      filteredLabels.push(c);
-      filteredOperativo.push(northStarData.pctOperativo[i]);
-      filteredSalud.push(northStarData.pctSalud[i]);
-      filteredRolled.push(northStarData.rolled[i]);
-      filteredActive.push(northStarData.bkt1Active[i]);
-      filteredTotal.push(northStarData.bkt1Total[i]);
-    }
-  });
+  function filteredByCortes(arr) {
+    // returns arr filtered to only indices where label is in cortes
+    return allNS.map((l, i) => cortes.includes(l) ? arr[i] : null);
+  }
 
-  // Update KPI cards with filtered averages
-  const validOp = filteredOperativo.filter(v => v !== null);
-  const validSa = filteredSalud.filter(v => v !== null);
-  const avgOp = validOp.length ? validOp.reduce((a,b)=>a+b,0)/validOp.length : 0;
-  const avgSa = validSa.length ? validSa.reduce((a,b)=>a+b,0)/validSa.length : 0;
-  document.getElementById('northStarOperativo').textContent = avgOp.toFixed(1) + '%';
-  document.getElementById('northStarSalud').textContent     = avgSa.toFixed(2) + '%';
-
-  if (charts.northStar) charts.northStar.destroy();
-  charts.northStar = new Chart(document.getElementById('northStarChart'), {
-    type:'line',
-    data:{
-      labels: filteredLabels,
-      datasets:[
-        {label:'% sobre BKT 1 con fricción (operativo)',
-         data: filteredOperativo,
-         borderColor:'#D85A30', backgroundColor:'rgba(216,90,48,0.08)',
-         borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#D85A30',
-         yAxisID:'y1', fill:false, spanGaps:false},
-        {label:'% sobre BKT 1 total (salud cartera)',
-         data: filteredSalud,
-         borderColor:'#3B3ACA', backgroundColor:'rgba(59,58,202,0.08)',
-         borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#3B3ACA',
-         borderDash:[5,4], yAxisID:'y2', fill:false, spanGaps:false},
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            title: items=>'Corte ' + items[0].label,
-            label: ctx=>{
-              const i = ctx.dataIndex;
-              if (filteredRolled[i] === null) return ' (sin cierre disponible)';
-              if (ctx.datasetIndex === 0) {
-                return ' Operativo: ' + ctx.parsed.y.toFixed(2) + '% (' +
-                       filteredRolled[i] + ' de ' + filteredActive[i].toLocaleString() + ' con fricción)';
-              } else {
-                return ' Salud cartera: ' + ctx.parsed.y.toFixed(2) + '% (' +
-                       filteredRolled[i] + ' de ' + filteredTotal[i].toLocaleString() + ' total)';
-              }
-            }
-          },
-          backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
-        }
-      },
-      scales:{
-        x:{grid:{color:'rgba(0,0,0,0.05)'}, ticks:{color:'#888780', font:{size:12}}},
-        y1:{position:'left', min:0, max:12,
-            grid:{color:'rgba(0,0,0,0.05)'},
-            ticks:{color:'#D85A30', font:{size:12}, callback:v=>v+'%'},
-            title:{display:true, text:'Operativo (sobre BKT1 con fricción)', color:'#D85A30', font:{size:11}}},
-        y2:{position:'right', min:0, max:2,
-            grid:{display:false},
-            ticks:{color:'#3B3ACA', font:{size:12}, callback:v=>v.toFixed(2)+'%'},
-            title:{display:true, text:'Salud cartera (sobre BKT1 total)', color:'#3B3ACA', font:{size:11}}}
+  function byMonth(seriesArr, day) {
+    const out = {};
+    allNS.forEach((l, i) => {
+      if (data[l] && data[l].day === day && seriesArr[i] !== null) {
+        out[monthOf(l)] = seriesArr[i];
       }
+    });
+    return out;
+  }
+
+  function makeLineDataset(label, color, dash, monthMap) {
+    return {
+      label,
+      data: allMonths.map(m => monthMap[m] ?? null),
+      borderColor: color,
+      backgroundColor: color.replace(')', ',0.10)').replace('rgb','rgba'),
+      borderWidth: 2.5, tension: 0.3, fill: false, spanGaps: true,
+      pointRadius: allMonths.map(m => monthMap[m] != null ? 5 : 0),
+      pointHoverRadius: 7, pointBackgroundColor: color,
+      ...(dash ? { borderDash: [5,4] } : {}),
+    };
+  }
+
+  const showD1  = currentFilter !== 'day15';
+  const showD15 = currentFilter !== 'day1';
+
+  // ── MÉTRICA 1: Comunicaciones ──────────────────────────────────────────
+  {
+    const commsD1  = byMonth(northStarData.pctComms, 1);
+    const commsD15 = byMonth(northStarData.pctComms, 15);
+    const vD1  = Object.values(commsD1);
+    const vD15 = Object.values(commsD15);
+    const avgD1  = vD1.length  ? (vD1.reduce((a,b)=>a+b,0)/vD1.length).toFixed(1)+'%'  : '—';
+    const avgD15 = vD15.length ? (vD15.reduce((a,b)=>a+b,0)/vD15.length).toFixed(1)+'%' : '—';
+
+    document.getElementById('nsCommsD1').textContent  = showD1  ? avgD1  : '—';
+    document.getElementById('nsCommsD15').textContent = showD15 ? avgD15 : '—';
+
+    // Last visible corte
+    const visCortes = getCortesWithCierre ? allNS.filter(l => northStarData.pctComms[allNS.indexOf(l)] !== null) : [];
+    const lastVisible = [...visCortes].filter(l => currentFilter === 'all' || data[l].day === (currentFilter === 'day1' ? 1 : 15)).pop();
+    if (lastVisible) {
+      const idx = allNS.indexOf(lastVisible);
+      document.getElementById('nsCommsLast').textContent    = northStarData.pctComms[idx].toFixed(1)+'%';
+      document.getElementById('nsCommsLastSub').textContent = lastVisible;
     }
-  });
+
+    const datasets = [];
+    if (showD1)  datasets.push(makeLineDataset('Día 1',  '#1D9E75', false, commsD1));
+    if (showD15) datasets.push(makeLineDataset('Día 15', '#3B3ACA', true,  commsD15));
+
+    if (charts.nsComms) charts.nsComms.destroy();
+    charts.nsComms = new Chart(document.getElementById('nsCommsChart'), {
+      type:'line', data:{ labels: allMonths, datasets },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{ display: showD1 && showD15, position:'top', labels:{color:'#5F5E5A',font:{size:12},boxWidth:16,boxHeight:3,padding:12} },
+          tooltip:{
+            callbacks:{
+              title: items => items[0].label,
+              label: ctx => {
+                if (ctx.parsed.y == null) return null;
+                const idx = allNS.indexOf((ctx.dataset.label === 'Día 1' ? '01-' : '15-') + allMonths[ctx.dataIndex]);
+                const noDomi = northStarData.noDomi[idx];
+                const spei   = northStarData.speiDur[idx];
+                return ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}% (${spei} de ${noDomi} con SPEI durante domi)`;
+              }
+            },
+            backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
+          }
+        },
+        scales:{
+          x:{ grid:{color:'rgba(0,0,0,0.05)'}, ticks:{color:'#888780',font:{size:13}} },
+          y:{ min:15, max:55, grid:{color:'rgba(0,0,0,0.05)'},
+              ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'},
+              title:{display:true,text:'% SPEI durante domi / no-domi',color:'#888780',font:{size:11}} }
+        }
+      }
+    });
+  }
+
+  // ── MÉTRICA 2: Rolo a BKT2 entre sin-pago ─────────────────────────────
+  {
+    const roloD1  = byMonth(northStarData.pctRoloSinPago, 1);
+    const roloD15 = byMonth(northStarData.pctRoloSinPago, 15);
+    const vD1  = Object.values(roloD1).filter(v => v !== null);
+    const vD15 = Object.values(roloD15).filter(v => v !== null);
+    const avgD1  = vD1.length  ? (vD1.reduce((a,b)=>a+b,0)/vD1.length).toFixed(1)+'%'  : '—';
+    const avgD15 = vD15.length ? (vD15.reduce((a,b)=>a+b,0)/vD15.length).toFixed(1)+'%' : '—';
+
+    document.getElementById('nsNoPayD1').textContent  = showD1  ? avgD1  : '—';
+    document.getElementById('nsNoPayD15').textContent = showD15 ? avgD15 : '—';
+
+    const lastVisible = allNS.filter(l => northStarData.pctRoloSinPago[allNS.indexOf(l)] !== null)
+                             .filter(l => currentFilter === 'all' || data[l].day === (currentFilter === 'day1' ? 1 : 15)).pop();
+    if (lastVisible) {
+      const idx = allNS.indexOf(lastVisible);
+      document.getElementById('nsNoPayLast').textContent    = northStarData.pctRoloSinPago[idx].toFixed(1)+'%';
+      document.getElementById('nsNoPayLastSub').textContent = lastVisible;
+    } else {
+      document.getElementById('nsNoPayLast').textContent    = '—';
+      document.getElementById('nsNoPayLastSub').textContent = 'sin cierre aún';
+    }
+
+    const datasets = [];
+    if (showD1)  datasets.push(makeLineDataset('Día 1',  '#D85A30', false, roloD1));
+    if (showD15) datasets.push(makeLineDataset('Día 15', '#EF9F27', true,  roloD15));
+
+    if (charts.nsNoPay) charts.nsNoPay.destroy();
+    charts.nsNoPay = new Chart(document.getElementById('nsNoPayChart'), {
+      type:'line', data:{ labels: allMonths, datasets },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{ display: showD1 && showD15, position:'top', labels:{color:'#5F5E5A',font:{size:12},boxWidth:16,boxHeight:3,padding:12} },
+          tooltip:{
+            callbacks:{
+              title: items => items[0].label,
+              label: ctx => {
+                if (ctx.parsed.y == null) return null;
+                const prefix = ctx.dataset.label === 'Día 1' ? '01-' : '15-';
+                const idx = allNS.indexOf(prefix + allMonths[ctx.dataIndex]);
+                const sinP   = northStarData.sinPago[idx];
+                const rolled = northStarData.rolled[idx];
+                const cob    = northStarData.cobranza[idx];
+                return ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}% (${rolled} de ${cob ? cob.toLocaleString() : '—'} que llegaron a cobranza → BKT2)`;
+              }
+            },
+            backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
+          }
+        },
+        scales:{
+          x:{ grid:{color:'rgba(0,0,0,0.05)'}, ticks:{color:'#888780',font:{size:13}} },
+          y:{ min:0, max:10, grid:{color:'rgba(0,0,0,0.05)'},
+              ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'},
+              title:{display:true,text:'% rolaron a BKT2 / sin-pago',color:'#888780',font:{size:11}} }
+        }
+      }
+    });
+  }
+
+  // ── MÉTRICA 1: Salud de cartera (northStarChart) ──────────────────────
+  {
+    const filteredLabels = [];
+    const filteredSalud  = [];
+    const filteredRolled = [];
+    const filteredTotal  = [];
+
+    cortes.forEach(c => {
+      const i = allNS.indexOf(c);
+      if (i >= 0 && northStarData.pctSalud[i] !== null) {
+        filteredLabels.push(c);
+        filteredSalud.push(northStarData.pctSalud[i]);
+        filteredRolled.push(northStarData.rolled[i]);
+        filteredTotal.push(northStarData.bkt1Total[i]);
+      }
+    });
+
+    const validSa = filteredSalud.filter(v => v !== null);
+    const avgSa = validSa.length ? validSa.reduce((a,b)=>a+b,0)/validSa.length : 0;
+    document.getElementById('northStarSalud').textContent = avgSa.toFixed(2)+'%';
+
+    if (charts.northStar) charts.northStar.destroy();
+    charts.northStar = new Chart(document.getElementById('northStarChart'), {
+      type:'line',
+      data:{
+        labels: filteredLabels,
+        datasets:[{
+          label:'% BKT1→BKT2 / total BKT1',
+          data: filteredSalud,
+          borderColor:'#3B3ACA', backgroundColor:'rgba(59,58,202,0.08)',
+          borderWidth:2.5, tension:0.3, pointRadius:5, pointBackgroundColor:'#3B3ACA',
+          fill:false, spanGaps:false
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{ display:false },
+          tooltip:{
+            callbacks:{
+              title: items => 'Corte '+items[0].label,
+              label: ctx => {
+                const i = ctx.dataIndex;
+                return ` Salud cartera: ${ctx.parsed.y.toFixed(2)}% (${filteredRolled[i]} de ${filteredTotal[i].toLocaleString()} clientes BKT1)`;
+              }
+            },
+            backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
+          }
+        },
+        scales:{
+          x:{ grid:{color:'rgba(0,0,0,0.05)'}, ticks:{color:'#888780',font:{size:12}} },
+          y:{ min:0, max:2,
+              grid:{color:'rgba(0,0,0,0.05)'},
+              ticks:{color:'#3B3ACA',font:{size:12},callback:v=>v.toFixed(2)+'%'},
+              title:{display:true,text:'% BKT1→BKT2 / total BKT1',color:'#3B3ACA',font:{size:11}} }
+        }
+      }
+    });
+  }
 }
 
 function buildNsPayChart() {
@@ -1378,6 +1581,11 @@ function buildNsPayChart() {
           ctx2.font = 'bold 10px -apple-system,BlinkMacSystemFont,sans-serif';
           ctx2.fillStyle = ds.borderColor;
           ctx2.textAlign = 'center';
+          // % value above the point
+          ctx2.fillText(`${ds.data[i].toFixed(1)}%`, pt.x, pt.y - 22);
+          // D+ below the % label
+          ctx2.font = '500 9px -apple-system,BlinkMacSystemFont,sans-serif';
+          ctx2.fillStyle = ds.borderColor + 'CC';
           ctx2.fillText(`D+${info.closingDay}`, pt.x, pt.y - 12);
           ctx2.restore();
         });
