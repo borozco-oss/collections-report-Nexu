@@ -280,6 +280,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
       <span class="legend-item"><span class="box2" style="background:#D4537E;"></span>4° intento</span>
     </div>
     <div class="chart-wrap-md"><canvas id="domiChart"></canvas></div>
+    <div id="domiTable" style="margin-top:16px;overflow-x:auto;"></div>
   </div>
   <div class="section">
     <h2>Recuperación por fase · domi + cobranza en el tiempo</h2>
@@ -294,6 +295,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
       <span class="legend-item"><span class="box2" style="background:#CECDCA;"></span>Sem 4 (D+22→D+30)</span>
     </div>
     <div class="chart-wrap-md"><canvas id="phaseChart"></canvas></div>
+    <div id="phaseTable" style="margin-top:16px;overflow-x:auto;"></div>
     <div class="info-box">
       <p class="info-title">Cómo leer</p>
       <p style="margin:0;">4 bandas de color = domi automatizada. 3 bandas grises descendentes = cobranza SPEI por semana. Bandas grises vacías en mayo = sin cierre de mora aún.</p>
@@ -879,7 +881,8 @@ function buildDomiChart() {
   const i2 = cortes.map(c => data[c].domiIntentos[1]);
   const i3 = cortes.map(c => data[c].domiIntentos[2]);
   const i4 = cortes.map(c => data[c].domiIntentos[3]);
-  
+  const totals = cortes.map((c,i) => i1[i]+i2[i]+i3[i]+i4[i]);
+
   if (charts.domi) charts.domi.destroy();
   charts.domi = new Chart(document.getElementById('domiChart'), {
     type: 'bar',
@@ -901,7 +904,7 @@ function buildDomiChart() {
             label:ctx=>` ${ctx.dataset.label}: +${ctx.parsed.y.toFixed(2)}pp`,
             footer: items => {
               const sum = items.reduce((a,b) => a + b.parsed.y, 0);
-              return `Acumulado: ${sum.toFixed(1)}%`;
+              return `Total: ${sum.toFixed(1)}%`;
             }
           },
           backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6
@@ -909,11 +912,91 @@ function buildDomiChart() {
       },
       scales:{
         x:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
-        y:{stacked:true,min:0,max:90,grid:{color:'rgba(0,0,0,0.05)'},
+        y:{stacked:true,min:0,max:92,grid:{color:'rgba(0,0,0,0.05)'},
            ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
       }
-    }
+    },
+    plugins: [{
+      id: 'domiLabels',
+      afterDatasetsDraw(chart) {
+        const ctx2 = chart.ctx;
+
+        // Config: min segment height (px) to show label
+        const minHeight = 14;
+
+        // Per-segment value labels
+        const segConfigs = [
+          { dsIdx:0, color:'rgba(255,255,255,0.92)', prefix:'',  suffix:'%',  decimals:1 },
+          { dsIdx:1, color:'rgba(255,255,255,0.92)', prefix:'+', suffix:'pp', decimals:1 },
+          { dsIdx:2, color:'rgba(255,255,255,0.92)', prefix:'+', suffix:'pp', decimals:1 },
+          { dsIdx:3, color:'rgba(255,255,255,0.92)', prefix:'+', suffix:'pp', decimals:1 },
+        ];
+
+        segConfigs.forEach(({dsIdx, color, prefix, suffix, decimals}) => {
+          const meta = chart.getDatasetMeta(dsIdx);
+          const ds   = chart.data.datasets[dsIdx];
+          meta.data.forEach((bar, i) => {
+            const val = ds.data[i];
+            if (val == null) return;
+            const barH = bar.base - bar.y;
+            if (barH < minHeight) return;
+            const midY = bar.y + barH / 2;
+            ctx2.save();
+            ctx2.font = dsIdx === 0
+              ? 'bold 10px -apple-system,BlinkMacSystemFont,sans-serif'
+              : '500 9px -apple-system,BlinkMacSystemFont,sans-serif';
+            ctx2.fillStyle = color;
+            ctx2.textAlign = 'center';
+            ctx2.fillText(`${prefix}${val.toFixed(decimals)}${suffix}`, bar.x, midY + 3.5);
+            ctx2.restore();
+          });
+        });
+
+        // Total label on top — distinct color
+        const topMeta = chart.getDatasetMeta(3);
+        topMeta.data.forEach((bar, i) => {
+          const total = totals[i];
+          if (total == null) return;
+          ctx2.save();
+          ctx2.font = 'bold 11px -apple-system,BlinkMacSystemFont,sans-serif';
+          ctx2.fillStyle = '#1D4ED8';
+          ctx2.textAlign = 'center';
+          ctx2.fillText(total.toFixed(1)+'%', bar.x, bar.y - 7);
+          ctx2.restore();
+        });
+      }
+    }]
   });
+
+  // ── Tabla de valores ────────────────────────────────────────────────────
+  const rows = [
+    { label:'1° intento', values:i1, color:'#1D9E75', prefix:'',  suffix:'%'  },
+    { label:'2° intento', values:i2, color:'#7F77DD', prefix:'+', suffix:'pp' },
+    { label:'3° intento', values:i3, color:'#EF9F27', prefix:'+', suffix:'pp' },
+    { label:'4° intento', values:i4, color:'#D4537E', prefix:'+', suffix:'pp' },
+    { label:'Total',      values:totals, color:'#1D4ED8', prefix:'', suffix:'%', bold:true },
+  ];
+
+  const thS  = `padding:7px 12px;text-align:center;font-size:11px;font-weight:600;color:#888780;letter-spacing:0.4px;border-bottom:1px solid #E8E7E3;white-space:nowrap;`;
+  const tdS  = (c,b) => `padding:6px 12px;text-align:center;font-size:12px;font-weight:${b?'700':'500'};color:${c};border-bottom:1px solid ${b?'#D0CECA':'#F0EFEB'};`;
+  const tdLS = (b)   => `padding:6px 14px;text-align:left;font-size:12px;font-weight:${b?'700':'500'};color:#3D3C38;border-bottom:1px solid ${b?'#D0CECA':'#F0EFEB'};white-space:nowrap;border-right:1px solid #E8E7E3;`;
+
+  let tbl = `<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;border:1px solid #E8E7E3;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">`;
+  tbl += `<thead><tr><th style="${thS}text-align:left;border-right:1px solid #E8E7E3;min-width:110px;"></th>`;
+  cortes.forEach(c => { tbl += `<th style="${thS}">${c}</th>`; });
+  tbl += `</tr></thead><tbody>`;
+
+  rows.forEach(row => {
+    const sepStyle = row.bold ? 'border-top:2px solid #D0CECA;' : '';
+    tbl += `<tr style="${sepStyle}"><td style="${tdLS(row.bold)}">`;
+    if (!row.bold) tbl += `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${row.color};margin-right:6px;vertical-align:middle;"></span>`;
+    tbl += `${row.label}</td>`;
+    row.values.forEach(v => { tbl += `<td style="${tdS(row.color, row.bold)}">${row.prefix}${v.toFixed(1)}${row.suffix}</td>`; });
+    tbl += `</tr>`;
+  });
+
+  tbl += `</tbody></table>`;
+  document.getElementById('domiTable').innerHTML = tbl;
 }
 
 function buildRollChart() {
@@ -1170,20 +1253,28 @@ function buildWindowsChart() {
 function buildPhaseChart() {
   const cortes = getSelectedCortes();
   const d = cortes.map(c => extraData[c].combined);
-  
+
+  const vals = {
+    i1: d.map(x => x.i1), i2: d.map(x => x.i2),
+    i3: d.map(x => x.i3), i4: d.map(x => x.i4),
+    s2: d.map(x => x.s2 || 0), s3: d.map(x => x.s3 || 0), s4: d.map(x => x.s4 || 0),
+  };
+  const domiTotals  = cortes.map((_,i) => vals.i1[i]+vals.i2[i]+vals.i3[i]+vals.i4[i]);
+  const grandTotals = cortes.map((_,i) => domiTotals[i]+vals.s2[i]+vals.s3[i]+vals.s4[i]);
+
   if (charts.phase) charts.phase.destroy();
   charts.phase = new Chart(document.getElementById('phaseChart'), {
     type: 'bar',
     data: {
       labels: cortes,
       datasets: [
-        { label:'1° intento', data:d.map(x=>x.i1), backgroundColor:'#1D9E75', borderWidth:0, stack:'stack1' },
-        { label:'2° intento', data:d.map(x=>x.i2), backgroundColor:'#7F77DD', borderWidth:0, stack:'stack1' },
-        { label:'3° intento', data:d.map(x=>x.i3), backgroundColor:'#EF9F27', borderWidth:0, stack:'stack1' },
-        { label:'4° intento', data:d.map(x=>x.i4), backgroundColor:'#D4537E', borderWidth:0, stack:'stack1' },
-        { label:'Sem 2 (D+8-D+14)', data:d.map(x=>x.s2), backgroundColor:'#5F5E5A', borderWidth:0, stack:'stack1' },
-        { label:'Sem 3 (D+15-D+21)', data:d.map(x=>x.s3), backgroundColor:'#9E9D98', borderWidth:0, stack:'stack1' },
-        { label:'Sem 4 (D+22-D+30)', data:d.map(x=>x.s4), backgroundColor:'#CECDCA', borderWidth:0, stack:'stack1' },
+        { label:'1° intento',        data:vals.i1, backgroundColor:'#1D9E75', borderWidth:0, stack:'stack1' },
+        { label:'2° intento',        data:vals.i2, backgroundColor:'#7F77DD', borderWidth:0, stack:'stack1' },
+        { label:'3° intento',        data:vals.i3, backgroundColor:'#EF9F27', borderWidth:0, stack:'stack1' },
+        { label:'4° intento',        data:vals.i4, backgroundColor:'#D4537E', borderWidth:0, stack:'stack1' },
+        { label:'Sem 2 (D+8→D+14)', data:vals.s2, backgroundColor:'#5F5E5A', borderWidth:0, stack:'stack1' },
+        { label:'Sem 3 (D+15→D+21)',data:vals.s3, backgroundColor:'#9E9D98', borderWidth:0, stack:'stack1' },
+        { label:'Sem 4 (D+22→D+30)',data:vals.s4, backgroundColor:'#CECDCA', borderWidth:0, stack:'stack1' },
       ]
     },
     options: {
@@ -1192,22 +1283,104 @@ function buildPhaseChart() {
         legend:{display:false},
         tooltip:{
           callbacks:{
-            label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}pp`,
-            footer: items => {
-              const sum = items.reduce((a,b) => a + b.parsed.y, 0);
-              return `Total recaudado: ${sum.toFixed(1)}%`;
-            }
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}pp`,
+            footer: items => `Total recaudado: ${items.reduce((a,b)=>a+b.parsed.y,0).toFixed(1)}%`
           },
-          backgroundColor:'rgba(31,31,31,0.95)',padding:10,cornerRadius:6
+          backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
         }
       },
       scales:{
-        x:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:12}}},
-        y:{stacked:true,min:0,max:100,grid:{color:'rgba(0,0,0,0.05)'},
-           ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
+        x:{stacked:true, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{color:'#888780',font:{size:12}}},
+        y:{stacked:true, min:0, max:105, grid:{color:'rgba(0,0,0,0.05)'},
+           ticks:{color:'#888780', font:{size:12}, callback:v=>v+'%'}}
       }
-    }
+    },
+    plugins:[{
+      id:'phaseLabels',
+      afterDatasetsDraw(chart) {
+        const ctx2 = chart.ctx;
+        const minH  = 14;
+
+        // segment configs: [dsIndex, textColor, prefix, suffix, decimals]
+        const segs = [
+          [0,'rgba(255,255,255,0.92)','', '%', 1],
+          [1,'rgba(255,255,255,0.92)','+','pp',1],
+          [2,'rgba(255,255,255,0.92)','+','pp',1],
+          [3,'rgba(255,255,255,0.92)','+','pp',1],
+          [4,'rgba(255,255,255,0.92)','+','pp',1],
+          [5,'rgba(255,255,255,0.85)','+','pp',1],
+          [6,'#5F5E5A',              '+','pp',1],
+        ];
+
+        segs.forEach(([dsIdx, color, prefix, suffix, dec]) => {
+          const meta = chart.getDatasetMeta(dsIdx);
+          const ds   = chart.data.datasets[dsIdx];
+          meta.data.forEach((bar, i) => {
+            const val = ds.data[i];
+            if (!val || val < 0.5) return;
+            const barH = bar.base - bar.y;
+            if (barH < minH) return;
+            ctx2.save();
+            ctx2.font = dsIdx === 0
+              ? 'bold 10px -apple-system,BlinkMacSystemFont,sans-serif'
+              : '500 9px -apple-system,BlinkMacSystemFont,sans-serif';
+            ctx2.fillStyle = color;
+            ctx2.textAlign = 'center';
+            ctx2.fillText(`${prefix}${val.toFixed(dec)}${suffix}`, bar.x, bar.y + barH/2 + 3.5);
+            ctx2.restore();
+          });
+        });
+
+        // Grand total on top in blue
+        const topMeta = chart.getDatasetMeta(6);
+        topMeta.data.forEach((bar, i) => {
+          const tot = grandTotals[i];
+          if (!tot) return;
+          ctx2.save();
+          ctx2.font = 'bold 11px -apple-system,BlinkMacSystemFont,sans-serif';
+          ctx2.fillStyle = '#1D4ED8';
+          ctx2.textAlign = 'center';
+          ctx2.fillText(tot.toFixed(1)+'%', bar.x, bar.y - 7);
+          ctx2.restore();
+        });
+      }
+    }]
   });
+
+  // ── Tabla ────────────────────────────────────────────────────────────────
+  const rows = [
+    { label:'1° intento',         values:vals.i1, color:'#1D9E75', prefix:'',  suffix:'%'  },
+    { label:'2° intento',         values:vals.i2, color:'#7F77DD', prefix:'+', suffix:'pp' },
+    { label:'3° intento',         values:vals.i3, color:'#EF9F27', prefix:'+', suffix:'pp' },
+    { label:'4° intento',         values:vals.i4, color:'#D4537E', prefix:'+', suffix:'pp' },
+    { label:'Cierre domi',        values:domiTotals, color:'#1D4ED8', prefix:'', suffix:'%', sub:true },
+    { label:'Sem 2 (D+8→D+14)',  values:vals.s2, color:'#5F5E5A', prefix:'+', suffix:'pp' },
+    { label:'Sem 3 (D+15→D+21)', values:vals.s3, color:'#9E9D98', prefix:'+', suffix:'pp' },
+    { label:'Sem 4 (D+22→D+30)', values:vals.s4, color:'#CECDCA', prefix:'+', suffix:'pp' },
+    { label:'Total final',        values:grandTotals, color:'#1D4ED8', prefix:'', suffix:'%', bold:true },
+  ];
+
+  const thS  = `padding:7px 12px;text-align:center;font-size:11px;font-weight:600;color:#888780;letter-spacing:0.4px;border-bottom:1px solid #E8E7E3;white-space:nowrap;`;
+  const tdS  = (c,b,s) => `padding:${b?'7px':'5px'} 12px;text-align:center;font-size:${b?'12':'11'}px;font-weight:${b?'700':s?'600':'500'};color:${c};border-bottom:1px solid ${b?'#D0CECA':s?'#D0CECA':'#F0EFEB'};border-top:${s?'2px solid #E0DFD9':'none'};`;
+  const tdLS = (b,s) => `padding:${b?'7px':'5px'} 14px;text-align:left;font-size:${b?'12':'11'}px;font-weight:${b?'700':s?'600':'500'};color:#3D3C38;border-bottom:1px solid ${b?'#D0CECA':s?'#D0CECA':'#F0EFEB'};border-top:${s?'2px solid #E0DFD9':'none'};white-space:nowrap;border-right:1px solid #E8E7E3;`;
+
+  let tbl = `<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;border:1px solid #E8E7E3;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">`;
+  tbl += `<thead><tr><th style="${thS}text-align:left;border-right:1px solid #E8E7E3;min-width:140px;"></th>`;
+  cortes.forEach(c => { tbl += `<th style="${thS}">${c}</th>`; });
+  tbl += `</tr></thead><tbody>`;
+
+  rows.forEach(row => {
+    tbl += `<tr><td style="${tdLS(row.bold, row.sub)}">`;
+    if (!row.bold && !row.sub) tbl += `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${row.color};margin-right:6px;vertical-align:middle;"></span>`;
+    tbl += `${row.label}</td>`;
+    row.values.forEach(v => {
+      tbl += `<td style="${tdS(row.color, row.bold, row.sub)}">${v != null ? row.prefix+v.toFixed(1)+row.suffix : '—'}</td>`;
+    });
+    tbl += `</tr>`;
+  });
+
+  tbl += `</tbody></table>`;
+  document.getElementById('phaseTable').innerHTML = tbl;
 }
 
 
