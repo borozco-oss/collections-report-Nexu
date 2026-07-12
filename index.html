@@ -937,25 +937,37 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
            North Star #3 (fraude): CUENTA INEXISTENTE, CUENTA CANCELADA,
            CUENTA BLOQUEADA, CUENTA CON INSUFICIENCIA DE FONDOS, etc.
 
-   LIMITACIÓN CLAVE PARA NORTH STARS:
+   LIMITACIÓN CLAVE PARA NORTH STARS (histórico, ya resuelta para 01-jun):
      El BKT de mora (BKT1/2/3/4) NO está en el Resultado — nunca lo estuvo.
-     Viene del Cierre de moratorios. Mientras el Cierre no esté disponible
-     (no hay datos desde 15-may-2026), NO se pueden actualizar:
-        - Pago a tiempo POR BKT (desglose BKT1/2/3/4)  [solo agregado posible]
-        - Rollover BKT1->BKT2  (requiere BKT SALIDA del Cierre)
-     La Mora temprana viene de OTRO archivo (REPORTE_GENERAL_1EROS_PAGOS),
-     NO de este. No mezclar fuentes.
+     Viene del Cierre de moratorios. La Mora temprana viene de OTRO archivo
+     (REPORTE_GENERAL_1EROS_PAGOS), NO del Resultado. No mezclar fuentes.
 
-   DATO AGREGADO 01-jun-2026 (NO incorporado a las series por falta de Cierre;
-   se deja como referencia validada): 6,933 clientes; pago a tiempo 77.37%
-   (Domi 66.36% + SPEI durante domi 10.90% + Plan 0.10%); Sin pago 22.62%.
-   Coincide con el ~77.5% histórico que mencionó el Founder.
+   ESTADO 01-jun-2026: North Stars YA ACTUALIZADOS (Cierre_moratorios_01_06_26
+   recibido). Pago a tiempo BKT1 = 85.40% (domi 70.58% + SPEI domi 14.82%).
+   Rollover BKT1->BKT2 = 0.99% (64 de 6,500). Recuperación total D+30 = 93.35%.
 
-   AL ACTUALIZAR CON EL CIERRE COMPLETO: leer 'Operaciones', dedup por VIN
-   (este formato ya viene limpio, pero validar), normalizar Medio_de_pago,
-   parsear Fecha_Intento (serial Excel o datetime), cruzar VIN x Cierre Data
-   para BKT entering/salida, y recomputar bkt{1..4}DetailByCorte + rolloverData
-   agregando la clave '01-jun'. Para mora temprana, usar REPORTE_GENERAL.
+   *** CAMBIO DE FORMATO ADICIONAL EN EL CIERRE (desde 01-jun-2026) ***
+   El Cierre de moratorios TAMBIÉN cambió de formato, independientemente del
+   Resultado. Antes: columna BKT (col1) y BKT SALIDA (col17) usaban valores
+   agrupados 'BKT 1' / 'BKT 2' / 'BKT 3' / 'BKT 4+'. Y 'Current' para salida
+   sin mora. AHORA: valores granulares 'Bkt1','Bkt2','Bkt3',...,'Bkt50+' (un
+   valor por cada mes/periodo de atraso, sin tope en 4). Y 'Al corriente'
+   reemplaza a 'Current'. Mapeo para replicar la metodología agrupada:
+     entrante: 'Bkt1'->BKT 1, 'Bkt2'->BKT 2, 'Bkt3'->BKT 3, CUALQUIER OTRO
+               valor (Bkt4, Bkt5, ..., Bkt50+) -> BKT 4+
+     salida:   'Al corriente'->Current, 'Bkt1'->BKT 1 (para rollover),
+               cualquier otro -> OTHER (fuera del universo BKT1->BKT2 puro)
+   Verificar este mapeo en cada corte futuro por si Finanzas ajusta de nuevo
+   la nomenclatura. Reconciliación 01-jun: BKT1(100-no_pago)=99.02% =
+   Rollover(current_pct)=99.02% ✓.
+
+   AL ACTUALIZAR PRÓXIMOS CORTES: leer 'Operaciones' (Resultado) + 'Data'
+   (Cierre), dedup por VIN en ambos, normalizar Medio_de_pago, cruzar VIN,
+   aplicar el mapeo BKT granular->agrupado de arriba, y recomputar
+   bkt{1..4}DetailByCorte + rolloverData + data[corte] (curva completa,
+   sumando domi_incr acumulado + recuperación tardía por semana desde el
+   Cierre, SIN duplicar el SPEI que ya viene incluido en domiIntentos/Avance
+   Intentos). Para mora temprana, usar REPORTE_GENERAL exclusivamente.
    ============================================================================ */
 
 const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may','15-may','01-jun'];
@@ -973,6 +985,7 @@ const bkt1DetailByCorte = {
   '15-abr': {domi:73.79, spei_domi:10.82, s2:6.59, s3:4.24, s4:3.36, no_pago:1.2, total:7265},
   '01-may': {domi:70.61, spei_domi:13.38, s2:6.26, s3:3.05, s4:5.76, no_pago:0.93, total:6322},
   '15-may': {domi:72.42, spei_domi:11.87, s2:7.92, s3:3.66, s4:3.05, no_pago:1.08, total:7314},
+  '01-jun': {domi:70.58, spei_domi:14.82, s2:6.43, s3:2.83, s4:4.35, no_pago:0.98, total:6500},
 };
 
 const bkt2DetailByCorte = {
@@ -986,6 +999,7 @@ const bkt2DetailByCorte = {
   '15-abr': {domi:10.42, spei_domi:2.08, s2:4.17, s3:7.29, s4:11.46, no_pago:64.58, total:96},
   '01-may': {domi:4.29, spei_domi:1.43, s2:4.29, s3:12.86, s4:12.86, no_pago:64.29, total:70},
   '15-may': {domi:10.91, spei_domi:0.91, s2:10.0, s3:4.55, s4:3.64, no_pago:70.0, total:110},
+  '01-jun': {domi:8.33, spei_domi:1.39, s2:6.94, s3:0.0, s4:6.94, no_pago:76.39, total:72},
 };
 
 const bkt3DetailByCorte = {
@@ -999,6 +1013,7 @@ const bkt3DetailByCorte = {
   '15-abr': {domi:4.48, spei_domi:1.49, s2:0.0, s3:4.48, s4:2.99, no_pago:86.57, total:67},
   '01-may': {domi:7.14, spei_domi:2.38, s2:2.38, s3:0.0, s4:2.38, no_pago:85.71, total:42},
   '15-may': {domi:8.0, spei_domi:6.0, s2:0.0, s3:0.0, s4:0.0, no_pago:86.0, total:50},
+  '01-jun': {domi:5.13, spei_domi:2.56, s2:2.56, s3:0.0, s4:2.56, no_pago:87.18, total:39},
 };
 
 const bkt4DetailByCorte = {
@@ -1012,6 +1027,7 @@ const bkt4DetailByCorte = {
   '15-abr': {domi:1.66, spei_domi:0.18, s2:0.18, s3:0.55, s4:0.55, no_pago:96.86, total:542},
   '01-may': {domi:1.64, spei_domi:0.33, s2:0.33, s3:0.0, s4:0.0, no_pago:97.7, total:304},
   '15-may': {domi:1.24, spei_domi:0.0, s2:0.0, s3:0.36, s4:0.36, no_pago:98.05, total:563},
+  '01-jun': {domi:3.73, spei_domi:0.0, s2:0.31, s3:0.31, s4:0.0, no_pago:95.65, total:322},
 };
 
 // Rollover BKT1 → BKT2: universe = cartera BKT1 entering corte (full Resultado minus BKT2/3/4 entering in Cierre)
@@ -1028,6 +1044,7 @@ const rolloverData = {
   '15-abr': {total:7265, current:7176, current_pct:98.78, rolled_b2:89, rolled_b2_pct:1.23},
   '01-may': {total:6322, current:6263, current_pct:99.07, rolled_b2:59, rolled_b2_pct:0.93},
   '15-may': {total:7314, current:7234, current_pct:98.91, rolled_b2:80, rolled_b2_pct:1.09},
+  '01-jun': {total:6500, current:6436, current_pct:99.02, rolled_b2:64, rolled_b2_pct:0.99},
 };
 
 // Mora temprana — primeros 3 pagos por cohorte (REPORTE_GENERAL_1EROS_PAGOS)
@@ -1180,12 +1197,14 @@ const data = {
     bkt1Detail: {domi: 84.29, cob: 14.63, no: 1.08}
   },
   '01-jun': {
-    color: '#3B3ACA', day: 1, hasCierre: false,
-    pcts: [0.0,65.46,65.46,65.46,70.95,70.95,74.21,74.21,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37,77.37],
-    intentosDias: [1,2,3],
-    startPct: 65.46, endPct: 77.37, delta: 11.91, endDay: 30,
+    color: '#3B3ACA', day: 1, hasCierre: true,
+    pcts: [0.0,65.46,70.95,74.21,77.37,77.37,77.37,77.37,83.56,85.23,85.81,86.99,87.44,87.63,88.33,89.21,89.75,90.01,90.48,90.65,90.71,91.0,91.4,91.81,92.07,92.36,92.5,92.53,92.86,93.35,93.35],
+    intentosDias: [1,2,3,4],
+    startPct: 65.46, endPct: 93.35, delta: 27.89, endDay: 30,
     domiIntentos: [65.46, 5.49, 3.26, 3.16],
-    roll: null, outcomes: null, bkt1Detail: null
+    roll: {b1b2: 0.99, b2b3: null, b3b4: null},
+    outcomes: null,
+    bkt1Detail: {domi: 70.58, cob: 14.44, no: 0.98}
   }
 };
 
@@ -1200,7 +1219,7 @@ const extraData = {
   '15-abr': {cartera: {m1: 326, m2: 334, m3: 258, m4: 7052}, causas: {insuficiencia:1431,cancelada:139,bloqueada:95,domibaja:33,inexistente:25,reverso:16,otros:15}, totalRechazos: 1754, windowEarly: 6.21, windowLate: 6.5, combined: {i1:60.31,i2:10.29,i3:4.25,i4:2.56,s2:6.30,s3:4.15,s4:2.44,hasC:true}},
   '01-may': {cartera: {m1: 353, m2: 306, m3: 312, m4: 5767}, causas: {insuficiencia:1176,cancelada:73,bloqueada:58,domibaja:20,inexistente:14,reverso:9,otros:12},totalRechazos: 1362, totalOperados: 5321, windowEarly: null, windowLate: null, combined: {i1: 68.2, i2: 5.08, i3: 2.52, i4: 3.18, s2: 6.17, s3: 3.16, s4: 2.2, hasC: true}},
   '15-may': {cartera: {m1: 222, m2: 325, m3: 334, m4: 7156}, causas: {insuficiencia:1617,cancelada:157,bloqueada:104,domibaja:42,inexistente:29,reverso:20,otros:17}, totalRechazos: 1986, totalOperados: 6140, windowEarly: null, windowLate: null, combined: {i1: 67.4, i2: 5.92, i3: 1.8, i4: 1.19, s2: 7.39, s3: 3.42, s4: 3.46, hasC: true}},
-  '01-jun': {cartera: {m1: 269, m2: 353, m3: 306, m4: 6005}, causas: {insuficiencia:1661,cancelada:153,bloqueada:110,domibaja:37,inexistente:34,reverso:25,otros:38}, totalRechazos: 2058, totalOperados: 5364, windowEarly: null, windowLate: null, combined: {i1: 65.46, i2: 5.49, i3: 3.26, i4: 3.16, s2: 0, s3: 0, s4: 0, hasC: false}}
+  '01-jun': {cartera: {m1: 269, m2: 353, m3: 306, m4: 6005}, causas: {insuficiencia:1661,cancelada:153,bloqueada:110,domibaja:37,inexistente:34,reverso:25,otros:38}, totalRechazos: 2058, totalOperados: 5364, windowEarly: null, windowLate: null, combined: {i1: 65.46, i2: 5.49, i3: 3.26, i4: 3.16, s2: 6.13, s3: 2.67, s4: 7.18, hasC: true}}
 };
 
 const bankDataV2 = {
@@ -1228,26 +1247,26 @@ const allMixDatasets = [
 ];
 
 const northStarData = {
-  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may'],
+  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun'],
   // BKT1 total at corte date (from Cierre Análisis row "BKT 1")
   // 01-mar, 15-abr, may: sin cierre disponible
-  bkt1Total:  [5385, 6791, 5641, 6897, 5872, 7099, 6074, 7265, 6322, 7314],
+  bkt1Total:  [5385, 6791, 5641, 6897, 5872, 7099, 6074, 7265, 6322, 7314, 6500],
   // Clients rolled BKT1→BKT2: from "BKT ACTUALIZADO AL SIGUIENTE CORTE" column
   // in the Data sheet of each Cierre de moratorios file (all 8 cortes confirmed)
   // Rolled = BKT1→BKT2 excluyendo En Consigna y Resguardo (labor terminada, no roll operativo)
   // Rolled: tabla "Cartera sin daciones" del Análisis, BKT1→BKT2 (excluye consigna/resguardo/daciones)
-  rolled:     [31,   74,   29,   58,   47,   68,   44,   80,   60,   80],
+  rolled:     [31,   74,   29,   58,   47,   68,   44,   80,   60,   80,   64],
   // M1: % BKT1→BKT2 / total BKT1 (salud de cartera — métrica de negocio)
-  pctSalud:   [0.58, 1.09, 0.51, 0.84, 0.80, 0.96, 0.72, 1.10, 0.95, 1.09],
+  pctSalud:   [0.58, 1.09, 0.51, 0.84, 0.80, 0.96, 0.72, 1.10, 0.95, 1.09, 0.98],
   // M2: % BKT1→BKT2 / cobranza (de los que llegaron a cobranza sin pagar, cuántos rolaron a BKT2)
-  cobranza:   [934, 1127, 842, 1243, 1032, 1155, 898, 1150, 1038, 1070],
-  pctRoloSinPago: [3.3, 6.6, 3.4, 4.7, 4.6, 5.9, 4.9, 7.0, 5.8,  null],
+  cobranza:   [934, 1127, 842, 1243, 1032, 1155, 898, 1150, 1038, 1070, 949],
+  pctRoloSinPago: [3.3, 6.6, 3.4, 4.7, 4.6, 5.9, 4.9, 7.0, 5.8,  7.5, 6.7],
   // M3: % SPEI durante domi / no-domi (efectividad comunicaciones — todos los cortes)
-  pctComms:   [25.9, 26.8, 31.5, 24.1, 27.7, 31.4, 42.6, 30.6, 37.6, 30.3],
+  pctComms:   [25.9, 26.8, 31.5, 24.1, 27.7, 31.4, 42.6, 30.6, 37.6, 30.3, 32.4],
   // Raw counts
-  noDomi:     [1717, 2358, 1718, 2477, 1914, 2623, 2332, 2593, 2270, 2723],
-  speiDur:    [445,  633,  542,  598,  530,  823,  994,  793,  853,  825],
-  sinPago:    [1271, 1725, 1176, 1876, 1384, 1794, 1276, 1800, 1417, 1898],
+  noDomi:     [1717, 2358, 1718, 2477, 1914, 2623, 2332, 2593, 2270, 2723, 2332],
+  speiDur:    [445,  633,  542,  598,  530,  823,  994,  793,  853,  825, 756],
+  sinPago:    [1271, 1725, 1176, 1876, 1384, 1794, 1276, 1800, 1417, 1898, 1569],
 };
 
 const vintageData = {
