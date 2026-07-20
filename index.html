@@ -942,9 +942,12 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
      Viene del Cierre de moratorios. La Mora temprana viene de OTRO archivo
      (REPORTE_GENERAL_1EROS_PAGOS), NO del Resultado. No mezclar fuentes.
 
-   ESTADO 01-jun-2026: North Stars YA ACTUALIZADOS (Cierre_moratorios_01_06_26
-   recibido). Pago a tiempo BKT1 = 85.40% (domi 70.58% + SPEI domi 14.82%).
-   Rollover BKT1->BKT2 = 0.99% (64 de 6,500). Recuperación total D+30 = 93.35%.
+   ESTADO 15-jun-2026: North Stars YA ACTUALIZADOS (Cierre_moratorios_15_06_26
+   recibido, mismo formato granular Bkt1..Bkt50+ / Al corriente). Pago a
+   tiempo BKT1 = 87.00% (domi 72.36% + SPEI domi 14.64%). Rollover
+   BKT1->BKT2 = 1.13% (84 de 7,464). Recuperación total D+30 = 98.87%.
+   Reconciliación: BKT1(100-no_pago)=98.90% ≈ Rollover(current_pct)=98.87%.
+   3 VINs huérfanos en Cierre (BKT 4+, impacto inmaterial).
 
    *** CAMBIO DE FORMATO ADICIONAL EN EL CIERRE (desde 01-jun-2026) ***
    El Cierre de moratorios TAMBIÉN cambió de formato, independientemente del
@@ -970,7 +973,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    Intentos). Para mora temprana, usar REPORTE_GENERAL exclusivamente.
    ============================================================================ */
 
-const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may','15-may','01-jun'];
+const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may','15-may','01-jun','15-jun'];
 
 // BKT1 granular breakdown: domi / SPEI durante domi / SPEI sem2 / sem3 / sem4 / no pagó
 // Source: cross-reference Resultado (BBVA+Inter+SPEI sheets) x Cierre Data (BKT per VIN)
@@ -986,6 +989,7 @@ const bkt1DetailByCorte = {
   '01-may': {domi:70.61, spei_domi:13.38, s2:6.26, s3:3.05, s4:5.76, no_pago:0.93, total:6322},
   '15-may': {domi:72.42, spei_domi:11.87, s2:7.92, s3:3.66, s4:3.05, no_pago:1.08, total:7314},
   '01-jun': {domi:70.58, spei_domi:14.82, s2:6.43, s3:2.83, s4:4.35, no_pago:0.98, total:6500},
+  '15-jun': {domi:72.36, spei_domi:14.64, s2:4.61, s3:4.17, s4:3.12, no_pago:1.1, total:7464},
 };
 
 const bkt2DetailByCorte = {
@@ -1000,6 +1004,7 @@ const bkt2DetailByCorte = {
   '01-may': {domi:4.29, spei_domi:1.43, s2:4.29, s3:12.86, s4:12.86, no_pago:64.29, total:70},
   '15-may': {domi:10.91, spei_domi:0.91, s2:10.0, s3:4.55, s4:3.64, no_pago:70.0, total:110},
   '01-jun': {domi:8.33, spei_domi:1.39, s2:6.94, s3:0.0, s4:6.94, no_pago:76.39, total:72},
+  '15-jun': {domi:9.16, spei_domi:3.82, s2:9.16, s3:9.16, s4:15.27, no_pago:53.44, total:131},
 };
 
 const bkt3DetailByCorte = {
@@ -1014,6 +1019,7 @@ const bkt3DetailByCorte = {
   '01-may': {domi:7.14, spei_domi:2.38, s2:2.38, s3:0.0, s4:2.38, no_pago:85.71, total:42},
   '15-may': {domi:8.0, spei_domi:6.0, s2:0.0, s3:0.0, s4:0.0, no_pago:86.0, total:50},
   '01-jun': {domi:5.13, spei_domi:2.56, s2:2.56, s3:0.0, s4:2.56, no_pago:87.18, total:39},
+  '15-jun': {domi:9.09, spei_domi:5.45, s2:0.0, s3:0.0, s4:9.09, no_pago:76.36, total:55},
 };
 
 const bkt4DetailByCorte = {
@@ -1028,6 +1034,7 @@ const bkt4DetailByCorte = {
   '01-may': {domi:1.64, spei_domi:0.33, s2:0.33, s3:0.0, s4:0.0, no_pago:97.7, total:304},
   '15-may': {domi:1.24, spei_domi:0.0, s2:0.0, s3:0.36, s4:0.36, no_pago:98.05, total:563},
   '01-jun': {domi:3.73, spei_domi:0.0, s2:0.31, s3:0.31, s4:0.0, no_pago:95.65, total:322},
+  '15-jun': {domi:1.39, spei_domi:0.35, s2:0.52, s3:0.17, s4:0.17, no_pago:97.39, total:575},
 };
 
 // Rollover BKT1 → BKT2: universe = cartera BKT1 entering corte (full Resultado minus BKT2/3/4 entering in Cierre)
@@ -1045,6 +1052,7 @@ const rolloverData = {
   '01-may': {total:6322, current:6263, current_pct:99.07, rolled_b2:59, rolled_b2_pct:0.93},
   '15-may': {total:7314, current:7234, current_pct:98.91, rolled_b2:80, rolled_b2_pct:1.09},
   '01-jun': {total:6500, current:6436, current_pct:99.02, rolled_b2:64, rolled_b2_pct:0.99},
+  '15-jun': {total:7464, current:7380, current_pct:98.87, rolled_b2:84, rolled_b2_pct:1.13},
 };
 
 // Mora temprana — primeros 3 pagos por cohorte (REPORTE_GENERAL_1EROS_PAGOS)
@@ -1205,6 +1213,16 @@ const data = {
     roll: {b1b2: 0.99, b2b3: null, b3b4: null},
     outcomes: null,
     bkt1Detail: {domi: 70.58, cob: 14.44, no: 0.98}
+  },
+  '15-jun': {
+    color: '#1D9E75', day: 15, hasCierre: true,
+    pcts: [0.0,62.35,69.5,73.32,75.72,75.72,75.72,75.72,81.53,82.47,83.29,83.78,84.04,84.12,84.43,85.19,85.81,86.92,87.78,88.02,88.07,88.38,88.79,89.07,89.4,89.69,89.76,89.8,90.13,90.66,90.83],
+    intentosDias: [1,2,3,4],
+    startPct: 62.35, endPct: 90.83, delta: 28.48, endDay: 30,
+    domiIntentos: [62.35, 7.15, 3.82, 2.4],
+    roll: {b1b2: 1.13, b2b3: null, b3b4: null},
+    outcomes: null,
+    bkt1Detail: {domi: 87.0, cob: 11.9, no: 1.1}
   }
 };
 
@@ -1219,54 +1237,55 @@ const extraData = {
   '15-abr': {cartera: {m1: 326, m2: 334, m3: 258, m4: 7052}, causas: {insuficiencia:1431,cancelada:139,bloqueada:95,domibaja:33,inexistente:25,reverso:16,otros:15}, totalRechazos: 1754, windowEarly: 6.21, windowLate: 6.5, combined: {i1:60.31,i2:10.29,i3:4.25,i4:2.56,s2:6.30,s3:4.15,s4:2.44,hasC:true}},
   '01-may': {cartera: {m1: 353, m2: 306, m3: 312, m4: 5767}, causas: {insuficiencia:1176,cancelada:73,bloqueada:58,domibaja:20,inexistente:14,reverso:9,otros:12},totalRechazos: 1362, totalOperados: 5321, windowEarly: null, windowLate: null, combined: {i1: 68.2, i2: 5.08, i3: 2.52, i4: 3.18, s2: 6.17, s3: 3.16, s4: 2.2, hasC: true}},
   '15-may': {cartera: {m1: 222, m2: 325, m3: 334, m4: 7156}, causas: {insuficiencia:1617,cancelada:157,bloqueada:104,domibaja:42,inexistente:29,reverso:20,otros:17}, totalRechazos: 1986, totalOperados: 6140, windowEarly: null, windowLate: null, combined: {i1: 67.4, i2: 5.92, i3: 1.8, i4: 1.19, s2: 7.39, s3: 3.42, s4: 3.46, hasC: true}},
-  '01-jun': {cartera: {m1: 269, m2: 353, m3: 306, m4: 6005}, causas: {insuficiencia:1661,cancelada:153,bloqueada:110,domibaja:37,inexistente:34,reverso:25,otros:38}, totalRechazos: 2058, totalOperados: 5364, windowEarly: null, windowLate: null, combined: {i1: 65.46, i2: 5.49, i3: 3.26, i4: 3.16, s2: 6.13, s3: 2.67, s4: 7.18, hasC: true}}
+  '01-jun': {cartera: {m1: 269, m2: 353, m3: 306, m4: 6005}, causas: {insuficiencia:1661,cancelada:153,bloqueada:110,domibaja:37,inexistente:34,reverso:25,otros:38}, totalRechazos: 2058, totalOperados: 5364, windowEarly: null, windowLate: null, combined: {i1: 65.46, i2: 5.49, i3: 3.26, i4: 3.16, s2: 6.13, s3: 2.67, s4: 7.18, hasC: true}},
+  '15-jun': {cartera: {m1: 336, m2: 222, m3: 325, m4: 7342}, causas: {insuficiencia:2055,cancelada:189,bloqueada:163,domibaja:45,inexistente:37,reverso:19,otros:296}, totalRechazos: 2804, totalOperados: 6228, windowEarly: null, windowLate: null, combined: {i1: 62.35, i2: 7.15, i3: 3.82, i4: 2.4, s2: 4.36, s3: 3.94, s4: 6.81, hasC: true}}
 };
 
 const bankDataV2 = {
-  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun'],
-  bbva: [74.6, 71.3, 76.1, 70.0, 72.9, 71.5, 73.8, 71.5, 73.1,70.8,70.7], inter: [78.6, 77.5, 80.8, 75.9, 79.3, 76.8, 79.5, 77.9, 79.1,76.7,76.9],
-  bbvaN: [1932, 2534, 1996, 2577, 2108, 2569, 1980, 2640, 2160,2624,2253], interN: [3381, 4292, 3472, 4402, 3611, 4398, 3442, 4532, 3723,4584,3913],
-  methods: ['4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.','4 intentos acum.','3 intentos acum.'], days: [1, 15, 1, 15, 1, 15, 1, 15, 1,15,1],
+  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun'],
+  bbva: [74.6, 71.3, 76.1, 70.0, 72.9, 71.5, 73.8, 71.5, 73.1,70.8,70.7,69.8], inter: [78.6, 77.5, 80.8, 75.9, 79.3, 76.8, 79.5, 77.9, 79.1,76.7,76.9,75.0],
+  bbvaN: [1932, 2534, 1996, 2577, 2108, 2569, 1980, 2640, 2160,2624,2253,2710], interN: [3381, 4292, 3472, 4402, 3611, 4398, 3442, 4532, 3723,4584,3913,4705],
+  methods: ['4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.','4 intentos acum.','3 intentos acum.','3 intentos acum.'], days: [1, 15, 1, 15, 1, 15, 1, 15, 1,15,1,15],
 };
 
-const allMixLabels = ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun'];
-const allMixTotals = [5762, 7453, 6010, 7581, 6251, 7796, 6482, 7970, 6738,8037,6933];
+const allMixLabels = ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun'];
+const allMixTotals = [5762, 7453, 6010, 7581, 6251, 7796, 6482, 7970, 6738,8037,6933,8225];
 const allMixDatasets = [
-  {label:'BBVA Bancomer',data:[2097, 2751, 2180, 2778, 2274, 2858, 2350, 2900, 2435,2918,2253],backgroundColor:'#3B3ACA',borderWidth:0,stack:'s'},
-        {label:'Santander',data:[827, 955, 868, 971, 906, 991, 939, 1023, 970,1037,948],backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
-        {label:'Banorte',data:[778, 927, 825, 956, 859, 984, 898, 1008, 938,1020,933],backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
-        {label:'Banamex',data:[808, 1048, 833, 1086, 861, 1124, 892, 1149, 923,1158,1059],backgroundColor:'#1D9E75',borderWidth:0,stack:'s'},
-        {label:'HSBC',data:[363, 512, 379, 520, 397, 536, 412, 552, 437,551,504],backgroundColor:'#D4537E',borderWidth:0,stack:'s'},
-        {label:'Azteca',data:[271, 357, 282, 358, 290, 367, 306, 374, 318,375,343],backgroundColor:'#7F77DD',borderWidth:0,stack:'s'},
-        {label:'Scotiabank',data:[145, 223, 157, 224, 161, 234, 163, 240, 177,245,224],backgroundColor:'#854F0B',borderWidth:0,stack:'s'},
-        {label:'BanCoppel',data:[137, 168, 136, 170, 140, 172, 148, 181, 153,185,169],backgroundColor:'#378ADD',borderWidth:0,stack:'s'},
-        {label:'Inbursa',data:[107, 166, 115, 165, 119, 162, 123, 169, 126,173,158],backgroundColor:'#888780',borderWidth:0,stack:'s'},
-        {label:'Bajío',data:[81, 131, 84, 132, 89, 141, 90, 141, 94,142,130],backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
-        {label:'Banregio',data:[65, 92, 67, 96, 65, 100, 66, 102, 67,101,92],backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
-        {label:'Otros',data:[72, 116, 73, 114, 79, 116, 84, 118, 89,119,121],backgroundColor:'#CECDCA',borderWidth:0,stack:'s'}
+  {label:'BBVA Bancomer',data:[2097, 2751, 2180, 2778, 2274, 2858, 2350, 2900, 2435,2918,2253,2710],backgroundColor:'#3B3ACA',borderWidth:0,stack:'s'},
+        {label:'Santander',data:[827, 955, 868, 971, 906, 991, 939, 1023, 970,1037,948,1117],backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
+        {label:'Banorte',data:[778, 927, 825, 956, 859, 984, 898, 1008, 938,1020,933,1099],backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
+        {label:'Banamex',data:[808, 1048, 833, 1086, 861, 1124, 892, 1149, 923,1158,1059,1248],backgroundColor:'#1D9E75',borderWidth:0,stack:'s'},
+        {label:'HSBC',data:[363, 512, 379, 520, 397, 536, 412, 552, 437,551,504,594],backgroundColor:'#D4537E',borderWidth:0,stack:'s'},
+        {label:'Azteca',data:[271, 357, 282, 358, 290, 367, 306, 374, 318,375,343,404],backgroundColor:'#7F77DD',borderWidth:0,stack:'s'},
+        {label:'Scotiabank',data:[145, 223, 157, 224, 161, 234, 163, 240, 177,245,224,264],backgroundColor:'#854F0B',borderWidth:0,stack:'s'},
+        {label:'BanCoppel',data:[137, 168, 136, 170, 140, 172, 148, 181, 153,185,169,199],backgroundColor:'#378ADD',borderWidth:0,stack:'s'},
+        {label:'Inbursa',data:[107, 166, 115, 165, 119, 162, 123, 169, 126,173,158,186],backgroundColor:'#888780',borderWidth:0,stack:'s'},
+        {label:'Bajío',data:[81, 131, 84, 132, 89, 141, 90, 141, 94,142,130,153],backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
+        {label:'Banregio',data:[65, 92, 67, 96, 65, 100, 66, 102, 67,101,92,109],backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
+        {label:'Otros',data:[72, 116, 73, 114, 79, 116, 84, 118, 89,119,121,142],backgroundColor:'#CECDCA',borderWidth:0,stack:'s'}
 ];
 
 const northStarData = {
-  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun'],
+  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun'],
   // BKT1 total at corte date (from Cierre Análisis row "BKT 1")
   // 01-mar, 15-abr, may: sin cierre disponible
-  bkt1Total:  [5385, 6791, 5641, 6897, 5872, 7099, 6074, 7265, 6322, 7314, 6500],
+  bkt1Total:  [5385, 6791, 5641, 6897, 5872, 7099, 6074, 7265, 6322, 7314, 6500, 7464],
   // Clients rolled BKT1→BKT2: from "BKT ACTUALIZADO AL SIGUIENTE CORTE" column
   // in the Data sheet of each Cierre de moratorios file (all 8 cortes confirmed)
   // Rolled = BKT1→BKT2 excluyendo En Consigna y Resguardo (labor terminada, no roll operativo)
   // Rolled: tabla "Cartera sin daciones" del Análisis, BKT1→BKT2 (excluye consigna/resguardo/daciones)
-  rolled:     [31,   74,   29,   58,   47,   68,   44,   80,   60,   80,   64],
+  rolled:     [31,   74,   29,   58,   47,   68,   44,   80,   60,   80,   64,   84],
   // M1: % BKT1→BKT2 / total BKT1 (salud de cartera — métrica de negocio)
-  pctSalud:   [0.58, 1.09, 0.51, 0.84, 0.80, 0.96, 0.72, 1.10, 0.95, 1.09, 0.98],
+  pctSalud:   [0.58, 1.09, 0.51, 0.84, 0.80, 0.96, 0.72, 1.10, 0.95, 1.09, 0.98, 1.13],
   // M2: % BKT1→BKT2 / cobranza (de los que llegaron a cobranza sin pagar, cuántos rolaron a BKT2)
-  cobranza:   [934, 1127, 842, 1243, 1032, 1155, 898, 1150, 1038, 1070, 949],
-  pctRoloSinPago: [3.3, 6.6, 3.4, 4.7, 4.6, 5.9, 4.9, 7.0, 5.8,  7.5, 6.7],
+  cobranza:   [934, 1127, 842, 1243, 1032, 1155, 898, 1150, 1038, 1070, 949, 970],
+  pctRoloSinPago: [3.3, 6.6, 3.4, 4.7, 4.6, 5.9, 4.9, 7.0, 5.8,  7.5, 6.7, 8.7],
   // M3: % SPEI durante domi / no-domi (efectividad comunicaciones — todos los cortes)
-  pctComms:   [25.9, 26.8, 31.5, 24.1, 27.7, 31.4, 42.6, 30.6, 37.6, 30.3, 32.4],
+  pctComms:   [25.9, 26.8, 31.5, 24.1, 27.7, 31.4, 42.6, 30.6, 37.6, 30.3, 32.4, 28.6],
   // Raw counts
-  noDomi:     [1717, 2358, 1718, 2477, 1914, 2623, 2332, 2593, 2270, 2723, 2332],
-  speiDur:    [445,  633,  542,  598,  530,  823,  994,  793,  853,  825, 756],
-  sinPago:    [1271, 1725, 1176, 1876, 1384, 1794, 1276, 1800, 1417, 1898, 1569],
+  noDomi:     [1717, 2358, 1718, 2477, 1914, 2623, 2332, 2593, 2270, 2723, 2332, 2804],
+  speiDur:    [445,  633,  542,  598,  530,  823,  994,  793,  853,  825, 756, 802],
+  sinPago:    [1271, 1725, 1176, 1876, 1384, 1794, 1276, 1800, 1417, 1898, 1569, 1997],
 };
 
 const vintageData = {
