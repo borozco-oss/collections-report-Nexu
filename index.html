@@ -815,7 +815,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
     <h2 style="margin-bottom:4px;">Outcomes BKT1 · desagregado por corte</h2>
     <p class="subtitle">Volúmenes absolutos: cuántos clientes terminaron al corriente al cierre D+30 vs. cuántos rollearon a BKT 2. El rollover es pequeño pero materialmente importante: cada cliente que rollea reduce drásticamente la probabilidad de recuperación futura.</p>
     <div class="legend" style="margin-bottom:8px;">
-      <span class="legend-item"><span class="box2" style="background:#1D9E75;"></span>Recuperados al cierre (Current)</span>
+      <span class="legend-item"><span class="box2" style="background:#1D9E75;"></span>Cobrados al cierre</span>
       <span class="legend-item"><span class="box2" style="background:#D85A30;"></span>Rolleados a BKT 2</span>
     </div>
     <div class="chart-wrap-md"><canvas id="rolloverVolumeChart"></canvas></div>
@@ -1006,6 +1006,24 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
      Viene del Cierre de moratorios. La Mora temprana viene de OTRO archivo
      (REPORTE_GENERAL_1EROS_PAGOS), NO del Resultado. No mezclar fuentes.
 
+   ESTADO 15-ago-2026: SIN Cierre de moratorios -> North Stars NO actualizados
+   (solo subpestañas Recaudación/Domiciliación/Análisis adicional/Banco
+   domiciliado, que dependen únicamente del Resultado). Al llegar el Cierre,
+   recomputar los 3 North Stars agregando la clave '15-ago'.
+   *** CUARTO CAMBIO DE FORMATO DEL RESULTADO *** — columnas nuevas:
+     - 'Clasificación_cartera' y 'Producto' YA NO EXISTEN.
+     - 'Número_mensualidad' (entero 1,2,3...36) reemplaza la clasificación
+       categórica M1/M2/M3/M4 — mapear: 1->m1, 2->m2, 3->m3, >=4->m4+.
+     - 'Estatus Banco' (con espacio, valores limpios: 'Operado', 'Fondos
+       insuficientes', 'Cuenta cancelada'...) coexiste con
+       'Estatus_reporte_banco' (valores en mayúsculas de siempre) — ambas
+       columnas presentes y consistentes; se siguió usando
+       'Estatus_reporte_banco' para las causas de rechazo por continuidad.
+   1 duplicado real de VIN (2 intentos distintos, ambos Pagado) — resuelto
+   con drop_duplicates(keep='first'), igual que siempre.
+   Archivo llegó nombrado 'Domi_15__Resultado.xlsx'; contenido (Resumen MTD,
+   Fecha_Intento 17-20 ago) SÍ confirma que es el corte 15-ago-2026.
+
    *** 15-jun-2026 RE-EMITIDO POR FINANZAS (verificado ago-2026) ***
    Al reprocesar los archivos de 15-jun con una copia posterior, los datos
    NO coincidieron con lo publicado originalmente. Diferencias detectadas:
@@ -1020,6 +1038,29 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    LECCIÓN: Finanzas puede re-emitir archivos sin avisar. Al recibir un
    archivo de un corte ya cargado, reprocesarlo completo y comparar contra
    lo publicado antes de asumir que no cambió.
+
+   *** BUG CORREGIDO (ago-2026): "PAGÓ PERO SIGUE EN MORA" NO CONTABILIZADO ***
+   Detectado al comparar manualmente "No pagó al cierre" (bkt1-4DetailByCorte)
+   contra "% Rollover" (rolloverData) para 15-jul: no cuadraban (1.48% vs
+   1.52%). Causa: bkt{1-4}DetailByCorte clasificaba a un cliente como
+   domi/spei_domi con solo mirar su Medio_de_pago en el Resultado, SIN
+   verificar si el Cierre decía que seguía debiendo. Esto dejaba fuera a
+   clientes que pagaron PARCIAL vía domi/SPEI (a veces debiendo miles de
+   pesos) y aun así se contaban como "pago exitoso".
+   FIX: ahora la clasificación SIEMPRE consulta primero el Cierre (BKT SALIDA,
+   ya con la regla del $1 aplicada). Si salida != Current, es no_pago sin
+   importar qué medio de pago aparezca en el Resultado. Solo si salida ==
+   Current se usa el medio de pago para desglosar domi/spei_domi/s2/s3/s4.
+   IMPACTO: mínimo en BKT1 (+0.02 a +0.04pp, ya reconciliaba casi perfecto).
+   GRANDE en BKT2 (+1.3 a +7.4pp), BKT3 (+2.7 a +10.9pp) y BKT4+ (+1.2 a
+   +3.7pp) en LOS 14 CORTES — a mayor bucket, más común el pago parcial que
+   no salda la deuda. Los TOTALES (denominadores) de cada bucket NO
+   cambiaron, solo la composición interna (no_pago sube, domi/spei_domi
+   bajan). Corregido bkt1-4DetailByCorte completos para los 14 cortes.
+   LECCIÓN: cualquier métrica de "pagó o no pagó" debe basarse en el
+   resultado FINAL del Cierre (BKT SALIDA), nunca inferirse solo del medio
+   de pago usado en el Resultado — un cliente puede pagar algo y seguir
+   debiendo.
 
    *** REGLA DE NEGOCIO: UMBRAL DE $1 MXN (validada con Mariela, ago-2026) ***
    Un cliente entra a cobranza (= cuenta como rollover) SOLO si su deuda al
@@ -1075,7 +1116,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    Intentos). Para mora temprana, usar REPORTE_GENERAL exclusivamente.
    ============================================================================ */
 
-const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may','15-may','01-jun','15-jun','01-jul','15-jul'];
+const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may','15-may','01-jun','15-jun','01-jul','15-jul','15-ago'];
 
 // BKT1 granular breakdown: domi / SPEI durante domi / SPEI sem2 / sem3 / sem4 / no pagó
 // Source: cross-reference Resultado (BBVA+Inter+SPEI sheets) x Cierre Data (BKT per VIN)
@@ -1104,70 +1145,70 @@ const intentoPagoData = {
 
 const bkt1DetailByCorte = {
   '01-ene': {domi:74.82, spei_domi:8.26, s2:7.93, s3:3.9, s4:4.22, no_pago:0.87, total:5385},
-  '15-ene': {domi:74.6, spei_domi:10.48, s2:6.02, s3:4.11, s4:3.49, no_pago:1.31, total:6794},
+  '15-ene': {domi:74.57, spei_domi:10.48, s2:6.02, s3:4.11, s4:3.49, no_pago:1.34, total:6794},
   '01-feb': {domi:76.0, spei_domi:9.48, s2:5.57, s3:3.55, s4:4.59, no_pago:0.82, total:5641},
-  '15-feb': {domi:73.7, spei_domi:8.61, s2:8.34, s3:3.78, s4:4.57, no_pago:1.0, total:6897},
+  '15-feb': {domi:73.68, spei_domi:8.61, s2:8.34, s3:3.78, s4:4.57, no_pago:1.01, total:6897},
   '01-mar': {domi:73.81, spei_domi:8.84, s2:6.9, s3:3.27, s4:5.99, no_pago:1.19, total:5872},
-  '15-mar': {domi:72.67, spei_domi:11.54, s2:6.24, s3:4.03, s4:4.39, no_pago:1.13, total:7099},
-  '01-abr': {domi:68.18, spei_domi:17.27, s2:6.67, s3:3.41, s4:3.52, no_pago:0.95, total:6074},
-  '15-abr': {domi:73.79, spei_domi:10.82, s2:6.59, s3:4.24, s4:3.37, no_pago:1.18, total:7265},
+  '15-mar': {domi:72.66, spei_domi:11.54, s2:6.24, s3:4.03, s4:4.39, no_pago:1.14, total:7099},
+  '01-abr': {domi:68.16, spei_domi:17.27, s2:6.67, s3:3.41, s4:3.52, no_pago:0.97, total:6074},
+  '15-abr': {domi:73.78, spei_domi:10.81, s2:6.59, s3:4.24, s4:3.37, no_pago:1.21, total:7265},
   '01-may': {domi:70.61, spei_domi:13.38, s2:6.26, s3:3.05, s4:5.76, no_pago:0.93, total:6322},
-  '15-may': {domi:72.42, spei_domi:11.87, s2:7.92, s3:3.66, s4:3.05, no_pago:1.08, total:7314},
+  '15-may': {domi:72.42, spei_domi:11.85, s2:7.92, s3:3.66, s4:3.05, no_pago:1.09, total:7314},
   '01-jun': {domi:70.58, spei_domi:14.82, s2:6.43, s3:2.83, s4:4.35, no_pago:0.98, total:6500},
-  '15-jun': {domi:72.43, spei_domi:14.63, s2:4.59, s3:4.13, s4:3.12, no_pago:1.1, total:7457},
+  '15-jun': {domi:72.43, spei_domi:14.6, s2:4.59, s3:4.13, s4:3.12, no_pago:1.13, total:7457},
   '01-jul': {domi:70.51, spei_domi:14.05, s2:5.8, s3:3.52, s4:4.97, no_pago:1.14, total:6725},
-  '15-jul': {domi:72.98, spei_domi:13.86, s2:4.28, s3:3.39, s4:4.01, no_pago:1.48, total:7576},
+  '15-jul': {domi:72.95, spei_domi:13.85, s2:4.28, s3:3.39, s4:4.01, no_pago:1.52, total:7576},
 };
 
 const bkt2DetailByCorte = {
-  '01-ene': {domi:9.09, spei_domi:2.6, s2:5.19, s3:7.79, s4:12.99, no_pago:62.34, total:77},
-  '15-ene': {domi:15.33, spei_domi:2.92, s2:3.65, s3:5.11, s4:7.3, no_pago:65.69, total:137},
-  '01-feb': {domi:10.0, spei_domi:1.67, s2:0.0, s3:6.67, s4:11.67, no_pago:70.0, total:60},
-  '15-feb': {domi:12.5, spei_domi:5.15, s2:2.21, s3:6.62, s4:6.62, no_pago:66.91, total:136},
-  '01-mar': {domi:7.02, spei_domi:7.02, s2:1.75, s3:8.77, s4:14.04, no_pago:61.4, total:57},
-  '15-mar': {domi:8.57, spei_domi:1.9, s2:0.0, s3:2.86, s4:17.14, no_pago:69.52, total:105},
-  '01-abr': {domi:8.86, spei_domi:2.53, s2:1.27, s3:5.06, s4:12.66, no_pago:69.62, total:79},
-  '15-abr': {domi:10.42, spei_domi:2.08, s2:4.17, s3:7.29, s4:11.46, no_pago:64.58, total:96},
-  '01-may': {domi:4.29, spei_domi:1.43, s2:4.29, s3:12.86, s4:12.86, no_pago:64.29, total:70},
-  '15-may': {domi:10.91, spei_domi:0.91, s2:10.0, s3:4.55, s4:3.64, no_pago:70.0, total:110},
-  '01-jun': {domi:8.33, spei_domi:1.39, s2:6.94, s3:0.0, s4:6.94, no_pago:76.39, total:72},
-  '15-jun': {domi:8.7, spei_domi:4.35, s2:10.14, s3:10.87, s4:14.49, no_pago:51.45, total:138},
-  '01-jul': {domi:5.33, spei_domi:2.67, s2:4.0, s3:8.0, s4:10.67, no_pago:69.33, total:75},
-  '15-jul': {domi:8.11, spei_domi:5.41, s2:15.54, s3:8.78, s4:10.81, no_pago:51.35, total:148},
+  '01-ene': {domi:6.49, spei_domi:2.6, s2:5.19, s3:7.79, s4:12.99, no_pago:64.94, total:77},
+  '15-ene': {domi:8.03, spei_domi:2.92, s2:3.65, s3:5.11, s4:7.3, no_pago:72.99, total:137},
+  '01-feb': {domi:3.33, spei_domi:1.67, s2:0.0, s3:6.67, s4:13.33, no_pago:75.0, total:60},
+  '15-feb': {domi:5.88, spei_domi:4.41, s2:2.21, s3:6.62, s4:6.62, no_pago:74.26, total:136},
+  '01-mar': {domi:5.26, spei_domi:7.02, s2:1.75, s3:8.77, s4:14.04, no_pago:63.16, total:57},
+  '15-mar': {domi:3.81, spei_domi:1.9, s2:0.0, s3:2.86, s4:19.05, no_pago:72.38, total:105},
+  '01-abr': {domi:5.06, spei_domi:2.53, s2:1.27, s3:5.06, s4:12.66, no_pago:73.42, total:79},
+  '15-abr': {domi:6.25, spei_domi:2.08, s2:4.17, s3:7.29, s4:11.46, no_pago:68.75, total:96},
+  '01-may': {domi:0.0, spei_domi:1.43, s2:4.29, s3:12.86, s4:12.86, no_pago:68.57, total:70},
+  '15-may': {domi:4.55, spei_domi:0.91, s2:10.0, s3:4.55, s4:3.64, no_pago:76.36, total:110},
+  '01-jun': {domi:5.56, spei_domi:1.39, s2:6.94, s3:0.0, s4:6.94, no_pago:79.17, total:72},
+  '15-jun': {domi:4.35, spei_domi:4.35, s2:10.14, s3:10.87, s4:14.49, no_pago:55.8, total:138},
+  '01-jul': {domi:4.0, spei_domi:2.67, s2:4.0, s3:8.0, s4:10.67, no_pago:70.67, total:75},
+  '15-jul': {domi:4.05, spei_domi:5.41, s2:15.54, s3:8.78, s4:10.81, no_pago:55.41, total:148},
 };
 
 const bkt3DetailByCorte = {
-  '01-ene': {domi:4.0, spei_domi:0.0, s2:0.0, s3:8.0, s4:4.0, no_pago:84.0, total:25},
-  '15-ene': {domi:2.7, spei_domi:0.0, s2:0.0, s3:5.41, s4:10.81, no_pago:81.08, total:37},
-  '01-feb': {domi:3.7, spei_domi:0.0, s2:0.0, s3:0.0, s4:3.7, no_pago:92.59, total:27},
-  '15-feb': {domi:6.45, spei_domi:0.0, s2:4.84, s3:1.61, s4:4.84, no_pago:82.26, total:62},
-  '01-mar': {domi:3.85, spei_domi:3.85, s2:3.85, s3:0.0, s4:0.0, no_pago:88.46, total:26},
-  '15-mar': {domi:4.94, spei_domi:0.0, s2:2.47, s3:1.23, s4:2.47, no_pago:88.89, total:81},
-  '01-abr': {domi:7.14, spei_domi:3.57, s2:0.0, s3:3.57, s4:7.14, no_pago:78.57, total:28},
-  '15-abr': {domi:4.48, spei_domi:1.49, s2:0.0, s3:4.48, s4:2.99, no_pago:86.57, total:67},
-  '01-may': {domi:7.14, spei_domi:2.38, s2:2.38, s3:0.0, s4:2.38, no_pago:85.71, total:42},
-  '15-may': {domi:8.0, spei_domi:6.0, s2:0.0, s3:0.0, s4:0.0, no_pago:86.0, total:50},
-  '01-jun': {domi:5.13, spei_domi:2.56, s2:2.56, s3:0.0, s4:2.56, no_pago:87.18, total:39},
-  '15-jun': {domi:9.09, spei_domi:5.45, s2:0.0, s3:0.0, s4:9.09, no_pago:76.36, total:55},
-  '01-jul': {domi:10.0, spei_domi:0.0, s2:0.0, s3:0.0, s4:2.5, no_pago:87.5, total:40},
-  '15-jul': {domi:13.04, spei_domi:4.35, s2:4.35, s3:0.0, s4:0.0, no_pago:78.26, total:46},
+  '01-ene': {domi:0.0, spei_domi:0.0, s2:0.0, s3:8.0, s4:4.0, no_pago:88.0, total:25},
+  '15-ene': {domi:0.0, spei_domi:0.0, s2:0.0, s3:5.41, s4:10.81, no_pago:83.78, total:37},
+  '01-feb': {domi:0.0, spei_domi:0.0, s2:0.0, s3:0.0, s4:3.7, no_pago:96.3, total:27},
+  '15-feb': {domi:1.61, spei_domi:0.0, s2:4.84, s3:1.61, s4:4.84, no_pago:87.1, total:62},
+  '01-mar': {domi:0.0, spei_domi:3.85, s2:3.85, s3:0.0, s4:0.0, no_pago:92.31, total:26},
+  '15-mar': {domi:1.23, spei_domi:0.0, s2:2.47, s3:1.23, s4:2.47, no_pago:92.59, total:81},
+  '01-abr': {domi:0.0, spei_domi:3.57, s2:0.0, s3:3.57, s4:7.14, no_pago:85.71, total:28},
+  '15-abr': {domi:0.0, spei_domi:1.49, s2:0.0, s3:4.48, s4:2.99, no_pago:91.04, total:67},
+  '01-may': {domi:0.0, spei_domi:0.0, s2:2.38, s3:0.0, s4:2.38, no_pago:95.24, total:42},
+  '15-may': {domi:0.0, spei_domi:6.0, s2:0.0, s3:0.0, s4:0.0, no_pago:94.0, total:50},
+  '01-jun': {domi:0.0, spei_domi:2.56, s2:2.56, s3:0.0, s4:2.56, no_pago:92.31, total:39},
+  '15-jun': {domi:0.0, spei_domi:5.45, s2:0.0, s3:0.0, s4:9.09, no_pago:85.45, total:55},
+  '01-jul': {domi:0.0, spei_domi:0.0, s2:0.0, s3:0.0, s4:2.5, no_pago:97.5, total:40},
+  '15-jul': {domi:2.17, spei_domi:4.35, s2:4.35, s3:0.0, s4:0.0, no_pago:89.13, total:46},
 };
 
 const bkt4DetailByCorte = {
-  '01-ene': {domi:2.91, spei_domi:0.0, s2:0.0, s3:0.0, s4:0.36, no_pago:96.73, total:275},
-  '15-ene': {domi:2.27, spei_domi:0.21, s2:0.0, s3:0.0, s4:0.41, no_pago:97.11, total:485},
-  '01-feb': {domi:1.77, spei_domi:0.0, s2:0.0, s3:0.0, s4:0.0, no_pago:98.23, total:282},
-  '15-feb': {domi:1.24, spei_domi:0.21, s2:0.0, s3:0.21, s4:0.21, no_pago:98.14, total:484},
-  '01-mar': {domi:1.69, spei_domi:0.0, s2:0.0, s3:0.0, s4:1.01, no_pago:97.3, total:296},
-  '15-mar': {domi:1.39, spei_domi:0.2, s2:0.0, s3:0.0, s4:0.2, no_pago:98.22, total:505},
-  '01-abr': {domi:2.33, spei_domi:0.0, s2:0.33, s3:0.33, s4:0.0, no_pago:97.01, total:301},
-  '15-abr': {domi:1.66, spei_domi:0.18, s2:0.18, s3:0.55, s4:0.55, no_pago:96.86, total:542},
-  '01-may': {domi:1.64, spei_domi:0.33, s2:0.33, s3:0.0, s4:0.0, no_pago:97.7, total:304},
-  '15-may': {domi:1.24, spei_domi:0.0, s2:0.0, s3:0.36, s4:0.36, no_pago:98.05, total:563},
-  '01-jun': {domi:3.73, spei_domi:0.0, s2:0.31, s3:0.31, s4:0.0, no_pago:95.65, total:322},
-  '15-jun': {domi:1.39, spei_domi:0.35, s2:0.52, s3:0.17, s4:0.0, no_pago:97.57, total:575},
-  '01-jul': {domi:2.06, spei_domi:0.0, s2:0.29, s3:0.0, s4:0.0, no_pago:97.65, total:340},
-  '15-jul': {domi:1.67, spei_domi:0.17, s2:0.0, s3:0.33, s4:0.5, no_pago:97.32, total:598},
+  '01-ene': {domi:0.0, spei_domi:0.0, s2:0.0, s3:0.0, s4:0.36, no_pago:99.64, total:275},
+  '15-ene': {domi:0.0, spei_domi:0.21, s2:0.0, s3:0.0, s4:0.41, no_pago:99.38, total:485},
+  '01-feb': {domi:0.0, spei_domi:0.0, s2:0.0, s3:0.0, s4:0.0, no_pago:100.0, total:282},
+  '15-feb': {domi:0.0, spei_domi:0.0, s2:0.0, s3:0.21, s4:0.21, no_pago:99.59, total:484},
+  '01-mar': {domi:0.34, spei_domi:0.0, s2:0.0, s3:0.0, s4:1.01, no_pago:98.65, total:296},
+  '15-mar': {domi:0.0, spei_domi:0.2, s2:0.0, s3:0.0, s4:0.2, no_pago:99.6, total:505},
+  '01-abr': {domi:0.0, spei_domi:0.0, s2:0.33, s3:0.33, s4:0.0, no_pago:99.34, total:301},
+  '15-abr': {domi:0.18, spei_domi:0.18, s2:0.18, s3:0.55, s4:0.55, no_pago:98.34, total:542},
+  '01-may': {domi:0.0, spei_domi:0.33, s2:0.33, s3:0.0, s4:0.0, no_pago:99.34, total:304},
+  '15-may': {domi:0.0, spei_domi:0.0, s2:0.0, s3:0.36, s4:0.36, no_pago:99.29, total:563},
+  '01-jun': {domi:0.0, spei_domi:0.0, s2:0.31, s3:0.31, s4:0.0, no_pago:99.38, total:322},
+  '15-jun': {domi:0.0, spei_domi:0.35, s2:0.52, s3:0.17, s4:0.0, no_pago:98.96, total:575},
+  '01-jul': {domi:0.0, spei_domi:0.0, s2:0.29, s3:0.0, s4:0.0, no_pago:99.71, total:340},
+  '15-jul': {domi:0.0, spei_domi:0.17, s2:0.0, s3:0.33, s4:0.5, no_pago:99.0, total:598},
 };
 
 // Rollover BKT1 → BKT2: universe = cartera BKT1 entering corte (full Resultado minus BKT2/3/4 entering in Cierre)
@@ -1378,6 +1419,14 @@ const data = {
     roll: {b1b2: 1.52, b2b3: null, b3b4: null},
     outcomes: null,
     bkt1Detail: {domi: 86.84, cob: 11.68, no: 1.48}
+  },
+  '15-ago': {
+    color: '#1D9E75', day: 15, hasCierre: false,
+    pcts: [0.0,63.14,70.22,73.13,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9,75.9],
+    intentosDias: [1,2,3,4],
+    startPct: 63.14, endPct: 75.9, delta: 12.76, endDay: 30,
+    domiIntentos: [63.14, 7.08, 2.91, 2.77],
+    roll: null, outcomes: null, bkt1Detail: null
   }
 };
 
@@ -1395,31 +1444,32 @@ const extraData = {
   '01-jun': {cartera: {m1: 269, m2: 353, m3: 306, m4: 6005}, causas: {insuficiencia:1661,cancelada:153,bloqueada:110,domibaja:37,inexistente:34,reverso:25,otros:38}, totalRechazos: 2058, totalOperados: 5364, windowEarly: null, windowLate: null, combined: {i1: 65.46, i2: 5.49, i3: 3.26, i4: 3.16, s2: 6.13, s3: 2.67, s4: 7.18, hasC: true}},
   '15-jun': {cartera: {m1: 336, m2: 222, m3: 325, m4: 7342}, causas: {insuficiencia:2055,cancelada:189,bloqueada:163,domibaja:45,inexistente:37,reverso:19,otros:296}, totalRechazos: 2804, totalOperados: 6228, windowEarly: null, windowLate: null, combined: {i1: 62.34, i2: 7.16, i3: 3.82, i4: 2.4, s2: 4.36, s3: 3.94, s4: 6.79, hasC: true}},
   '01-jul': {cartera: {m1: 344, m2: 269, m3: 351, m4: 6216}, causas: {insuficiencia:1881,cancelada:153,bloqueada:116,domibaja:45,inexistente:28,reverso:28,otros:179}, totalRechazos: 2430, totalOperados: 5584, windowEarly: null, windowLate: null, combined: {i1: 58.38, i2: 10.52, i3: 5.79, i4: 3.08, s2: 5.49, s3: 3.38, s4: 6.45, hasC: true}},
-  '15-jul': {cartera: {m1: 297, m2: 336, m3: 221, m4: 7514}, causas: {insuficiencia:2171,cancelada:165,bloqueada:151,domibaja:54,inexistente:32,reverso:23,otros:216}, totalRechazos: 2812, totalOperados: 6453, windowEarly: null, windowLate: null, combined: {i1: 63.4, i2: 6.04, i3: 5.3, i4: 2.38, s2: 4.0, s3: 3.07, s4: 5.69, hasC: true}}
+  '15-jul': {cartera: {m1: 297, m2: 336, m3: 221, m4: 7514}, causas: {insuficiencia:2171,cancelada:165,bloqueada:151,domibaja:54,inexistente:32,reverso:23,otros:216}, totalRechazos: 2812, totalOperados: 6453, windowEarly: null, windowLate: null, combined: {i1: 63.4, i2: 6.04, i3: 5.3, i4: 2.38, s2: 4.0, s3: 3.07, s4: 5.69, hasC: true}},
+  '15-ago': {cartera: {m1: 321, m2: 297, m3: 336, m4: 7593}, causas: {insuficiencia:2161,cancelada:166,bloqueada:154,domibaja:57,inexistente:34,reverso:18,otros:394}, totalRechazos: 2984, totalOperados: 6487, windowEarly: null, windowLate: null, combined: {i1: 63.14, i2: 7.08, i3: 2.91, i4: 2.77, s2: 0, s3: 0, s4: 0, hasC: false}}
 };
 
 const bankDataV2 = {
-  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul'],
-  bbva: [74.6, 71.3, 76.1, 70.0, 72.9, 71.5, 73.8, 71.5, 73.1,70.8,70.7,69.8,70.7,71.8], inter: [78.6, 77.5, 80.8, 75.9, 79.3, 76.8, 79.5, 77.9, 79.1,76.7,76.9,72.6,77.4,75.9],
-  bbvaN: [1932, 2534, 1996, 2577, 2108, 2569, 1980, 2640, 2160,2624,2253,2710,2322,2730], interN: [3381, 4292, 3472, 4402, 3611, 4398, 3442, 4532, 3723,4584,3913,4860,4021,4733],
-  methods: ['4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.','4 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.'], days: [1, 15, 1, 15, 1, 15, 1, 15, 1,15,1,15,1,15],
+  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul','15-ago'],
+  bbva: [74.6, 71.3, 76.1, 70.0, 72.9, 71.5, 73.8, 71.5, 73.1,70.8,70.7,69.8,70.7,71.8,69.5], inter: [78.6, 77.5, 80.8, 75.9, 79.3, 76.8, 79.5, 77.9, 79.1,76.7,76.9,72.6,77.4,75.9,75.0],
+  bbvaN: [1932, 2534, 1996, 2577, 2108, 2569, 1980, 2640, 2160,2624,2253,2710,2322,2730,2777], interN: [3381, 4292, 3472, 4402, 3611, 4398, 3442, 4532, 3723,4584,3913,4860,4021,4733,4842],
+  methods: ['4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.','4 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.'], days: [1, 15, 1, 15, 1, 15, 1, 15, 1,15,1,15,1,15,15],
 };
 
-const allMixLabels = ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul'];
-const allMixTotals = [5762, 7453, 6010, 7581, 6251, 7796, 6482, 7970, 6738,8037,6933,8225,7180,8368];
+const allMixLabels = ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul','15-ago'];
+const allMixTotals = [5762, 7453, 6010, 7581, 6251, 7796, 6482, 7970, 6738,8037,6933,8225,7180,8368,8547];
 const allMixDatasets = [
-  {label:'BBVA Bancomer',data:[2097, 2751, 2180, 2778, 2274, 2858, 2350, 2900, 2435,2918,2253,2710,2322,2730],backgroundColor:'#3B3ACA',borderWidth:0,stack:'s'},
-        {label:'Santander',data:[827, 955, 868, 971, 906, 991, 939, 1023, 970,1037,948,1117,984,1142],backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
-        {label:'Banorte',data:[778, 927, 825, 956, 859, 984, 898, 1008, 938,1020,933,1099,968,1123],backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
-        {label:'Banamex',data:[808, 1048, 833, 1086, 861, 1124, 892, 1149, 923,1158,1059,1248,1099,1275],backgroundColor:'#1D9E75',borderWidth:0,stack:'s'},
-        {label:'HSBC',data:[363, 512, 379, 520, 397, 536, 412, 552, 437,551,504,594,523,607],backgroundColor:'#D4537E',borderWidth:0,stack:'s'},
-        {label:'Azteca',data:[271, 357, 282, 358, 290, 367, 306, 374, 318,375,343,404,356,413],backgroundColor:'#7F77DD',borderWidth:0,stack:'s'},
-        {label:'Scotiabank',data:[145, 223, 157, 224, 161, 234, 163, 240, 177,245,224,264,233,270],backgroundColor:'#854F0B',borderWidth:0,stack:'s'},
-        {label:'BanCoppel',data:[137, 168, 136, 170, 140, 172, 148, 181, 153,185,169,199,176,204],backgroundColor:'#378ADD',borderWidth:0,stack:'s'},
-        {label:'Inbursa',data:[107, 166, 115, 165, 119, 162, 123, 169, 126,173,158,186,164,191],backgroundColor:'#888780',borderWidth:0,stack:'s'},
-        {label:'Bajío',data:[81, 131, 84, 132, 89, 141, 90, 141, 94,142,130,153,135,156],backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
-        {label:'Banregio',data:[65, 92, 67, 96, 65, 100, 66, 102, 67,101,92,109,96,111],backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
-        {label:'Otros',data:[72, 116, 73, 114, 79, 116, 84, 118, 89,119,121,142,125,145],backgroundColor:'#CECDCA',borderWidth:0,stack:'s'}
+  {label:'BBVA Bancomer',data:[2097, 2751, 2180, 2778, 2274, 2858, 2350, 2900, 2435,2918,2253,2710,2322,2730,2777],backgroundColor:'#3B3ACA',borderWidth:0,stack:'s'},
+        {label:'Santander',data:[827, 955, 868, 971, 906, 991, 939, 1023, 970,1037,948,1117,984,1142,1169],backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
+        {label:'Banorte',data:[778, 927, 825, 956, 859, 984, 898, 1008, 938,1020,933,1099,968,1123,1150],backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
+        {label:'Banamex',data:[808, 1048, 833, 1086, 861, 1124, 892, 1149, 923,1158,1059,1248,1099,1275,1305],backgroundColor:'#1D9E75',borderWidth:0,stack:'s'},
+        {label:'HSBC',data:[363, 512, 379, 520, 397, 536, 412, 552, 437,551,504,594,523,607,621],backgroundColor:'#D4537E',borderWidth:0,stack:'s'},
+        {label:'Azteca',data:[271, 357, 282, 358, 290, 367, 306, 374, 318,375,343,404,356,413,423],backgroundColor:'#7F77DD',borderWidth:0,stack:'s'},
+        {label:'Scotiabank',data:[145, 223, 157, 224, 161, 234, 163, 240, 177,245,224,264,233,270,276],backgroundColor:'#854F0B',borderWidth:0,stack:'s'},
+        {label:'BanCoppel',data:[137, 168, 136, 170, 140, 172, 148, 181, 153,185,169,199,176,204,209],backgroundColor:'#378ADD',borderWidth:0,stack:'s'},
+        {label:'Inbursa',data:[107, 166, 115, 165, 119, 162, 123, 169, 126,173,158,186,164,191,195],backgroundColor:'#888780',borderWidth:0,stack:'s'},
+        {label:'Bajío',data:[81, 131, 84, 132, 89, 141, 90, 141, 94,142,130,153,135,156,160],backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
+        {label:'Banregio',data:[65, 92, 67, 96, 65, 100, 66, 102, 67,101,92,109,96,111,114],backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
+        {label:'Otros',data:[72, 116, 73, 114, 79, 116, 84, 118, 89,119,121,142,125,145,149],backgroundColor:'#CECDCA',borderWidth:0,stack:'s'}
 ];
 
 const northStarData = {
@@ -2756,7 +2806,7 @@ function buildPorBktCharts() {
 
   const trendDatasets = [];
   if (showD1) trendDatasets.push({
-    label: 'Día 1', data: months.map(m => d1Map[m]?.v ?? null),
+    label: 'Corte 1', data: months.map(m => d1Map[m]?.v ?? null),
     borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.05)',
     borderWidth: 2.5, tension: 0.3,
     pointRadius: 6, pointHoverRadius: 8,
@@ -2764,7 +2814,7 @@ function buildPorBktCharts() {
     fill: false, spanGaps: true,
   });
   if (showD15) trendDatasets.push({
-    label: 'Día 15', data: months.map(m => d15Map[m]?.v ?? null),
+    label: 'Corte 15', data: months.map(m => d15Map[m]?.v ?? null),
     borderColor: '#3B3ACA', backgroundColor: 'rgba(59,58,202,0.05)',
     borderWidth: 2.5, tension: 0.3, borderDash: [6,4],
     pointRadius: 6, pointHoverRadius: 8,
@@ -2789,7 +2839,7 @@ function buildPorBktCharts() {
             label: ctx => {
               if (ctx.parsed.y == null) return null;
               const m = months[ctx.dataIndex];
-              const src = ctx.dataset.label === 'Día 1' ? d1Map[m] : d15Map[m];
+              const src = ctx.dataset.label === 'Corte 1' ? d1Map[m] : d15Map[m];
               return ` ${ctx.dataset.label}: ${ctx.parsed.y}% (domi ${src.d.domi}% + SPEI domi ${src.d.spei_domi}%)`;
             }
           },
@@ -2806,22 +2856,40 @@ function buildPorBktCharts() {
       id: 'trendLabels',
       afterDatasetsDraw(chart) {
         const ctx2 = chart.ctx;
-        chart.data.datasets.forEach((ds, dsIdx) => {
-          const meta = chart.getDatasetMeta(dsIdx);
-          const color = ds.borderColor;
-          meta.data.forEach((pt, i) => {
+        const metas = chart.data.datasets.map((_, idx) => chart.getDatasetMeta(idx));
+        const n = chart.data.labels.length;
+        const MIN_GAP = 20; // separación mínima en px para que las etiquetas no se encimen
+
+        for (let i = 0; i < n; i++) {
+          const pts = [];
+          chart.data.datasets.forEach((ds, dsIdx) => {
             const val = ds.data[i];
             if (val == null) return;
-            ctx2.save();
-            ctx2.font = 'bold 11px -apple-system,sans-serif';
-            ctx2.fillStyle = color;
-            ctx2.textAlign = 'center';
-            // Offset to avoid overlapping when both lines exist
-            const offsetY = dsIdx === 0 ? -14 : 18;
-            ctx2.fillText(val.toFixed(1)+'%', pt.x, pt.y + offsetY);
-            ctx2.restore();
+            const pt = metas[dsIdx].data[i];
+            pts.push({ val, x: pt.x, y: pt.y, color: ds.borderColor });
           });
-        });
+          if (pts.length === 0) continue;
+
+          ctx2.save();
+          ctx2.font = 'bold 11px -apple-system,sans-serif';
+          ctx2.textAlign = 'center';
+
+          if (pts.length === 1) {
+            ctx2.fillStyle = pts[0].color;
+            ctx2.fillText(pts[0].val.toFixed(1)+'%', pts[0].x, pts[0].y - 14);
+          } else {
+            // Ordenar por posición vertical real (no por índice de dataset)
+            pts.sort((a,b) => a.y - b.y);
+            const [top, bottom] = pts;
+            const gap = bottom.y - top.y;
+            const [topOffset, bottomOffset] = gap < MIN_GAP ? [-16, 16] : [-12, 14];
+            ctx2.fillStyle = top.color;
+            ctx2.fillText(top.val.toFixed(1)+'%', top.x, top.y + topOffset);
+            ctx2.fillStyle = bottom.color;
+            ctx2.fillText(bottom.val.toFixed(1)+'%', bottom.x, bottom.y + bottomOffset);
+          }
+          ctx2.restore();
+        }
       }
     }]
   });
@@ -2960,8 +3028,8 @@ function buildIntentoProgresionChart() {
     data: {
       labels,
       datasets: [
-        { type:'bar', label:'Domi (incremental)', data:domiData, backgroundColor:'#1D9E75', stack:'s', borderRadius:3, order:2 },
-        { type:'bar', label:'SPEI (incremental)', data:speiData, backgroundColor:'#3B3ACA', stack:'s', borderRadius:3, order:2 },
+        { type:'bar', label:'Domi', data:domiData, backgroundColor:'#1D9E75', stack:'s', borderRadius:3, order:2 },
+        { type:'bar', label:'SPEI', data:speiData, backgroundColor:'#3B3ACA', stack:'s', borderRadius:3, order:2 },
         { type:'line', label:'% acumulado', data:cumData, borderColor:'#888780', backgroundColor:'rgba(136,135,128,0.06)',
           borderWidth:2, borderDash:[5,4], tension:0.25, pointRadius:5, pointBackgroundColor:'#5F5E5A',
           yAxisID:'y', fill:false, order:1 },
@@ -2993,8 +3061,13 @@ function buildIntentoProgresionChart() {
       id: 'intentoLabels',
       afterDatasetsDraw(chart) {
         const ctx2 = chart.ctx;
-        // Etiqueta del acumulado sobre cada punto de la línea
+        const domiMeta = chart.getDatasetMeta(0);
+        const speiMeta = chart.getDatasetMeta(1);
         const lineMeta = chart.getDatasetMeta(2);
+        const baseY = chart.scales.y.getPixelForValue(0);
+        const INSIDE_MIN = 5; // % mínimo para escribir el valor DENTRO del segmento
+
+        // Etiqueta del acumulado sobre cada punto de la línea
         lineMeta.data.forEach((pt,i) => {
           ctx2.save();
           ctx2.font = 'bold 11px -apple-system,sans-serif';
@@ -3003,25 +3076,44 @@ function buildIntentoProgresionChart() {
           ctx2.fillText(cumData[i].toFixed(1)+'%', pt.x, pt.y - 12);
           ctx2.restore();
         });
-        // Etiqueta del total incremental dentro de cada barra apilada
-        const domiMeta = chart.getDatasetMeta(0);
-        const speiMeta = chart.getDatasetMeta(1);
+
+        // Domi: centrado dentro si el segmento es grande; si no, arriba de la barra en verde
         domiMeta.data.forEach((bar,i) => {
-          if (domiData[i] < 3) return;
+          const val = domiData[i];
+          if (val <= 0) return;
           ctx2.save();
           ctx2.font = 'bold 10px -apple-system,sans-serif';
-          ctx2.fillStyle = '#fff';
           ctx2.textAlign = 'center';
-          ctx2.fillText(domiData[i].toFixed(1)+'%', bar.x, bar.y + 14);
+          if (val >= INSIDE_MIN) {
+            const midY = (baseY + bar.y) / 2;
+            ctx2.fillStyle = '#fff';
+            ctx2.fillText(val.toFixed(1)+'%', bar.x, midY + 4);
+          } else {
+            const topY = speiMeta.data[i].y; // techo de toda la barra
+            ctx2.fillStyle = '#1D9E75';
+            ctx2.fillText(val.toFixed(1)+'%', bar.x, topY - 20);
+          }
           ctx2.restore();
         });
+
+        // SPEI: centrado dentro si el segmento es grande; si no, arriba de la barra en azul
         speiMeta.data.forEach((bar,i) => {
-          if (speiData[i] < 3) return;
+          const val = speiData[i];
+          if (val <= 0) return;
           ctx2.save();
           ctx2.font = 'bold 10px -apple-system,sans-serif';
-          ctx2.fillStyle = '#fff';
           ctx2.textAlign = 'center';
-          ctx2.fillText(speiData[i].toFixed(1)+'%', bar.x, bar.y + 14);
+          if (val >= INSIDE_MIN) {
+            const domiTopY = domiMeta.data[i].y;
+            const midY = (domiTopY + bar.y) / 2;
+            ctx2.fillStyle = '#fff';
+            ctx2.fillText(val.toFixed(1)+'%', bar.x, midY + 4);
+          } else {
+            const domiAlsoOutside = domiData[i] < INSIDE_MIN;
+            const offset = domiAlsoOutside ? 34 : 20;
+            ctx2.fillStyle = '#3B3ACA';
+            ctx2.fillText(val.toFixed(1)+'%', bar.x, bar.y - offset);
+          }
           ctx2.restore();
         });
       }
@@ -3073,7 +3165,7 @@ function buildRolloverNsCharts() {
 
   const rollDatasets = [];
   if (showD1) rollDatasets.push({
-    label: 'Día 1', data: months.map(m => d1Map[m]?.rolled_b2_pct ?? null),
+    label: 'Corte 1', data: months.map(m => d1Map[m]?.rolled_b2_pct ?? null),
     borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.04)',
     borderWidth: 2.5, tension: 0.3,
     pointRadius: 6, pointHoverRadius: 8,
@@ -3081,7 +3173,7 @@ function buildRolloverNsCharts() {
     fill: false, spanGaps: true,
   });
   if (showD15) rollDatasets.push({
-    label: 'Día 15', data: months.map(m => d15Map[m]?.rolled_b2_pct ?? null),
+    label: 'Corte 15', data: months.map(m => d15Map[m]?.rolled_b2_pct ?? null),
     borderColor: '#3B3ACA', backgroundColor: 'rgba(59,58,202,0.04)',
     borderWidth: 2.5, tension: 0.3, borderDash: [6,4],
     pointRadius: 6, pointHoverRadius: 8,
@@ -3106,7 +3198,7 @@ function buildRolloverNsCharts() {
             label: ctx => {
               if (ctx.parsed.y == null) return null;
               const m = months[ctx.dataIndex];
-              const src = ctx.dataset.label === 'Día 1' ? d1Map[m] : d15Map[m];
+              const src = ctx.dataset.label === 'Corte 1' ? d1Map[m] : d15Map[m];
               return ` ${ctx.dataset.label}: ${src.rolled_b2} de ${src.total.toLocaleString()} (${ctx.parsed.y.toFixed(2)}%)`;
             }
           },
@@ -3124,21 +3216,39 @@ function buildRolloverNsCharts() {
       id: 'rollLabels',
       afterDatasetsDraw(chart) {
         const ctx2 = chart.ctx;
-        chart.data.datasets.forEach((ds, dsIdx) => {
-          const meta = chart.getDatasetMeta(dsIdx);
-          const color = ds.borderColor;
-          meta.data.forEach((pt, i) => {
+        const metas = chart.data.datasets.map((_, idx) => chart.getDatasetMeta(idx));
+        const n = chart.data.labels.length;
+        const MIN_GAP = 20;
+
+        for (let i = 0; i < n; i++) {
+          const pts = [];
+          chart.data.datasets.forEach((ds, dsIdx) => {
             const val = ds.data[i];
             if (val == null) return;
-            ctx2.save();
-            ctx2.font = 'bold 11px -apple-system,sans-serif';
-            ctx2.fillStyle = color;
-            ctx2.textAlign = 'center';
-            const offsetY = dsIdx === 0 ? -14 : 18;
-            ctx2.fillText(val.toFixed(2)+'%', pt.x, pt.y + offsetY);
-            ctx2.restore();
+            const pt = metas[dsIdx].data[i];
+            pts.push({ val, x: pt.x, y: pt.y, color: ds.borderColor });
           });
-        });
+          if (pts.length === 0) continue;
+
+          ctx2.save();
+          ctx2.font = 'bold 11px -apple-system,sans-serif';
+          ctx2.textAlign = 'center';
+
+          if (pts.length === 1) {
+            ctx2.fillStyle = pts[0].color;
+            ctx2.fillText(pts[0].val.toFixed(2)+'%', pts[0].x, pts[0].y - 14);
+          } else {
+            pts.sort((a,b) => a.y - b.y);
+            const [top, bottom] = pts;
+            const gap = bottom.y - top.y;
+            const [topOffset, bottomOffset] = gap < MIN_GAP ? [-16, 16] : [-12, 14];
+            ctx2.fillStyle = top.color;
+            ctx2.fillText(top.val.toFixed(2)+'%', top.x, top.y + topOffset);
+            ctx2.fillStyle = bottom.color;
+            ctx2.fillText(bottom.val.toFixed(2)+'%', bottom.x, bottom.y + bottomOffset);
+          }
+          ctx2.restore();
+        }
         // average reference line
         const yScale = chart.scales.y;
         const avgY = yScale.getPixelForValue(avgRoll);
@@ -3168,7 +3278,7 @@ function buildRolloverNsCharts() {
     data: {
       labels: cortes,
       datasets: [
-        { label:'Recuperados al cierre (Current)', data:currents,  backgroundColor:'#1D9E75', borderWidth:0, stack:'s' },
+        { label:'Cobrados al cierre', data:currents,  backgroundColor:'#1D9E75', borderWidth:0, stack:'s' },
         { label:'Rolleados a BKT 2',       data:rolledAbs, backgroundColor:'#D85A30', borderWidth:0, stack:'s' },
       ]
     },
@@ -3197,7 +3307,18 @@ function buildRolloverNsCharts() {
       id: 'volLabels',
       afterDatasetsDraw(chart) {
         const ctx2 = chart.ctx;
+        const baseY = chart.scales.y.getPixelForValue(0);
+        const currentMeta = chart.getDatasetMeta(0);
         const rollMeta = chart.getDatasetMeta(1);
+        currentMeta.data.forEach((bar, i) => {
+          ctx2.save();
+          ctx2.font='bold 11px -apple-system,sans-serif';
+          ctx2.fillStyle='#fff';
+          ctx2.textAlign='center';
+          const midY = (baseY + bar.y) / 2;
+          ctx2.fillText(currents[i].toLocaleString(), bar.x, midY + 4);
+          ctx2.restore();
+        });
         rollMeta.data.forEach((bar, i) => {
           ctx2.save();
           ctx2.font='bold 11px -apple-system,sans-serif';
