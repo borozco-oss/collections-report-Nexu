@@ -2266,7 +2266,10 @@ function buildMainChart() {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode:'index', intersect:false },
       plugins: {
-        legend: { display: false },
+        legend: {
+          display: true, position: 'top', align: 'start',
+          labels: { color:'#5F5E5A', font:{size:10.5}, boxWidth:16, boxHeight:2.5, padding:8, usePointStyle:false }
+        },
         tooltip: {
           callbacks: { 
             label: ctx => ctx.parsed.y !== null ? ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` : null 
