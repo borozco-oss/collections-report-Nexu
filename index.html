@@ -735,6 +735,15 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
     <h2 style="margin-bottom:4px;">Progresión del pago a tiempo por intento de domi (BKT1)</h2>
     <p class="subtitle">Baseline histórico (promedio de los cortes seleccionados): ¿cuánto se captura en cada intento de domi, y cuánto de eso es domi automática vs SPEI? Cada barra es lo capturado <strong>en ese intento específico</strong> (incremental); la línea muestra el acumulado.</p>
 
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:10px 0 6px;">
+      <span style="font-size:12px;color:#5F5E5A;font-weight:600;">Elegir cortes del baseline:</span>
+      <div style="display:flex;gap:6px;">
+        <button id="intentoSelAll" style="font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid rgba(0,0,0,0.12);background:#F7F7FC;color:#3B3ACA;cursor:pointer;font-weight:600;">Todos</button>
+        <button id="intentoSelNone" style="font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid rgba(0,0,0,0.12);background:#F7F7FC;color:#888780;cursor:pointer;font-weight:600;">Ninguno</button>
+      </div>
+    </div>
+    <div id="intentoCortePicker" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;"></div>
+
     <div class="grid-3" style="margin-bottom:8px;">
       <div class="kpi" style="border-left:3px solid #1D9E75;">
         <p class="kpi-label">Acumulado al 1° intento</p>
@@ -876,7 +885,10 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
             <th style="text-align:right;padding:10px 12px;font-weight:600;color:#1D9E75;">Recuperados</th>
             <th style="text-align:right;padding:10px 12px;font-weight:600;color:#1D9E75;">% recuperación</th>
             <th style="text-align:right;padding:10px 12px;font-weight:600;color:#D85A30;">Rolled BKT2</th>
+            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#EF9F27;">Rollover sin dación</th>
+            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#8B2E1A;">Rollover · Dación</th>
             <th style="text-align:right;padding:10px 12px;font-weight:600;color:#D85A30;">% rollover</th>
+            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#EF9F27;">% rollover sin dación</th>
           </tr>
         </thead>
         <tbody id="rolloverTableBody"></tbody>
@@ -1639,20 +1651,20 @@ const bkt4DetailByCorte = {
 // a "sin_dacion" (cliente sigue activo, simplemente no pagó). Confirmado con Baruch
 // que dación = Consigna + Resguardo juntos. dacion + sin_dacion = total (rolloverData).
 const dacionData = {
-  '01-ene': {total:31, dacion:16, sin_dacion:15},
-  '15-ene': {total:74, dacion:17, sin_dacion:57},
-  '01-feb': {total:29, dacion:17, sin_dacion:12},
-  '15-feb': {total:58, dacion:12, sin_dacion:46},
-  '01-mar': {total:47, dacion:23, sin_dacion:24},
-  '15-mar': {total:68, dacion:18, sin_dacion:50},
-  '01-abr': {total:44, dacion:15, sin_dacion:29},
-  '15-abr': {total:80, dacion:21, sin_dacion:59},
-  '01-may': {total:60, dacion:14, sin_dacion:46},
+  '01-ene': {total:47, dacion:16, sin_dacion:31},
+  '15-ene': {total:91, dacion:17, sin_dacion:74},
+  '01-feb': {total:46, dacion:17, sin_dacion:29},
+  '15-feb': {total:70, dacion:12, sin_dacion:58},
+  '01-mar': {total:70, dacion:23, sin_dacion:47},
+  '15-mar': {total:81, dacion:18, sin_dacion:63},
+  '01-abr': {total:59, dacion:15, sin_dacion:44},
+  '15-abr': {total:88, dacion:21, sin_dacion:67},
+  '01-may': {total:59, dacion:14, sin_dacion:45},
   '15-may': {total:80, dacion:10, sin_dacion:70},
   '01-jun': {total:64, dacion:16, sin_dacion:48},
   '15-jun': {total:84, dacion:11, sin_dacion:73},
-  '01-jul': {total:77, dacion:24, sin_dacion:53},
-  '15-jul': {total:115, dacion:18, sin_dacion:97},
+  '01-jul': {total:77, dacion:23, sin_dacion:54},
+  '15-jul': {total:115, dacion:17, sin_dacion:98},
   '01-ago': {total:107, dacion:18, sin_dacion:89},
 };
 
@@ -3764,9 +3776,56 @@ function buildPorBktCharts() {
   buildIntentoProgresionChart();
 }
 
+// ── Selección independiente de cortes para la gráfica de progresión por intento ──
+let intentoCorteSelection = null; // null = todos (se inicializa en el primer render)
+
+function getCortesForIntento() {
+  const disponibles = getSelectedCortes().filter(c => intentoPagoData[c]);
+  if (intentoCorteSelection === null) return disponibles;
+  return disponibles.filter(c => intentoCorteSelection.has(c));
+}
+
+function renderIntentoCortePicker() {
+  const box = document.getElementById('intentoCortePicker');
+  if (!box) return;
+  const disponibles = Object.keys(intentoPagoData);
+  if (intentoCorteSelection === null) intentoCorteSelection = new Set(disponibles);
+  box.innerHTML = disponibles.map(c => {
+    const on = intentoCorteSelection.has(c);
+    const col = data[c]?.color || '#5F5E5A';
+    return `<button class="intento-corte-chip" data-corte="${c}"
+      style="font-size:11.5px;padding:5px 10px;border-radius:14px;cursor:pointer;font-weight:600;
+             border:1.5px solid ${on ? col : 'rgba(0,0,0,0.15)'};
+             background:${on ? col+'1A' : '#fff'};
+             color:${on ? col : '#B5B4AE'};
+             transition:all 0.12s;">${c}</button>`;
+  }).join('');
+  box.querySelectorAll('.intento-corte-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const c = btn.dataset.corte;
+      if (intentoCorteSelection.has(c)) intentoCorteSelection.delete(c);
+      else intentoCorteSelection.add(c);
+      renderIntentoCortePicker();
+      buildIntentoProgresionChart();
+    });
+  });
+}
+
 function buildIntentoProgresionChart() {
-  const cortes = getSelectedCortes().filter(c => intentoPagoData[c]);
-  if (cortes.length === 0) return;
+  renderIntentoCortePicker();
+  const cortes = getCortesForIntento();
+  if (cortes.length === 0) {
+    document.getElementById('intentoNumCortes').textContent = '0';
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('intentoAcum'+i).textContent = '—';
+      document.getElementById('intentoDet'+i).textContent = 'sin cortes seleccionados';
+    }
+    document.getElementById('intentoMezcla').textContent = '—';
+    if (charts.intentoProgresion) { charts.intentoProgresion.destroy(); charts.intentoProgresion = null; }
+    const tb = document.getElementById('intentoTableBody');
+    if (tb) tb.innerHTML = '<tr><td colspan="7" style="padding:12px;text-align:center;color:#888780;font-size:12px;">Selecciona al menos un corte.</td></tr>';
+    return;
+  }
 
   // ── Baseline: promedio de domi/spei por intento sobre los cortes seleccionados ──
   const baseline = {};
@@ -4139,14 +4198,23 @@ function buildRolloverNsCharts() {
   const tbody = document.getElementById('rolloverTableBody');
   tbody.innerHTML = cortes.map(c => {
     const d = rolloverData[c];
+    const dd = dacionData[c];
     const rollColor = d.rolled_b2_pct < 1 ? '#1D9E75' : d.rolled_b2_pct < 1.5 ? '#EF9F27' : '#D85A30';
+    const sinDacion = dd ? dd.sin_dacion : null;
+    const dacion = dd ? dd.dacion : null;
+    const pctDacion = dd && dd.total > 0 ? (dd.dacion/dd.total*100).toFixed(0) : null;
+    const pctSinDacion = dd ? (dd.sin_dacion/d.total*100) : null;
+    const rollColorSD = pctSinDacion === null ? '#B5B4AE' : pctSinDacion < 1 ? '#1D9E75' : pctSinDacion < 1.5 ? '#EF9F27' : '#D85A30';
     return `<tr style="border-bottom:1px solid rgba(0,0,0,0.04);">
       <td style="padding:9px 12px;font-weight:500;">${c}</td>
       <td style="padding:9px 12px;text-align:right;color:#5F5E5A;">${d.total.toLocaleString()}</td>
       <td style="padding:9px 12px;text-align:right;color:#1D9E75;">${d.current.toLocaleString()}</td>
       <td style="padding:9px 12px;text-align:right;color:#1D9E75;font-weight:500;">${d.current_pct.toFixed(2)}%</td>
       <td style="padding:9px 12px;text-align:right;color:${rollColor};">${d.rolled_b2}</td>
+      <td style="padding:9px 12px;text-align:right;color:#EF9F27;">${sinDacion !== null ? sinDacion : '—'}</td>
+      <td style="padding:9px 12px;text-align:right;color:#8B2E1A;">${dacion !== null ? dacion + (pctDacion !== null ? ` <span style="color:#B5B4AE;font-size:11px;">(${pctDacion}%)</span>` : '') : '—'}</td>
       <td style="padding:9px 12px;text-align:right;color:${rollColor};font-weight:600;">${d.rolled_b2_pct.toFixed(2)}%</td>
+      <td style="padding:9px 12px;text-align:right;color:${rollColorSD};font-weight:600;">${pctSinDacion !== null ? pctSinDacion.toFixed(2)+'%' : '—'}</td>
     </tr>`;
   }).join('');
 }
@@ -4330,6 +4398,14 @@ document.getElementById('curveSelAll')?.addEventListener('click', () => {
 document.getElementById('curveSelNone')?.addEventListener('click', () => {
   curveCorteSelection = new Set();
   renderCurveSection();
+});
+document.getElementById('intentoSelAll')?.addEventListener('click', () => {
+  intentoCorteSelection = new Set(Object.keys(intentoPagoData));
+  buildIntentoProgresionChart();
+});
+document.getElementById('intentoSelNone')?.addEventListener('click', () => {
+  intentoCorteSelection = new Set();
+  buildIntentoProgresionChart();
 });
 function updateCurveModeButtons() {
   const bC = document.getElementById('curveModeClientes');
