@@ -580,7 +580,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
 
     <div class="info-box">
       <p class="info-title">Cómo leer</p>
-      <p style="margin:0;"><strong>BKT 1 (verde)</strong> = al corriente. <strong>BKT 2/3 (amarillo/naranja)</strong> = 1-2 mensualidades vencidas, aún recuperables. <strong>BKT 4+ (rojo)</strong> = mora grave, ruta legal/dación. Las cosechas recientes (2026) muestran BKT 2/3 altos porque son nuevas y sus clientes aún no han tenido tiempo de salir de mora — no necesariamente indica peor calidad.</p>
+      <p style="margin:0;"><strong>BKT 1 (verde)</strong> = 1 mensualidad vencida. <strong>BKT 2/3 (amarillo/naranja)</strong> = 2-3 mensualidades vencidas, aún recuperables. <strong>BKT 4+ (rojo)</strong> = 4 o más mensualidades, mora grave, ruta legal/dación. Las cosechas recientes (2026) muestran BKT 2/3 altos porque son nuevas y sus clientes aún no han tenido tiempo de salir de mora — no necesariamente indica peor calidad.</p>
     </div>
 
     <h3>Composición BKT por cosecha · % del total de la cohorte</h3>
@@ -620,25 +620,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
   </div>
 
   <div class="section" style="margin-bottom:16px;">
-    <h2 style="margin-bottom:4px;">BKT 1 · Al corriente</h2>
-    <p class="subtitle">% por fase de pago: domi automática → SPEI durante domi → SPEI sem 2-4 → no pagó. La mayoría de BKT1 paga por domi a tiempo.</p>
-    <div class="grid-3" style="margin-bottom:20px;">
-      <div class="kpi" style="border-left:3px solid #1D9E75;">
-        <p class="kpi-label">Promedio domi automática</p>
-        <p class="kpi-value" style="color:#1D9E75;" id="bkt1AvgDomi">—</p>
-        <p class="kpi-sub">capturado en 1°–4° intento</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #3B3ACA;">
-        <p class="kpi-label">Promedio SPEI durante domi</p>
-        <p class="kpi-value" style="color:#3B3ACA;" id="bkt1AvgSpei">—</p>
-        <p class="kpi-sub">pagaron por transferencia en domi</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #EF9F27;">
-        <p class="kpi-label">Promedio total recuperado</p>
-        <p class="kpi-value" style="color:#EF9F27;" id="bkt1AvgTotal">—</p>
-        <p class="kpi-sub">todas las fases combinadas</p>
-      </div>
-    </div>
+    <h2 style="margin-bottom:4px;">BKT 1 · 1 mensualidad vencida</h2>
     <div class="legend">
       <span class="legend-item"><span class="box2" style="background:#1D9E75;"></span>Domi (1°–4° intento)</span>
       <span class="legend-item"><span class="box2" style="background:#3B3ACA;"></span>SPEI durante domi</span>
@@ -653,75 +635,21 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
 
   <!-- BKT2/3/4+ stacked charts -->
   <div class="section" style="margin-bottom:16px;">
-    <h2 style="margin-bottom:4px;">BKT 2 · 1 mensualidad vencida</h2>
-    <p class="subtitle">% por fase de pago. "Sin pago completo" incluye parciales — pagaron algo pero no la mensualidad.</p>
-    <div class="grid-3" style="margin-bottom:16px;">
-      <div class="kpi" style="border-left:3px solid #1D9E75;">
-        <p class="kpi-label">Promedio domi automática</p>
-        <p class="kpi-value" style="color:#1D9E75;" id="bkt2AvgDomi">—</p>
-        <p class="kpi-sub">capturado en 1°–4° intento</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #3B3ACA;">
-        <p class="kpi-label">Promedio SPEI durante domi</p>
-        <p class="kpi-value" style="color:#3B3ACA;" id="bkt2AvgOther">—</p>
-        <p class="kpi-sub">pagaron por transferencia en domi</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #D85A30;">
-        <p class="kpi-label">Promedio no pagó</p>
-        <p class="kpi-value" style="color:#D85A30;" id="bkt2AvgNoPago">—</p>
-        <p class="kpi-sub">sin pago completo (incl. parciales)</p>
-      </div>
-    </div>
+    <h2 style="margin-bottom:4px;">BKT 2 · 2 mensualidades vencidas</h2>
     <div class="chart-wrap-md"><canvas id="bkt2PhaseChart"></canvas></div>
   </div>
 
   <div class="section" style="margin-bottom:16px;">
-    <h2 style="margin-bottom:4px;">BKT 3 · 2 mensualidades vencidas</h2>
-    <p class="subtitle">% por fase. A partir de BKT3 la domi captura muy poco — la recuperación es principalmente cobranza activa.</p>
-    <div class="grid-3" style="margin-bottom:16px;">
-      <div class="kpi" style="border-left:3px solid #1D9E75;">
-        <p class="kpi-label">Promedio domi automática</p>
-        <p class="kpi-value" style="color:#1D9E75;" id="bkt3AvgDomi">—</p>
-        <p class="kpi-sub">capturado en 1°–4° intento</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #3B3ACA;">
-        <p class="kpi-label">Promedio SPEI durante domi</p>
-        <p class="kpi-value" style="color:#3B3ACA;" id="bkt3AvgOther">—</p>
-        <p class="kpi-sub">pagaron por transferencia en domi</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #D85A30;">
-        <p class="kpi-label">Promedio no pagó</p>
-        <p class="kpi-value" style="color:#D85A30;" id="bkt3AvgNoPago">—</p>
-        <p class="kpi-sub">sin pago completo (incl. parciales)</p>
-      </div>
-    </div>
+    <h2 style="margin-bottom:4px;">BKT 3 · 3 mensualidades vencidas</h2>
     <div class="chart-wrap-md"><canvas id="bkt3PhaseChart"></canvas></div>
   </div>
 
   <div class="section">
-    <h2 style="margin-bottom:4px;">BKT 4+ · 3+ mensualidades vencidas</h2>
-    <p class="subtitle">% por fase. La domi casi no captura nada en este bucket — estos clientes requieren negociación directa.</p>
-    <div class="grid-3" style="margin-bottom:16px;">
-      <div class="kpi" style="border-left:3px solid #1D9E75;">
-        <p class="kpi-label">Promedio domi automática</p>
-        <p class="kpi-value" style="color:#1D9E75;" id="bkt4AvgDomi">—</p>
-        <p class="kpi-sub">capturado en 1°–4° intento</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #3B3ACA;">
-        <p class="kpi-label">Promedio SPEI durante domi</p>
-        <p class="kpi-value" style="color:#3B3ACA;" id="bkt4AvgOther">—</p>
-        <p class="kpi-sub">pagaron por transferencia en domi</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #D85A30;">
-        <p class="kpi-label">Promedio no pagó</p>
-        <p class="kpi-value" style="color:#D85A30;" id="bkt4AvgNoPago">—</p>
-        <p class="kpi-sub">sin pago completo (incl. parciales)</p>
-      </div>
-    </div>
+    <h2 style="margin-bottom:4px;">BKT 4+ · 4 o más mensualidades vencidas</h2>
     <div class="chart-wrap-md"><canvas id="bkt4PhaseChart"></canvas></div>
     <div class="note-box" style="margin-top:14px;">
       <p class="note-title">La domi no mueve a BKT4+</p>
-      <p style="margin:0;">Los clientes en BKT4+ acumulan 3+ meses de adeudo. La domi solo puede capturar una mensualidad — no salda la deuda, así que aunque paguen, siguen en BKT4+. Su recovery depende de negociación directa y es consistentemente <2%.</p>
+      <p style="margin:0;">Los clientes en BKT4+ acumulan 4 o más meses de adeudo. La domi solo puede capturar una mensualidad — no salda la deuda, así que aunque paguen, siguen en BKT4+. Su recovery depende de negociación directa y es consistentemente &lt;2%.</p>
     </div>
   </div>
 
@@ -3498,10 +3426,6 @@ function buildPorBktCharts() {
   const avgNoPago = avgOf('no_pago');
   const avgTotal  = avgNoPago != null ? 100 - avgNoPago : null;
 
-  document.getElementById('bkt1AvgDomi').textContent  = avgDomi.toFixed(1)+'%';
-  document.getElementById('bkt1AvgSpei').textContent  = avgSpeiD.toFixed(1)+'%';
-  document.getElementById('bkt1AvgTotal').textContent = avgTotal != null ? avgTotal.toFixed(1)+'%' : '—';
-
   // ── BKT1 stacked bar by payment phase (only complete cortes) ──────
   const b1 = key => bkt1Cortes.map(c => bkt1DetailByCorte[c][key]);
 
@@ -3538,7 +3462,15 @@ function buildPorBktCharts() {
         }
       },
       scales:{
-        x:{stacked:true, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#888780',font:{size:12}}},
+        x:{stacked:true, grid:{color:'rgba(0,0,0,0.04)'},
+           ticks:{color:'#888780',font:{size:12},
+             // Segunda línea con el N del bucket en ese corte. Va en el tick (no sobre
+             // la barra) para que nunca choque con las etiquetas de las fases apiladas.
+             callback: function(v, i) {
+               const c = bkt1Cortes[i];
+               const n = bkt1DetailByCorte[c]?.total;
+               return n != null ? [c, 'n=' + n.toLocaleString()] : c;
+             }}},
         y:{stacked:true, min:0, max:105, grid:{color:'rgba(0,0,0,0.04)'},
            ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
       }
@@ -3684,7 +3616,7 @@ function buildPorBktCharts() {
   });
 
   // ── BKT2/3/4+ stacked bar charts (same structure as BKT1) ─────────────
-  function buildBktPhaseChart(canvasId, detailMap, cortes, accentColor, kpiDomiId, kpiOtherId, kpiNopagoId, chartKey) {
+  function buildBktPhaseChart(canvasId, detailMap, cortes, accentColor, kpiDomiId, kpiOtherId, kpiNopagoId, chartKey, sampleNoteId) {
     const bktCortes = cortes.filter(c => detailMap[c]);
     const avgOf = key => {
       const vals = bktCortes.map(c => detailMap[c][key]).filter(v => v != null);
@@ -3696,6 +3628,22 @@ function buildPorBktCharts() {
     if (kpiDomiId)   document.getElementById(kpiDomiId).textContent   = avgDomi.toFixed(1)+'%';
     if (kpiOtherId)  document.getElementById(kpiOtherId).textContent  = avgSpeiD.toFixed(1)+'%';
     if (kpiNopagoId) document.getElementById(kpiNopagoId).textContent = avgNoPago.toFixed(1)+'%';
+
+    // Nota de tamaño de muestra: clave para calibrar cuánto peso dar a cada bucket.
+    // En buckets chicos (ej. BKT3 con n~25-80) un solo cliente puede mover el % varios
+    // puntos, así que se advierte explícitamente cuando la muestra es pequeña.
+    if (sampleNoteId) {
+      const el = document.getElementById(sampleNoteId);
+      if (el && bktCortes.length) {
+        const totals = bktCortes.map(c => detailMap[c].total).filter(t => t != null);
+        const minN = Math.min(...totals), maxN = Math.max(...totals);
+        const avgN = Math.round(totals.reduce((a,b)=>a+b,0)/totals.length);
+        const ppPorCliente = (100/minN).toFixed(1);
+        let txt = `n = ${minN}–${maxN} por corte (prom. ${avgN}).`;
+        if (minN < 100) txt += ` ⚠ Muestra chica: 1 cliente ≈ ${ppPorCliente}pp, leer tendencias con cautela.`;
+        el.textContent = txt;
+      }
+    }
 
     const g = key => bktCortes.map(c => detailMap[c][key] || 0);
 
@@ -3732,7 +3680,14 @@ function buildPorBktCharts() {
           }
         },
         scales:{
-          x:{stacked:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',font:{size:12}}},
+          x:{stacked:true,grid:{color:'rgba(0,0,0,0.04)'},
+             ticks:{color:'#888780',font:{size:12},
+               // Segunda línea con el N del bucket en ese corte (ver nota en BKT1).
+               callback: function(v, i) {
+                 const c = bktCortes[i];
+                 const n = detailMap[c]?.total;
+                 return n != null ? [c, 'n=' + n.toLocaleString()] : c;
+               }}},
           y:{stacked:true,min:0,max:105,grid:{color:'rgba(0,0,0,0.04)'},
              ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'}}
         }
@@ -3769,9 +3724,9 @@ function buildPorBktCharts() {
     });
   }
 
-  buildBktPhaseChart('bkt2PhaseChart', bkt2DetailByCorte, cortes, '#1D9E75', 'bkt2AvgDomi', 'bkt2AvgOther', 'bkt2AvgNoPago', 'bkt2Phase');
-  buildBktPhaseChart('bkt3PhaseChart', bkt3DetailByCorte, cortes, '#1D9E75', 'bkt3AvgDomi', 'bkt3AvgOther', 'bkt3AvgNoPago', 'bkt3Phase');
-  buildBktPhaseChart('bkt4PhaseChart', bkt4DetailByCorte, cortes, '#1D9E75', 'bkt4AvgDomi', 'bkt4AvgOther', 'bkt4AvgNoPago', 'bkt4Phase');
+  buildBktPhaseChart('bkt2PhaseChart', bkt2DetailByCorte, cortes, '#1D9E75', null, null, null, 'bkt2Phase', 'bkt2SampleNote');
+  buildBktPhaseChart('bkt3PhaseChart', bkt3DetailByCorte, cortes, '#1D9E75', null, null, null, 'bkt3Phase', 'bkt3SampleNote');
+  buildBktPhaseChart('bkt4PhaseChart', bkt4DetailByCorte, cortes, '#1D9E75', null, null, null, 'bkt4Phase', 'bkt4SampleNote');
 
   buildIntentoProgresionChart();
 }
