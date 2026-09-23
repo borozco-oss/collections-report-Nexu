@@ -91,6 +91,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
 /* CHARTS */
 .chart-wrap{position:relative;width:100%;height:460px;}
 .chart-wrap-md{position:relative;width:100%;height:320px;}
+.chart-wrap-vol{position:relative;width:100%;height:400px;}
 .chart-wrap-sm{position:relative;width:100%;height:280px;}
 .chart-wrap-xs{position:relative;width:100%;height:240px;}
 
@@ -812,7 +813,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
       <span class="legend-item"><span class="box2" style="background:#EF9F27;"></span>Rollover sin dación</span>
       <span class="legend-item"><span class="box2" style="background:#8B2E1A;"></span>Rollover · Dación</span>
     </div>
-    <div class="chart-wrap-md"><canvas id="rolloverVolumeChart"></canvas></div>
+    <div class="chart-wrap-vol"><canvas id="rolloverVolumeChart"></canvas></div>
   </div>
 
   <!-- Tabla resumen -->
@@ -4356,6 +4357,13 @@ function buildRolloverNsCharts() {
   const sinDacionAbs = cortes.map(c => dacionData[c]?.sin_dacion ?? rolloverData[c].rolled_b2);
   const dacionAbs = cortes.map(c => dacionData[c]?.dacion ?? 0);
 
+  // Margen dinámico en el eje Y: deja siempre espacio arriba de la barra más alta
+  // para las 2 etiquetas apiladas (sin dación + dación). Se recalcula con los datos
+  // reales de cada render, así que escala solo si los valores crecen a futuro.
+  const stackTotals = cortes.map((c, i) => currents[i] + sinDacionAbs[i] + dacionAbs[i]);
+  const maxStackTotal = Math.max(...stackTotals, 1);
+  const volYMax = Math.ceil((maxStackTotal * 1.22) / 500) * 500;
+
   if (charts.rolloverVolume) charts.rolloverVolume.destroy();
   charts.rolloverVolume = new Chart(document.getElementById('rolloverVolumeChart'), {
     type: 'bar',
@@ -4369,6 +4377,7 @@ function buildRolloverNsCharts() {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 28 } },
       plugins: {
         legend: { display:false },
         tooltip: {
@@ -4386,7 +4395,7 @@ function buildRolloverNsCharts() {
       },
       scales: {
         x: { stacked:true, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#888780',font:{size:12}} },
-        y: { stacked:true, grid:{color:'rgba(0,0,0,0.04)'},
+        y: { stacked:true, min:0, max: volYMax, grid:{color:'rgba(0,0,0,0.04)'},
              ticks:{color:'#888780',font:{size:12},callback:v=>v.toLocaleString()} }
       }
     },
@@ -4398,6 +4407,7 @@ function buildRolloverNsCharts() {
         const currentMeta = chart.getDatasetMeta(0);
         const sinDMeta = chart.getDatasetMeta(1);
         const dMeta = chart.getDatasetMeta(2);
+
         currentMeta.data.forEach((bar, i) => {
           ctx2.save();
           ctx2.font='bold 11px -apple-system,sans-serif';
@@ -4407,6 +4417,11 @@ function buildRolloverNsCharts() {
           ctx2.fillText(currents[i].toLocaleString(), bar.x, midY + 4);
           ctx2.restore();
         });
+
+        // Orden fijo y consistente: "sin dación" siempre arriba, "dación" siempre
+        // justo debajo (más cerca del tope de la barra) — igual que el diseño original.
+        // El margen dinámico del eje Y (volYMax) es lo que evita el corte, no un
+        // reacomodo de las etiquetas.
         sinDMeta.data.forEach((bar, i) => {
           if (sinDacionAbs[i] <= 0) return;
           ctx2.save();
