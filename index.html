@@ -71,6 +71,20 @@ body{
 .filter-btn.active{background:#3B3ACA;color:#FFFFFF;border-color:#3B3ACA;}
 .filter-hint{font-size:11px;color:#888780;margin-left:auto;}
 
+.bkt-vals-wrap{margin-top:14px;overflow-x:auto;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;}
+.bkt-vals{border-collapse:collapse;width:100%;font-size:11.5px;font-variant-numeric:tabular-nums;}
+.bkt-vals th,.bkt-vals td{padding:6px 8px;text-align:right;white-space:nowrap;border-bottom:0.5px solid rgba(0,0,0,0.06);}
+.bkt-vals thead th{background:#F7F7FC;color:#5F5E5A;font-weight:600;}
+.bkt-vals th.lbl,.bkt-vals td.lbl{text-align:left;position:sticky;left:0;background:#fff;z-index:1;color:#1F1F1F;font-weight:500;}
+.bkt-vals thead th.lbl{background:#F7F7FC;}
+.bkt-vals td.zero{color:#C4C3BD;}
+.bkt-vals tr.n-row td{color:#888780;}
+.bkt-vals tr.tot-row td{font-weight:700;color:#1D9E75;border-top:1px solid rgba(0,0,0,0.12);border-bottom:none;}
+.bkt-vals tr.sub-row td{font-weight:700;background:#F7F7FC;color:#1F1F1F;border-bottom:0.5px solid rgba(0,0,0,0.12);}
+.bkt-vals tr.sub-row td.lbl{background:#F7F7FC;}
+.bkt-vals tr.sub-row td .sub-note{font-weight:400;color:#888780;margin-left:4px;}
+.bkt-vals .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
+
 /* PAGE & SECTIONS */
 .page{max-width:1100px;margin:0 auto;padding:20px 24px 32px;}
 .tab-panel{display:none;}.tab-panel.active{display:block;}
@@ -343,7 +357,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
       <span class="legend-item"><span class="box2" style="background:#7F77DD;"></span>2°</span>
       <span class="legend-item"><span class="box2" style="background:#EF9F27;"></span>3°</span>
       <span class="legend-item"><span class="box2" style="background:#D4537E;"></span>4° intento</span>
-      <span class="legend-item"><span class="box2" style="background:#9C97E8;"></span>Sem 1 (D+0→D+7)</span>
+      <span class="legend-item"><span class="box2" style="background:#9C97E8;"></span>Sem 1 (fin de domi→D+7)</span>
       <span class="legend-item"><span class="box2" style="background:#5F5E5A;"></span>Sem 2 (D+8→D+14)</span>
       <span class="legend-item"><span class="box2" style="background:#9E9D98;"></span>Sem 3 (D+15→D+21)</span>
       <span class="legend-item"><span class="box2" style="background:#CECDCA;"></span>Sem 4 (D+22→D+30)</span>
@@ -632,6 +646,14 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
       <p class="info-title">Cómo leer</p>
       <p style="margin:0;">El universo es <strong>toda la cartera de cada corte</strong>. <strong>Domi (1-4 intento)</strong> y <strong>SPEI durante domi</strong> son clientes que pagaron en la ventana de domiciliación. Los que no pagaron pasan a cobranza, donde se recuperan vía SPEI en <strong>semanas 2, 3 y 4</strong> (ya no por domi). BKT1 es el grueso de cartera sana; BKT2/3/4 son mora acumulada.</p>
     </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:0 0 6px;">
+      <span style="font-size:12px;color:#5F5E5A;font-weight:600;">Filtrar cortes (aplica a BKT1, BKT2, BKT3 y BKT4+): <span id="porbktCorteHint" style="font-weight:400;color:#888780;"></span></span>
+      <div style="display:flex;gap:6px;">
+        <button id="porbktSelAll" style="font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid rgba(0,0,0,0.12);background:#F7F7FC;color:#3B3ACA;cursor:pointer;font-weight:600;">Todos</button>
+        <button id="porbktSelNone" style="font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid rgba(0,0,0,0.12);background:#F7F7FC;color:#888780;cursor:pointer;font-weight:600;">Ninguno</button>
+      </div>
+    </div>
+    <div id="porbktCortePicker" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
   </div>
 
   <div class="section" style="margin-bottom:16px;">
@@ -639,34 +661,30 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
     <div class="legend">
       <span class="legend-item"><span class="box2" style="background:#1D9E75;"></span>Domi (1°–4° intento)</span>
       <span class="legend-item"><span class="box2" style="background:#3B3ACA;"></span>SPEI durante domi</span>
-      <span class="legend-item"><span class="box2" style="background:#9C97E8;"></span>SPEI sem 1 (D+0→D+7)</span>
+      <span class="legend-item"><span class="box2" style="background:#9C97E8;"></span>SPEI sem 1 (fin de domi→D+7)</span>
       <span class="legend-item"><span class="box2" style="background:#F4A198;border:1px solid #D85A30;"></span>No pagó al cierre</span>
     </div>
     <div class="chart-wrap-md"><canvas id="bkt1PhaseChart"></canvas></div>
-    <div class="note-box" style="margin-top:14px;">
-      <p class="note-title">Lo que hay que vigilar en BKT1</p>
-      <p style="margin:0;">BKT1 se recupera principalmente por <strong>domi automática (~68-76%)</strong> más SPEI durante domi (~8-17%). Juntos capturan el grueso en la ventana de domiciliación; las semanas 2-4 son la cola de cobranza. El no-pago se mantiene estable en 2-5%.</p>
-    </div>
+    <div class="bkt-vals-wrap" id="bkt1ValsTable"></div>
   </div>
 
   <!-- BKT2/3/4+ stacked charts -->
   <div class="section" style="margin-bottom:16px;">
     <h2 style="margin-bottom:4px;">BKT 2 · 2 mensualidades vencidas</h2>
     <div class="chart-wrap-md"><canvas id="bkt2PhaseChart"></canvas></div>
+    <div class="bkt-vals-wrap" id="bkt2ValsTable"></div>
   </div>
 
   <div class="section" style="margin-bottom:16px;">
     <h2 style="margin-bottom:4px;">BKT 3 · 3 mensualidades vencidas</h2>
     <div class="chart-wrap-md"><canvas id="bkt3PhaseChart"></canvas></div>
+    <div class="bkt-vals-wrap" id="bkt3ValsTable"></div>
   </div>
 
   <div class="section">
     <h2 style="margin-bottom:4px;">BKT 4+ · 4 o más mensualidades vencidas</h2>
     <div class="chart-wrap-md"><canvas id="bkt4PhaseChart"></canvas></div>
-    <div class="note-box" style="margin-top:14px;">
-      <p class="note-title">La domi no mueve a BKT4+</p>
-      <p style="margin:0;">Los clientes en BKT4+ acumulan 4 o más meses de adeudo. La domi solo puede capturar una mensualidad — no salda la deuda, así que aunque paguen, siguen en BKT4+. Su recovery depende de negociación directa y es consistentemente &lt;2%.</p>
-    </div>
+    <div class="bkt-vals-wrap" id="bkt4ValsTable"></div>
   </div>
 
   <div class="section">
@@ -1101,6 +1119,16 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    Pago a tiempo, rollover y recuperación D+30 NO cambian. Curvas diarias (clientes y $)
    ajustadas D+12..D+29; en $ se ponderó con RENTA PENDIENTE POR CORTE DE DOMI como proxy
    de Pago_esperado (el Resultado no se reprocesó).
+   *** 15-ago REPROCESADO DESDE CERO (24-sep-2026) ***
+   Fuentes: Resultado 15-ago (Operaciones) × 'Copia de Cierre moratorios 150826 corregido'
+   (idéntico VIN a VIN a la versión '(1)': 72 pagos en D+30) × fechas del portal para los 403
+   identificados. Bucket: BKT2/3/4+ = hoja Data; resto = BKT1. Categorías: Domi/Plan empleado
+   y SPEI del Resultado; sin pago → semana por FECHA PAGO (Data) o portal; no current → no_pago.
+   Hallazgo: la base previa venía de la versión con 109 en D+30 y solo se le habían aplicado
+   las 17 diferencias conocidas; quedaban 10 clientes BKT1 en s4 que el Cierre vigente pone en
+   s3. BKT1 15-ago: s3 4.80→4.93, s4 3.63→3.51 (Fase 1 6.42, Fase 2 8.44). BKT2/3/4+ ya
+   cuadraban. Curvas D+5..D+30 (clientes y $, 4 buckets + cartera) reconstruidas desde cero;
+   D+5 y D+30 sin cambio; $ con Pago_esperado real (totales cuadran al centavo).
    *** 15-ago: "PAGOS IDENTIFICADOS VÍA SPEI/STP" RECLASIFICADOS CON FECHA REAL (23-sep-2026) ***
    Los 403 VINs = 'Sin pago' en el Resultado (3er intento 20-ago fallido, 340 por insuficiencia)
    que NO están en la hoja Data del Cierre (Finanzas los saca de cobranza porque ya pagaron).
@@ -1151,7 +1179,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    Son pagos voluntarios POR FUERA del canal de domi (por eso el Resultado no los ve)
    que ocurren antes de que arranque la gestión de cobranza — no son captura de la
    domiciliación. Como el KPI debe medir EFECTIVIDAD DE LA DOMICILIACIÓN, ahora viven
-   en su propia categoría 's1' (SPEI sem 1, D+0→D+7), fuera del pago a tiempo.
+   en su propia categoría 's1' (SPEI sem 1, fin de domi→D+7), fuera del pago a tiempo.
    NUEVA DEFINICIÓN: pago a tiempo = domi + spei_domi (SPEI registrado en el Resultado
    con su intento). Las 7 categorías de bkt*DetailByCorte suman 100%:
    domi + spei_domi + s1 + s2 + s3 + s4 + no_pago.
@@ -1348,8 +1376,8 @@ const bktCurveData = {
     bkt4: {pcts:[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.28, 0.28, 0.28, 0.28, 0.28, 0.28, 0.28, 0.28, 0.28, 0.28, 0.56, 0.56, 0.56, 0.56, 0.56, 0.56, 0.56], total:359},
   },
   '15-ago': {
-    bkt1: {pcts:[0.01, 0.01, 69.67, 77.48, 80.62, 83.65, 84.29, 85.12, 85.41, 86.89, 87.85, 88.32, 88.94, 89.62, 90.05, 90.27, 91.0, 92.16, 92.95, 93.89, 94.63, 94.85, 94.94, 95.27, 95.6, 95.96, 96.22, 96.44, 96.7, 96.81, 98.49], total:7731},
-    bkt2: {pcts:[0.0, 0.0, 0.64, 0.64, 1.92, 2.56, 2.56, 2.56, 2.56, 2.56, 2.56, 2.56, 2.56, 4.49, 5.77, 6.41, 6.41, 7.05, 7.69, 7.69, 8.97, 8.97, 8.97, 9.62, 9.62, 10.9, 12.82, 13.46, 15.38, 16.67, 23.08], total:156},
+    bkt1: {pcts:[0.01, 0.01, 69.67, 77.48, 80.62, 83.65, 84.3, 85.12, 85.41, 86.88, 87.84, 88.32, 88.94, 89.61, 90.05, 90.27, 91.0, 92.19, 92.99, 93.97, 94.76, 94.98, 95.07, 95.41, 95.73, 96.09, 96.37, 96.59, 96.84, 97.0, 98.49], total:7731},
+    bkt2: {pcts:[0.0, 0.0, 0.64, 0.64, 1.92, 2.56, 2.56, 2.56, 2.56, 2.56, 2.56, 2.56, 2.56, 4.49, 5.77, 6.41, 6.41, 7.05, 7.69, 7.69, 8.97, 8.97, 8.97, 9.62, 9.62, 11.54, 13.46, 14.1, 16.03, 17.31, 23.08], total:156},
     bkt3: {pcts:[0.0, 0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 6.0, 6.0, 6.0, 6.0, 8.0, 8.0, 10.0], total:50},
     bkt4: {pcts:[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.16, 0.16, 0.16, 0.16, 0.16, 0.16], total:610},
   },
@@ -1452,7 +1480,7 @@ const dataMoney = {
   '01-jul': {pcts:[0.07,56.51,66.73,72.55,75.72,75.72,75.94,77.5,80.89,82.04,82.63,82.78,83.49,84.49,85.42,86.45,86.96,87.23,87.31,87.77,88.58,89.12,89.58,89.91,90.06,90.09,90.47,90.8,91.03,91.48,91.95], total_money:85600632.54},
   '15-jul': {pcts:[0.0,61.25,67.33,72.85,75.2,75.21,75.69,77.21,78.98,79.86,80.32,80.57,80.98,81.5,82.29,82.82,83.31,83.87,83.99,84.57,85.24,85.82,86.2,86.6,86.74,86.79,87.01,87.35,87.57,88.3,89.11], total_money:106334135.91},
   '01-ago': {pcts:[0.0, 0.0, 62.47, 69.08, 72.35, 76.42, 76.42, 76.42, 79.49, 80.54, 81.36, 82.27, 83.13, 84.19, 85.37, 85.63, 86.26, 86.96, 87.64, 88.08, 88.42, 88.58, 88.61, 88.85, 89.11, 89.42, 89.62, 90.07, 90.35, 90.52, 91.28], total_money:88265350.77},
-  '15-ago': {pcts:[0.01, 0.01, 60.99, 68.13, 71.2, 74.02, 74.57, 75.28, 75.53, 77.04, 78.07, 78.52, 79.04, 79.58, 80.01, 80.19, 80.84, 81.72, 82.29, 82.97, 83.52, 83.69, 83.74, 84.06, 84.26, 84.56, 84.74, 84.88, 85.02, 85.09, 88.64], total_money:108353346.52},
+  '15-ago': {pcts:[0.01, 0.01, 60.99, 68.13, 71.2, 74.02, 74.57, 75.27, 75.54, 77.04, 78.07, 78.55, 79.16, 79.81, 80.29, 80.49, 81.2, 82.43, 83.14, 84.09, 84.85, 85.04, 85.1, 85.47, 85.77, 86.15, 86.41, 86.64, 86.92, 87.08, 88.64], total_money:108353346.52},
 };
 
 const bktCurveDataMoney = {
@@ -1547,8 +1575,8 @@ const bktCurveDataMoney = {
     bkt4: {pcts:[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.16, 0.16, 0.16, 0.16, 0.16, 0.16, 0.16, 0.16, 0.16, 0.16, 0.34, 0.34, 0.34, 0.34, 0.34, 0.34, 0.34], total_money:4939941.66},
   },
   '15-ago': {
-    bkt1: {pcts:[0.01, 0.01, 68.1, 76.08, 79.48, 82.61, 83.21, 84.0, 84.3, 85.98, 87.13, 87.67, 88.35, 89.01, 89.52, 89.73, 90.53, 91.86, 92.61, 93.63, 94.41, 94.62, 94.69, 95.07, 95.41, 95.79, 96.03, 96.28, 96.53, 96.65, 98.45], total_money:97007345.85},
-    bkt2: {pcts:[0.0, 0.0, 0.39, 0.39, 1.31, 2.61, 2.61, 2.61, 2.61, 2.61, 2.61, 2.61, 2.61, 5.34, 6.38, 6.79, 6.79, 7.38, 8.03, 8.03, 9.11, 9.11, 9.11, 9.65, 9.65, 10.67, 12.41, 12.75, 14.9, 15.81, 21.68], total_money:2161297.7},
+    bkt1: {pcts:[0.01, 0.01, 68.1, 76.08, 79.48, 82.61, 83.22, 84.01, 84.3, 85.98, 87.13, 87.67, 88.35, 89.02, 89.53, 89.74, 90.53, 91.9, 92.66, 93.72, 94.55, 94.77, 94.83, 95.23, 95.55, 95.93, 96.18, 96.43, 96.69, 96.84, 98.45], total_money:97007345.85},
+    bkt2: {pcts:[0.0, 0.0, 0.39, 0.39, 1.31, 2.61, 2.61, 2.61, 2.61, 2.61, 2.61, 2.61, 2.61, 5.34, 6.38, 6.79, 6.79, 7.38, 8.03, 8.03, 9.11, 9.11, 9.11, 9.65, 9.65, 11.08, 12.82, 13.17, 15.32, 16.22, 21.68], total_money:2161297.7},
     bkt3: {pcts:[0.0, 0.0, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 1.83, 3.15, 3.15, 3.15, 3.15, 3.15, 3.15, 5.06, 5.06, 5.06, 5.06, 7.08, 7.08, 8.5], total_money:657368.3},
     bkt4: {pcts:[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.16, 0.16, 0.16, 0.16, 0.16, 0.16], total_money:8527334.67},
   },
@@ -1756,7 +1784,7 @@ const bkt1DetailByCorte = {
   '01-jul': {domi:70.51, spei_domi:12.3, s1:1.75, s2:5.8, s3:3.52, s4:4.97, no_pago:1.14, total:6725},
   '15-jul': {domi:72.95, spei_domi:11.72, s1:2.13, s2:4.28, s3:3.39, s4:4.01, no_pago:1.52, total:7576},
   '01-ago': {domi:69.71, spei_domi:14.27, s1:0.0, s2:5.4, s3:3.3, s4:5.77, no_pago:1.55, total:6911},
-  '15-ago': {domi:71.76, spei_domi:11.87, s1:1.49, s2:4.93, s3:4.8, s4:3.63, no_pago:1.51, total:7731},
+  '15-ago': {domi:71.76, spei_domi:11.87, s1:1.49, s2:4.93, s3:4.93, s4:3.51, no_pago:1.51, total:7731},
 };
 
 const bkt2DetailByCorte = {
@@ -2053,7 +2081,7 @@ const data = {
   },
   '15-ago': {
     color: '#1D9E75', day: 15, hasCierre: true,
-    pcts:[0.01,0.01,63.04,70.11,72.97,75.72,76.3,77.05,77.31,78.65,79.51,79.94,80.5,81.14,81.57,81.78,82.43,83.5,84.24,85.1,85.79,85.99,86.07,86.37,86.69,87.06,87.33,87.54,87.82,87.95,89.58],
+    pcts:[0.01,0.01,63.04,70.11,72.97,75.72,76.31,77.06,77.31,78.65,79.51,79.95,80.51,81.15,81.57,81.78,82.44,83.53,84.28,85.16,85.9,86.1,86.18,86.5,86.8,87.18,87.46,87.67,87.95,88.11,89.58],
     intentosDias: [2,3,4,5],
     startPct: 63.04, endPct: 89.58, delta: 26.54, endDay: 30,
     domiIntentos: [63.04, 7.07, 2.86, 2.75],
@@ -2088,7 +2116,7 @@ const extraData = {
   '15-jun': {cartera: {m1: 336, m2: 222, m3: 325, m4: 7342}, causas: {insuficiencia:2055,cancelada:189,bloqueada:163,domibaja:45,inexistente:37,reverso:19,otros:296}, totalRechazos: 2804, totalOperados: 6228, windowEarly: null, windowLate: null, combined: {i1: 62.23, i2: 7.09, i3: 3.75, i4: 2.38, s1: 3.65, s2: 4.37, s3: 3.94, s4: 3.13, hasC: true}},
   '01-jul': {cartera: {m1: 344, m2: 269, m3: 351, m4: 6216}, causas: {insuficiencia:1881,cancelada:153,bloqueada:116,domibaja:45,inexistente:28,reverso:28,otros:179}, totalRechazos: 2430, totalOperados: 5584, windowEarly: null, windowLate: null, combined: {i1: 58.28, i2: 10.51, i3: 5.74, i4: 3.08, s1: 1.67, s2: 5.49, s3: 3.38, s4: 4.78, hasC: true}},
   '15-jul': {cartera: {m1: 297, m2: 336, m3: 221, m4: 7514}, causas: {insuficiencia:2171,cancelada:165,bloqueada:151,domibaja:54,inexistente:32,reverso:23,otros:216}, totalRechazos: 2812, totalOperados: 6453, windowEarly: null, windowLate: null, combined: {i1: 63.2, i2: 6.0, i3: 5.27, i4: 2.35, s1: 1.98, s2: 4.17, s3: 3.25, s4: 3.86, hasC: true}},
-  '15-ago': {cartera: {m1: 321, m2: 297, m3: 336, m4: 7593}, causas: {insuficiencia:2161,cancelada:166,bloqueada:154,domibaja:57,inexistente:34,reverso:18,otros:394}, totalRechazos: 2984, totalOperados: 6487, windowEarly: null, windowLate: null, combined: {i1: 63.03, i2: 7.07, i3: 2.87, i4: 2.74, s1: 1.36, s2: 4.53, s3: 4.41, s4: 3.6, hasC: true}},
+  '15-ago': {cartera: {m1: 321, m2: 297, m3: 336, m4: 7593}, causas: {insuficiencia:2161,cancelada:166,bloqueada:154,domibaja:57,inexistente:34,reverso:18,otros:394}, totalRechazos: 2984, totalOperados: 6487, windowEarly: null, windowLate: null, combined: {i1: 63.03, i2: 7.07, i3: 2.87, i4: 2.74, s1: 1.36, s2: 4.52, s3: 4.53, s4: 3.47, hasC: true}},
   '01-ago': {cartera: {m1: 358, m2: 343, m3: 269, m4: 6431}, causas: {insuficiencia:1780,cancelada:139,bloqueada:177,domibaja:50,inexistente:24,reverso:21,otros:381}, totalRechazos: 2572, totalOperados: 5820, windowEarly: null, windowLate: null, combined: {i1: 64.8, i2: 6.74, i3: 3.16, i4: 3.74, s1: 0.0, s2: 5.15, s3: 3.14, s4: 5.54, hasC: true}}
 };
 
@@ -3069,7 +3097,7 @@ function buildPhaseChart() {
         { label:'2° intento',        data:vals.i2, backgroundColor:'#7F77DD', borderWidth:0, stack:'stack1' },
         { label:'3° intento',        data:vals.i3, backgroundColor:'#EF9F27', borderWidth:0, stack:'stack1' },
         { label:'4° intento',        data:vals.i4, backgroundColor:'#D4537E', borderWidth:0, stack:'stack1' },
-        { label:'Sem 1 (D+0→D+7)', data:vals.s1, backgroundColor:'#9C97E8', borderWidth:0, stack:'stack1' },
+        { label:'Sem 1 (fin de domi→D+7)', data:vals.s1, backgroundColor:'#9C97E8', borderWidth:0, stack:'stack1' },
         { label:'Sem 2 (D+8→D+14)', data:vals.s2, backgroundColor:'#5F5E5A', borderWidth:0, stack:'stack1' },
         { label:'Sem 3 (D+15→D+21)',data:vals.s3, backgroundColor:'#9E9D98', borderWidth:0, stack:'stack1' },
         { label:'Sem 4 (D+22→D+30)',data:vals.s4, backgroundColor:'#CECDCA', borderWidth:0, stack:'stack1' },
@@ -3152,7 +3180,7 @@ function buildPhaseChart() {
     { label:'3° intento',         values:vals.i3, color:'#EF9F27', prefix:'+', suffix:'pp' },
     { label:'4° intento',         values:vals.i4, color:'#D4537E', prefix:'+', suffix:'pp' },
     { label:'Cierre domi',        values:domiTotals, color:'#1D4ED8', prefix:'', suffix:'%', sub:true },
-    { label:'Sem 1 (D+0→D+7)',   values:vals.s1, color:'#9C97E8', prefix:'+', suffix:'pp' },
+    { label:'Sem 1 (fin de domi→D+7)',   values:vals.s1, color:'#9C97E8', prefix:'+', suffix:'pp' },
     { label:'Sem 2 (D+8→D+14)',  values:vals.s2, color:'#5F5E5A', prefix:'+', suffix:'pp' },
     { label:'Sem 3 (D+15→D+21)', values:vals.s3, color:'#9E9D98', prefix:'+', suffix:'pp' },
     { label:'Sem 4 (D+22→D+30)', values:vals.s4, color:'#CECDCA', prefix:'+', suffix:'pp' },
@@ -3719,8 +3747,108 @@ function switchTab(tabId) {
   }
 }
 
+// ── Tabla de valores por corte bajo cada gráfica de bucket (mismo orden que el eje X) ──
+function renderBktValsTable(containerId, detailMap, cortes, domiColor) {
+  const box = document.getElementById(containerId);
+  if (!box) return;
+  const cs = cortes.filter(c => detailMap[c]);
+  if (!cs.length) { box.innerHTML = '<p style="margin:10px;font-size:12px;color:#888780;">Sin cortes seleccionados.</p>'; return; }
+  const rows = [
+    { k:'domi',      lbl:'Domi (1°–4° intento)',          col:domiColor },
+    { k:'spei_domi', lbl:'SPEI durante domi',             col:'#3B3ACA' },
+    { k:'s1',        lbl:'SPEI sem 1 (fin de domi→D+7)',  col:'#9C97E8' },
+    { k:'s2',        lbl:'SPEI sem 2 (D+8→D+14)',         col:'#7F77DD' },
+    { k:'s3',        lbl:'SPEI sem 3 (D+15→D+21)',        col:'#FAC775' },
+    { k:'s4',        lbl:'SPEI sem 4 (D+22→D+30)',        col:'#E0780B' },
+    { k:'no_pago',   lbl:'No pagó al cierre',             col:'#F4A198' },
+  ];
+  // Subtotales por fase: se insertan después de la última categoría de cada fase
+  const subs = {
+    spei_domi: { keys:['domi','spei_domi'], lbl:'Subtotal domi',   note:'pago a tiempo' },
+    s2:        { keys:['s1','s2'],          lbl:'Subtotal Fase 1', note:'sem 1 + sem 2 · fin de domi→D+14' },
+    s4:        { keys:['s3','s4'],          lbl:'Subtotal Fase 2', note:'sem 3 + sem 4 · D+15→D+30' },
+  };
+  const fmt = t => (t / 10).toFixed(1) + '%';          // t = décimas de punto (entero)
+  // Redondeo que cuadra: se trabaja en décimas enteras. "No pagó" se redondea normal (así
+  // "Recuperado" = 100 − no pagó coincide con la etiqueta de la barra) y las otras 6
+  // categorías se reparten por mayor residuo para sumar exactamente 1000 − no pagó.
+  // Subtotales y recuperado se calculan sumando esas décimas → todo cuadra a la vista.
+  // Reparto por mayor residuo de `raw` (décimas, no enteras) para que sume exactamente `target`
+  const lr = (raw, target) => {
+    const fl = raw.map(Math.floor);
+    let diff = target - fl.reduce((a,b) => a + b, 0);
+    const order = raw.map((v,i) => [v - fl[i], i]).sort((a,b) => diff > 0 ? b[0] - a[0] : a[0] - b[0]);
+    for (let j = 0; diff !== 0 && j < order.length * 3; j++) {
+      const i = order[j % order.length][1];
+      if (diff > 0) { fl[i]++; diff--; } else if (fl[i] > 0) { fl[i]--; diff++; }
+    }
+    return fl;
+  };
+  // Redondeo jerárquico: 1) No pagó = mismo cálculo que la etiqueta de la barra;
+  // 2) Subtotal domi = redondeo normal (coincide con el KPI de pago a tiempo);
+  // 3) Fase 1 / Fase 2 se reparten el resto; 4) cada categoría cuadra con su subtotal.
+  const disp = {};
+  cs.forEach(c => {
+    const d = detailMap[c], t = k => (d[k] || 0) * 10;
+    const np = 1000 - Math.round(parseFloat((100 - (d.no_pago || 0)).toFixed(1)) * 10);
+    const sd = Math.round(parseFloat(((d.domi || 0) + (d.spei_domi || 0)).toFixed(1)) * 10);
+    const [f1, f2] = lr([t('s1') + t('s2'), t('s3') + t('s4')], 1000 - np - sd);
+    const [a, b2] = lr([t('domi'), t('spei_domi')], sd);
+    const [s1, s2] = lr([t('s1'), t('s2')], f1);
+    const [s3, s4] = lr([t('s3'), t('s4')], f2);
+    disp[c] = { domi:a, spei_domi:b2, s1, s2, s3, s4, no_pago:np };
+  });
+  const head = `<thead><tr><th class="lbl">% de clientes</th>${cs.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
+  const nRow = `<tr class="n-row"><td class="lbl">Clientes (n)</td>${cs.map(c => `<td>${(detailMap[c].total ?? 0).toLocaleString()}</td>`).join('')}</tr>`;
+  const subRow = s => `<tr class="sub-row"><td class="lbl">${s.lbl}<span class="sub-note">(${s.note})</span></td>${
+      cs.map(c => `<td>${fmt(s.keys.reduce((a,k) => a + disp[c][k], 0))}</td>`).join('')}</tr>`;
+  const body = rows.map(r => `<tr><td class="lbl"><span class="sw" style="background:${r.col};"></span>${r.lbl}</td>${
+      cs.map(c => `<td class="${!detailMap[c][r.k] ? 'zero' : ''}">${fmt(disp[c][r.k])}</td>`).join('')}</tr>`
+      + (subs[r.k] ? subRow(subs[r.k]) : '')).join('');
+  const tot = `<tr class="tot-row"><td class="lbl" style="color:#1D9E75;">Recuperado al cierre</td>${
+      cs.map(c => `<td>${fmt(1000 - disp[c].no_pago)}</td>`).join('')}</tr>`;
+  box.innerHTML = `<table class="bkt-vals">${head}<tbody>${nRow}${body}${tot}</tbody></table>`;
+}
+
+// ── Selección independiente de cortes para "% recuperado al cierre · por BKT" ──
+let porbktCorteSelection = new Set(allCortes);
+
+function getCortesForPorBkt() {
+  // Combina el filtro global (Todos/día1/día15) con la selección manual de esta sección
+  return getSelectedCortes().filter(c => porbktCorteSelection.has(c));
+}
+
+function renderPorBktCortePicker() {
+  const box = document.getElementById('porbktCortePicker');
+  if (!box) return;
+  const disponibles = getSelectedCortes().filter(c => bkt1DetailByCorte[c]);
+  box.innerHTML = disponibles.map(c => {
+    const on = porbktCorteSelection.has(c);
+    const col = data[c]?.color || '#5F5E5A';
+    return `<button class="porbkt-corte-chip" data-corte="${c}"
+      style="font-size:11.5px;padding:5px 10px;border-radius:14px;cursor:pointer;font-weight:600;
+             border:1.5px solid ${on ? col : 'rgba(0,0,0,0.15)'};
+             background:${on ? col+'1A' : '#fff'};
+             color:${on ? col : '#B5B4AE'};
+             transition:all 0.12s;">${c}</button>`;
+  }).join('');
+  const n = disponibles.filter(c => porbktCorteSelection.has(c)).length;
+  const hint = document.getElementById('porbktCorteHint');
+  if (hint) hint.textContent = `(${n} de ${disponibles.length})`;
+  box.querySelectorAll('.porbkt-corte-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const c = btn.dataset.corte;
+      if (porbktCorteSelection.has(c)) porbktCorteSelection.delete(c);
+      else porbktCorteSelection.add(c);
+      buildPorBktCharts();
+    });
+  });
+}
+
 function buildPorBktCharts() {
-  const cortes = getSelectedCortes();
+  renderPorBktCortePicker();
+  const cortesGlobal = getSelectedCortes();   // tendencia BKT1 no usa el filtro de chips
+  const cortes = getCortesForPorBkt();
   const bkt1Cortes = cortes.filter(c => bkt1DetailByCorte[c]);
 
   // ── KPI averages ───────────────────────────────────────────────────────
@@ -3744,10 +3872,10 @@ function buildPorBktCharts() {
       datasets: [
         { label:'Domi (1°–4° intento)',   data:b1('domi'),      backgroundColor:'#1D9E75', borderWidth:0, stack:'s' },
         { label:'SPEI durante domi',       data:b1('spei_domi'), backgroundColor:'#3B3ACA', borderWidth:0, stack:'s' },
-        { label:'SPEI sem 1 (D+0→D+7)',    data:b1('s1'),        backgroundColor:'#9C97E8', borderWidth:0, stack:'s' },
+        { label:'SPEI sem 1 (fin de domi→D+7)',    data:b1('s1'),        backgroundColor:'#9C97E8', borderWidth:0, stack:'s' },
         { label:'SPEI sem 2 (D+8→D+14)',   data:b1('s2'),        backgroundColor:'#7F77DD', borderWidth:0, stack:'s' },
-        { label:'SPEI sem 3 (D+15→D+21)',  data:b1('s3'),        backgroundColor:'#EF9F27', borderWidth:0, stack:'s' },
-        { label:'SPEI sem 4 (D+22→D+30)',  data:b1('s4'),        backgroundColor:'#CECDCA', borderWidth:0, stack:'s' },
+        { label:'SPEI sem 3 (D+15→D+21)',  data:b1('s3'),        backgroundColor:'#FAC775', borderWidth:0, stack:'s' },
+        { label:'SPEI sem 4 (D+22→D+30)',  data:b1('s4'),        backgroundColor:'#E0780B', borderWidth:0, stack:'s' },
         { label:'No pagó al cierre',       data:b1('no_pago'),   backgroundColor:'#F4A198', borderWidth:0, stack:'s' },
       ]
     },
@@ -3817,7 +3945,7 @@ function buildPorBktCharts() {
   });
 
   // ── BKT1 trend: dos líneas (día 1 vs día 15), x-axis = mes ───
-  const trendCortes = cortes.filter(c => bkt1DetailByCorte[c]);
+  const trendCortes = cortesGlobal.filter(c => bkt1DetailByCorte[c]);
   const monthOf = c => c.split('-')[1];
   const dayOf   = c => data[c]?.day;
   const months  = [...new Set(trendCortes.map(monthOf))];
@@ -3963,10 +4091,10 @@ function buildPorBktCharts() {
         datasets:[
           {label:'Domi (1°–4° intento)',   data:g('domi'),      backgroundColor:accentColor, borderWidth:0, stack:'s'},
           {label:'SPEI durante domi',       data:g('spei_domi'), backgroundColor:'#3B3ACA',   borderWidth:0, stack:'s'},
-          {label:'SPEI sem 1 (D+0→D+7)',    data:g('s1'),        backgroundColor:'#9C97E8',   borderWidth:0, stack:'s'},
+          {label:'SPEI sem 1 (fin de domi→D+7)',    data:g('s1'),        backgroundColor:'#9C97E8',   borderWidth:0, stack:'s'},
           {label:'SPEI sem 2 (D+8→D+14)',   data:g('s2'),        backgroundColor:'#7F77DD',   borderWidth:0, stack:'s'},
-          {label:'SPEI sem 3 (D+15→D+21)',  data:g('s3'),        backgroundColor:'#EF9F27',   borderWidth:0, stack:'s'},
-          {label:'SPEI sem 4 (D+22→D+30)',  data:g('s4'),        backgroundColor:'#CECDCA',   borderWidth:0, stack:'s'},
+          {label:'SPEI sem 3 (D+15→D+21)',  data:g('s3'),        backgroundColor:'#FAC775',   borderWidth:0, stack:'s'},
+          {label:'SPEI sem 4 (D+22→D+30)',  data:g('s4'),        backgroundColor:'#E0780B',   borderWidth:0, stack:'s'},
           {label:'No pagó al cierre',       data:g('no_pago'),   backgroundColor:'#FEE8E8',   borderWidth:0, stack:'s'},
         ]
       },
@@ -4034,8 +4162,12 @@ function buildPorBktCharts() {
   }
 
   buildBktPhaseChart('bkt2PhaseChart', bkt2DetailByCorte, cortes, '#1D9E75', null, null, null, 'bkt2Phase', 'bkt2SampleNote');
+  renderBktValsTable('bkt2ValsTable', bkt2DetailByCorte, cortes, '#1D9E75');
   buildBktPhaseChart('bkt3PhaseChart', bkt3DetailByCorte, cortes, '#1D9E75', null, null, null, 'bkt3Phase', 'bkt3SampleNote');
+  renderBktValsTable('bkt3ValsTable', bkt3DetailByCorte, cortes, '#1D9E75');
   buildBktPhaseChart('bkt4PhaseChart', bkt4DetailByCorte, cortes, '#1D9E75', null, null, null, 'bkt4Phase', 'bkt4SampleNote');
+  renderBktValsTable('bkt4ValsTable', bkt4DetailByCorte, cortes, '#1D9E75');
+  renderBktValsTable('bkt1ValsTable', bkt1DetailByCorte, bkt1Cortes, '#1D9E75');
 
   buildIntentoProgresionChart();
 }
@@ -4676,6 +4808,14 @@ document.getElementById('curveSelAll')?.addEventListener('click', () => {
 document.getElementById('curveSelNone')?.addEventListener('click', () => {
   curveCorteSelection = new Set();
   renderCurveSection();
+});
+document.getElementById('porbktSelAll')?.addEventListener('click', () => {
+  porbktCorteSelection = new Set(allCortes);
+  buildPorBktCharts();
+});
+document.getElementById('porbktSelNone')?.addEventListener('click', () => {
+  porbktCorteSelection = new Set();
+  buildPorBktCharts();
 });
 document.getElementById('intentoSelAll')?.addEventListener('click', () => {
   intentoCorteSelection = new Set(Object.keys(intentoPagoData));
