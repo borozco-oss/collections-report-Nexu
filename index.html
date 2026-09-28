@@ -2670,7 +2670,37 @@ function domiIntentosFor(corte) {
 function buildDomiChart() {
   renderDomiBucketPicker();
   const cortes = getSelectedCortes().filter(c => intentoSplitData[c]?.[domiBucket]);
-  const sp = cortes.map(c => intentoSplitData[c][domiBucket]);
+  // Pago a tiempo oficial (= "Subtotal domi" de Pago a tiempo por BKT): domi + SPEI durante
+  // domi del bucket; en "Todos" se pondera por el tamaño de cada bucket.
+  const DET = { bkt1:bkt1DetailByCorte, bkt2:bkt2DetailByCorte, bkt3:bkt3DetailByCorte, bkt4:bkt4DetailByCorte };
+  const pagoATiempo = c => {
+    const bs = domiBucket === 'all' ? ['bkt1','bkt2','bkt3','bkt4'] : [domiBucket];
+    let N = 0, d = 0, s = 0;
+    bs.forEach(b => { const x = DET[b][c]; if (!x) return; N += x.total; d += x.domi * x.total; s += x.spei_domi * x.total; });
+    return N ? { d: d / N, s: s / N } : null;
+  };
+  // Ajusta el desglose por intento para que sume EXACTO el pago a tiempo: se lleva a
+  // centésimas enteras y se reparte por mayor residuo (domi y SPEI por separado).
+  const cuadra = (vals, tgt) => {                       // tgt en centésimas enteras
+    const raw = vals.map(v => Math.max(0, v) * 100);
+    const tot = raw.reduce((a,b) => a + b, 0);
+    const sc = tot > 0 ? raw.map(v => v * tgt / tot) : raw.map((_,i) => i === 0 ? tgt : 0);
+    const fl = sc.map(Math.floor); let diff = tgt - fl.reduce((a,b) => a + b, 0);
+    sc.map((v,i) => [v - fl[i], i]).sort((a,b) => b[0] - a[0]).forEach(([,i]) => { if (diff > 0) { fl[i]++; diff--; } });
+    return fl.map(v => v / 100);
+  };
+  const KEYS = ['i1','i2','i3','i4'];
+  const sp = cortes.map(c => {
+    const x = intentoSplitData[c][domiBucket], pt = pagoATiempo(c);
+    if (!pt) return x;
+    // Total en centésimas que, al mostrarse con 1 decimal, dé lo mismo que el pago a tiempo
+    const tot = pt.d + pt.s, shown = parseFloat(tot.toFixed(1));
+    let T = Math.round(tot * 100);
+    if ((T / 100).toFixed(1) !== shown.toFixed(1)) T += (T / 100 > shown ? -1 : 1);
+    const Td = Math.min(T, Math.round(pt.d * 100));
+    const d = cuadra(KEYS.map(k => x[k].d), Td), s = cuadra(KEYS.map(k => x[k].s), T - Td);
+    const o = {}; KEYS.forEach((k,i) => o[k] = { d: d[i], s: s[i] }); return o;
+  });
 
   // 8 datasets: por cada intento, su parte domi y su parte SPEI.
   // Colores pareados: tono fuerte = domi, tono claro = SPEI del mismo intento.
@@ -2686,7 +2716,7 @@ function buildDomiChart() {
     datasets.push({ label:`${p.label} SPEI`, data: sp.map(x => x[p.key].s), backgroundColor:p.spei, borderWidth:0, stack:'s' });
   });
   const totalsPorIntento = PAIRS.map(p => sp.map(x => +(x[p.key].d + x[p.key].s).toFixed(2)));
-  const grandTotals = cortes.map((_,i) => PAIRS.reduce((a,p,k) => a + totalsPorIntento[k][i], 0));
+  const grandTotals = cortes.map((_,i) => +PAIRS.reduce((a,p,k) => a + totalsPorIntento[k][i], 0).toFixed(2));
 
   if (charts.domi) charts.domi.destroy();
   charts.domi = new Chart(document.getElementById('domiChart'), {
@@ -2719,26 +2749,6 @@ function buildDomiChart() {
       id:'domiSplitLabels',
       afterDatasetsDraw(chart) {
         const ctx2 = chart.ctx;
-        // Etiqueta el TOTAL de cada intento (domi+SPEI) al centro del par de segmentos,
-        // para que se siga leyendo el aporte del intento aunque esté partido en dos.
-        PAIRS.forEach((p, k) => {
-          const mD = chart.getDatasetMeta(k*2);     // domi
-          const mS = chart.getDatasetMeta(k*2 + 1); // spei
-          mD.data.forEach((barD, i) => {
-            const barS = mS.data[i];
-            const top = barS.y;          // techo del par (SPEI va encima)
-            const bottom = barD.base;    // piso del par
-            const h = bottom - top;
-            if (h < 13) return;
-            ctx2.save();
-            ctx2.font = 'bold 10px -apple-system,sans-serif';
-            ctx2.fillStyle = k === 0 ? 'rgba(255,255,255,0.95)' : '#1F1F1F';
-            ctx2.textAlign = 'center';
-            const v = totalsPorIntento[k][i];
-            ctx2.fillText((k===0 ? '' : '+') + v.toFixed(1) + (k===0 ? '%' : 'pp'), barD.x, top + h/2 + 3.5);
-            ctx2.restore();
-          });
-        });
         // Acumulado total sobre la barra
         const topMeta = chart.getDatasetMeta(7);
         topMeta.data.forEach((bar, i) => {
