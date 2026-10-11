@@ -4492,6 +4492,7 @@ function buildRolloverNsCharts() {
     data: { labels: months, datasets: rollDatasets },
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 72 } },   // margen para la etiqueta del promedio, fuera de los puntos
       interaction: { mode:'index', intersect:false },
       plugins: {
         legend: {
@@ -4566,10 +4567,16 @@ function buildRolloverNsCharts() {
         ctx2.moveTo(chart.chartArea.left, avgY);
         ctx2.lineTo(chart.chartArea.right, avgY);
         ctx2.stroke();
+        // Etiqueta del promedio en el margen derecho (fuera del área de puntos): nunca choca con
+        // la etiqueta del último corte, sin importar su valor ni cuántos meses se agreguen.
+        ctx2.setLineDash([]);
+        const lx = chart.chartArea.right + 26;
         ctx2.font='10px -apple-system,sans-serif';
         ctx2.fillStyle='#888780';
-        ctx2.textAlign='right';
-        ctx2.fillText(`prom ${avgRoll.toFixed(2)}%`, chart.chartArea.right-4, avgY-4);
+        ctx2.textAlign='left';
+        ctx2.fillText('prom', lx, avgY - 2);
+        ctx2.font='bold 10px -apple-system,sans-serif';
+        ctx2.fillText(`${avgRoll.toFixed(2)}%`, lx, avgY + 10);
         ctx2.restore();
       }
     }]
