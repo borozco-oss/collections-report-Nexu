@@ -85,6 +85,25 @@ body{
 .bkt-vals tr.sub-row td .sub-note{font-weight:400;color:#888780;margin-left:4px;}
 .bkt-vals .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
 
+/* MÓDULO CRECIMIENTO DE CARTERA */
+.crec-controls{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;margin:0 0 18px;padding:14px 16px;background:#F7F7FC;border-radius:8px;}
+.crec-field{display:flex;flex-direction:column;gap:5px;}
+.crec-field label{font-size:11.5px;color:#5F5E5A;font-weight:600;}
+.crec-field input,.crec-field select{font:inherit;font-size:13px;padding:7px 10px;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1F1F1F;min-width:120px;}
+.crec-field input:focus,.crec-field select:focus{outline:2px solid #3B3ACA33;border-color:#3B3ACA;}
+.crec-seg{display:inline-flex;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;overflow:hidden;}
+.crec-seg button{font:inherit;font-size:12px;font-weight:600;padding:6px 12px;border:none;background:#fff;color:#5F5E5A;cursor:pointer;}
+.crec-seg button.on{background:#3B3ACA;color:#fff;}
+.crec-tbl{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums;}
+.crec-tbl th,.crec-tbl td{padding:7px 10px;text-align:right;white-space:nowrap;border-bottom:0.5px solid rgba(0,0,0,0.07);}
+.crec-tbl th{background:#F7F7FC;color:#5F5E5A;font-weight:600;}
+.crec-tbl th:first-child,.crec-tbl td:first-child{text-align:left;}
+.crec-tbl tr.proj td{background:#FBFAF5;}
+.crec-tbl tr.proj td:first-child{color:#8A6A12;font-weight:600;}
+.crec-tbl td.big{font-weight:700;color:#1F1F1F;}
+.crec-tag{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:9px;margin-left:6px;vertical-align:1px;}
+.crec-tag.real{background:#E6F4EE;color:#1D9E75;} .crec-tag.proy{background:#FDF1D8;color:#8A6A12;} .crec-tag.parcial{background:#EEEEF8;color:#3B3ACA;}
+
 /* PAGE & SECTIONS */
 .page{max-width:1100px;margin:0 auto;padding:20px 24px 32px;}
 .tab-panel{display:none;}.tab-panel.active{display:block;}
@@ -211,6 +230,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
         <button class="tab-btn" data-tab="rolloverns">⭐ Rollover BKT1→BKT2</button>
         <button class="tab-btn" data-tab="moratemprana">⭐ Mora temprana</button>
         <span class="tab-row-break"></span>
+        <button class="tab-btn tab-btn-secondary" data-tab="crecimiento">Crecimiento de cartera</button>
         <button class="tab-btn tab-btn-secondary" data-tab="recaudacion">Recaudación</button>
         <button class="tab-btn tab-btn-secondary" data-tab="domiciliacion">Domiciliación</button>
         <button class="tab-btn tab-btn-secondary" data-tab="rollover">Roll over</button>
@@ -232,6 +252,90 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
 </div>
 
 <div class="page">
+
+
+<!-- TAB: CRECIMIENTO DE CARTERA -->
+<div class="tab-panel" id="tab-crecimiento">
+  <div class="section">
+    <h2>Crecimiento de cartera · corte 1 vs corte 15</h2>
+    <p class="subtitle">Cuántos clientes entran a domiciliación en cada corte y cómo se reparten entre el día 1 y el día 15. Es la base para dimensionar todo lo que escala con la cartera: campañas, gestores y presupuesto.</p>
+    <div class="grid-4" id="crecKpis"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:#5F5E5A;font-weight:600;">Ver:</span>
+      <div class="crec-seg" id="crecMetric">
+        <button data-m="clientes" class="on">Clientes en cartera</button>
+        <button data-m="money">Pago esperado ($)</button>
+        <button data-m="gestion">Universo en gestión</button>
+      </div>
+    </div>
+    <div class="chart-wrap-md"><canvas id="crecChart"></canvas></div>
+    <p class="meta" id="crecChartNote" style="margin-top:10px;"></p>
+
+    <hr class="divider">
+
+    <h3 style="margin-top:8px;">¿Cómo se reparte entre corte 1 y corte 15?</h3>
+    <p class="meta">Participación de cada corte en la cartera del mes. Si un corte gana peso, ese corte necesita más capacidad de campañas.</p>
+    <div class="chart-wrap-xs"><canvas id="crecShareChart"></canvas></div>
+  </div>
+
+  <div class="section">
+    <h2>Presupuesto de campañas CCC.uno · proyección</h2>
+    <p class="subtitle">Cuánto se ha gastado realmente en CCC.uno, cuánto cuesta cada cuenta en gestión y cuánto presupuesto agregar en los próximos meses para no quedarse corto. Quedarse sin saldo de campañas a mitad de corte es justo lo que empuja el rollover hacia arriba.</p>
+
+    <h3 style="margin-top:4px;">Gasto real CCC.uno por mes · por canal</h3>
+    <p class="meta">Facturas de UBLU (sin IVA). CCC.uno cobra 100% por uso, sin rentas fijas: SMS $0.26, minuto a celular $0.22, minuto a fijo $0.12. La línea es el costo por cuenta en gestión (gasto ÷ cuentas del universo elegido abajo).</p>
+    <div class="grid-4" id="crecGastoKpis"></div>
+    <div class="chart-wrap-md"><canvas id="crecGastoChart"></canvas></div>
+    <p class="meta" style="margin-top:8px;">El blaster (llamadas con voz robot) es 85–93% del gasto. La factura sube o baja sobre todo por cuántas campañas y cuántas veces se marca a cada cuenta, no solo por el tamaño de la cartera. Dic-25 y ene solo tienen el total de la factura (sin desglose por canal).</p>
+
+    <hr class="divider">
+
+    <h3 style="margin-top:8px;">Proyección de presupuesto</h3>
+    <div class="info-box" style="margin-bottom:16px;">
+      <p class="info-title">Cómo funciona</p>
+      <p style="margin:0;">Se proyecta cada corte por separado (corte 1 y corte 15 crecen a ritmos distintos) con su tendencia lineal desde enero. El <strong>escenario alto</strong> suma a la tendencia la variación histórica de ese corte (percentil 95 de los desvíos), así el presupuesto cubre un corte más grande de lo esperado. Presupuesto = cuentas del escenario alto × costo por cuenta (de las facturas reales) × (1 + colchón).</p>
+    </div>
+    <div class="crec-controls">
+      <div class="crec-field">
+        <label for="crecUniverso">Cuentas que reciben campañas</label>
+        <select id="crecUniverso">
+          <option value="gestion">Universo en gestión (BKT1 sin pago en domi + BKT2+)</option>
+          <option value="bkt1">Solo BKT1 sin pago en domi</option>
+          <option value="clientes">Toda la cartera domiciliada</option>
+        </select>
+      </div>
+      <div class="crec-field">
+        <label for="crecCostoBase">Costo por cuenta al mes</label>
+        <select id="crecCostoBase"></select>
+      </div>
+      <div class="crec-field" id="crecCostoWrap" style="display:none;">
+        <label for="crecCosto">Costo personalizado (MXN)</label>
+        <input id="crecCosto" type="number" min="0" step="0.1" placeholder="Ej. 8.50">
+      </div>
+      <div class="crec-field">
+        <label for="crecColchon">Colchón adicional (%)</label>
+        <input id="crecColchon" type="number" min="0" max="100" step="1" value="10">
+      </div>
+      <div class="crec-field">
+        <label for="crecMeses">Meses a proyectar</label>
+        <select id="crecMeses"><option value="3">3</option><option value="6" selected>6</option><option value="12">12</option></select>
+      </div>
+    </div>
+    <div class="grid-3" id="crecBudgetKpis"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin:4px 0 10px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:#5F5E5A;font-weight:600;">Ver:</span>
+      <div class="crec-seg" id="crecProjMode">
+        <button data-m="cuentas" class="on">Cuentas</button>
+        <button data-m="presupuesto">Presupuesto sin IVA</button>
+      </div>
+      <span id="crecProjHint" style="font-size:11.5px;color:#888780;"></span>
+    </div>
+    <div class="chart-wrap-md"><canvas id="crecProjChart"></canvas></div>
+    <h3>Detalle mensual</h3>
+    <div style="overflow-x:auto;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;"><table class="crec-tbl" id="crecTable"></table></div>
+    <p class="footer">Fuente: Resultado de domiciliación de cada corte (clientes y pago esperado) y Cierre de moratorios (BKT2+ y clientes BKT1 que no pagaron en domi). "Universo en gestión" incluye a los clientes BKT1 sin pago en domi que después Finanzas identifica como pagados por SPEI/STP: CCC.uno los recibe igual al arranque del corte. Gasto: facturas UBLU de CCC.uno (dic-25 a sep-26) y reportes de consumo BG_PRESTEMOS_SAPI (feb a sep, cuadran al centavo con cada factura). Los montos del presupuesto se muestran sin y con IVA (16%). Las selecciones se guardan solo en este navegador.</p>
+  </div>
+</div>
 
 <!-- TAB: RECAUDACIÓN -->
 <div class="tab-panel" id="tab-recaudacion">
@@ -1119,6 +1223,17 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    Pago a tiempo, rollover y recuperación D+30 NO cambian. Curvas diarias (clientes y $)
    ajustadas D+12..D+29; en $ se ponderó con RENTA PENDIENTE POR CORTE DE DOMI como proxy
    de Pago_esperado (el Resultado no se reprocesó).
+   *** MÓDULO 'CRECIMIENTO DE CARTERA' (11-oct-2026) — pestaña data-tab="crecimiento" ***
+   No tiene datos propios: se calcula al vuelo desde bktCurveData (clientes por BKT),
+   bktCurveDataMoney (pago esperado) y northStarData.cobranza (BKT1 sin pago en domi), así que
+   se actualiza solo al agregar un corte. Universo en gestión = cobranza BKT1 + BKT2 + BKT3 + BKT4+.
+   Proyección por corte (día 1 y día 15 por separado): regresión lineal desde ene; escenario alto =
+   tendencia + 1.645 × desviación estándar de residuos. Presupuesto = alto × costo × (1+colchón).
+   Costo/colchón/universo/meses se guardan en localStorage (cpr_crec_*) del navegador.
+   CCC.uno (14-oct-2026): costo por cuenta = gasto real de la factura UBLU (sin IVA) ÷ cuentas del universo
+   elegido en ese mes (ccUnoGasto). Cobro 100% por uso (SMS 0.26, min celular 0.22, min fijo 0.12); blaster
+   = 85-93% del gasto. Excels BG_PRESTEMOS_SAPI feb-sep cuadran al centavo con las facturas. 15-sep/01-oct
+   preliminares (carteraPreliminar, solo Resultado; universo estimado con razón histórica sin pago).
    *** 01-sep-2026 AGREGADO (6-oct-2026) — Resultado_1_Sept_26 + Cierre_moratorios_010926 ***
    Pipeline validado antes contra 15-ago (reproduce exacto detalle 4 buckets, curvas clientes y
    $, desglose por intento, rollover, dación, cartera, causas, bancos). Formato Cierre: header en
@@ -3797,6 +3912,349 @@ function buildVintageCharts() {
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabPanels  = document.querySelectorAll('.tab-panel');
 
+// ══════════════════════════════════════════════════════════════════════════
+// MÓDULO: CRECIMIENTO DE CARTERA + PRESUPUESTO CCC.uno
+// Fuente por corte: bktCurveData (clientes por BKT), bktCurveDataMoney (pago esperado),
+// northStarData.cobranza (BKT1 sin pago en domi). Proyección: regresión lineal por corte
+// (día 1 y día 15 por separado); escenario alto = tendencia + 1.645 × desviación de residuos.
+// ══════════════════════════════════════════════════════════════════════════
+// ── Cortes con Resultado de domi pero SIN Cierre de moratorios todavía ──
+// Solo alimentan el módulo "Crecimiento de cartera". Clientes y pago esperado son exactos
+// (Resultado, VIN único); universo en gestión y BKT1 sin pago se estiman con 'Sin pago' del
+// Resultado × la razón histórica de cortes del mismo día. Al llegar el Cierre, el corte se
+// agrega normal a allCortes y se borra de aquí.
+const carteraPreliminar = {
+  '15-sep': {clientes:8746, money:110604640.8, sinPago:2085},
+  '01-oct': {clientes:8014, money:94998705.18, sinPago:1761},
+};
+// ── Gasto real CCC.uno (facturas UBLU, subtotal sin IVA) · desglose por canal desde reportes BG_PRESTEMOS_SAPI ──
+// Clave = mes de consumo (la factura se emite a inicios del mes siguiente). Para agregar un mes: sumar BILL AMOUNT
+// del excel por canal (SMS / tts=blaster / progressive / Dialpad-TSIP=manual) y validar contra el subtotal de la factura.
+const ccUnoGasto = {"dic-25": {"total": 24684.88, "factura": "F2001"}, "ene": {"total": 27917.32, "factura": "F2373"}, "feb": {"blaster": 15523.74, "manual": 586.28, "progresivo": 51.7, "sms": 5080.92, "total": 21242.64, "llamadasBlaster": 71052, "campanas": 56, "factura": "INV/2026/00183"}, "mar": {"blaster": 20325.44, "manual": 515.06, "progresivo": 33.44, "sms": 2713.62, "total": 23587.56, "llamadasBlaster": 92942, "campanas": 43, "factura": "INV/2026/00293"}, "abr": {"blaster": 22999.58, "manual": 511.28, "progresivo": 12.88, "sms": 1566.5, "total": 25090.24, "llamadasBlaster": 105864, "campanas": 44, "factura": "INV/2026/00528"}, "may": {"blaster": 23784.98, "manual": 485.78, "progresivo": 55.6, "sms": 2710.24, "total": 27036.6, "llamadasBlaster": 109084, "campanas": 43, "factura": "INV/2026/00725"}, "jun": {"blaster": 27336.62, "manual": 1010.56, "progresivo": 43.92, "sms": 1373.06, "total": 29764.16, "llamadasBlaster": 125369, "campanas": 36, "factura": "INV/2026/00942"}, "jul": {"blaster": 19565.4, "manual": 1061.92, "progresivo": 334.14, "sms": 2333.76, "total": 23295.22, "llamadasBlaster": 89640, "campanas": 67, "factura": "INV/2026/01146"}, "ago": {"blaster": 19308.58, "manual": 565.98, "progresivo": 347.24, "sms": 2879.5, "total": 23101.3, "llamadasBlaster": 88017, "campanas": 40, "factura": "INV/2026/01334"}, "sep": {"blaster": 31667.44, "manual": 477.68, "progresivo": 426.62, "sms": 1426.1, "total": 33997.84, "llamadasBlaster": 144957, "campanas": 95, "factura": "INV/2026/01521"}};
+let crecMetric = 'clientes';
+function buildCrecimientoModule() {
+  const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const mLabel = t => MES[((t % 12) + 12) % 12] + (t >= 12 ? '-' + (26 + Math.floor(t / 12)) : '');
+  const B = ['bkt1','bkt2','bkt3','bkt4'];
+  const parse = c => { const [d, m] = c.split('-'); return { day: +d === 1 ? 1 : 15, t: MES.indexOf(m) }; };
+  const cob = c => { const i = northStarData.labels.indexOf(c); return i >= 0 ? northStarData.cobranza[i] : null; };
+  // Razón histórica (mismo día de corte) para estimar universo/BKT1 desde 'Sin pago' del Resultado
+  const ratioDia = (day, kind) => {
+    const xs = northStarData.labels.filter(c => parse(c).day === day && bktCurveData[c]).map(c => {
+      const i = northStarData.labels.indexOf(c), sp = northStarData.sinPago[i], C = bktCurveData[c];
+      const num = kind === 'bkt1' ? northStarData.cobranza[i] : northStarData.cobranza[i] + C.bkt2.total + C.bkt3.total + C.bkt4.total;
+      return num / sp; });
+    return xs.reduce((a, b) => a + b, 0) / xs.length;
+  };
+  const isPre = c => !bktCurveData[c] && !!carteraPreliminar[c];
+  const val = (c, m) => {
+    if (isPre(c)) {
+      const p = carteraPreliminar[c], day = parse(c).day;
+      if (m === 'clientes') return p.clientes;
+      if (m === 'money')    return p.money;
+      return Math.round(p.sinPago * ratioDia(day, m === 'bkt1' ? 'bkt1' : 'gestion'));
+    }
+    const C = bktCurveData[c], M = bktCurveDataMoney[c];
+    if (!C) return null;
+    if (m === 'clientes') return B.reduce((a, b) => a + (C[b]?.total || 0), 0);
+    if (m === 'money')    return M ? B.reduce((a, b) => a + (M[b]?.total_money || 0), 0) : null;
+    const k = cob(c); if (k == null) return null;
+    if (m === 'bkt1')     return k;
+    return k + (C.bkt2?.total || 0) + (C.bkt3?.total || 0) + (C.bkt4?.total || 0);   // gestion
+  };
+  const cortesMod = [...allCortes, ...Object.keys(carteraPreliminar).filter(c => !allCortes.includes(c))];
+  const preSet = new Set(cortesMod.filter(isPre).map(c => { const p = parse(c); return p.day + '|' + p.t; }));
+  const isPreDT = (day, t) => preSet.has(day + '|' + t);
+  const series = m => {
+    const s = { 1: {}, 15: {} };
+    cortesMod.forEach(c => { const p = parse(c), v = val(c, m); if (p.t >= 0 && v != null) s[p.day][p.t] = v; });
+    return s;
+  };
+  const fit = obj => {                         // regresión lineal y desviación de residuos
+    const ts = Object.keys(obj).map(Number), n = ts.length;
+    const mt = ts.reduce((a, t) => a + t, 0) / n, my = ts.reduce((a, t) => a + obj[t], 0) / n;
+    const b = ts.reduce((a, t) => a + (t - mt) * (obj[t] - my), 0) / ts.reduce((a, t) => a + (t - mt) ** 2, 0);
+    const a0 = my - b * mt;
+    const sd = Math.sqrt(ts.reduce((a, t) => a + (obj[t] - (a0 + b * t)) ** 2, 0) / Math.max(1, n - 2));
+    return { f: t => a0 + b * t, slope: b, sd, last: Math.max(...ts) };
+  };
+  const nf = v => Math.round(v).toLocaleString('es-MX');
+  const mxn = v => '$' + Math.round(v).toLocaleString('es-MX');
+  const mm = v => '$' + (v / 1e6).toFixed(1) + 'M';
+  const C1 = '#3B3ACA', C15 = '#1D9E75';
+
+  // ── KPIs de crecimiento (clientes) ──
+  const sc = series('clientes');
+  const ts1 = Object.keys(sc[1]).map(Number), ts15 = Object.keys(sc[15]).map(Number);
+  const full = ts1.filter(t => sc[15][t] != null);
+  const L = Math.max(...full), F = Math.min(...full);
+  const f1 = fit(sc[1]), f15 = fit(sc[15]);
+  const last1 = Math.max(...ts1), last15 = Math.max(...ts15);
+  const pct = (a, b) => ((a / b - 1) * 100).toFixed(1);
+  const totL = sc[1][L] + sc[15][L], totF = sc[1][F] + sc[15][F];
+  document.getElementById('crecKpis').innerHTML = `
+    <div class="kpi"><p class="kpi-label">Cartera de ${mLabel(L)} (corte 1 + corte 15)</p><p class="kpi-value">${nf(totL)}</p><p class="kpi-sub">+${pct(totL, totF)}% vs ${mLabel(F)} · ${nf(totF)}</p></div>
+    <div class="kpi"><p class="kpi-label">Ritmo de crecimiento</p><p class="kpi-value">+${nf(f1.slope + f15.slope)}<span style="font-size:13px;color:#888780;"> clientes/mes</span></p><p class="kpi-sub">≈ +${((f1.slope + f15.slope) / totL * 100).toFixed(1)}% mensual</p></div>
+    <div class="kpi" style="border-left:3px solid ${C1};"><p class="kpi-label">Corte 1 · ${String(1).padStart(2,'0')}-${mLabel(last1)}</p><p class="kpi-value">${nf(sc[1][last1])}</p><p class="kpi-sub">+${pct(sc[1][last1], sc[1][Math.min(...ts1)])}% desde ${mLabel(Math.min(...ts1))} · +${nf(f1.slope)}/mes</p></div>
+    <div class="kpi" style="border-left:3px solid ${C15};"><p class="kpi-label">Corte 15 · 15-${mLabel(last15)}</p><p class="kpi-value">${nf(sc[15][last15])}</p><p class="kpi-sub">+${pct(sc[15][last15], sc[15][Math.min(...ts15)])}% desde ${mLabel(Math.min(...ts15))} · +${nf(f15.slope)}/mes</p></div>`;
+
+  // ── Gráfica principal: barras apiladas por mes (corte 1 + corte 15) ──
+  const drawMain = () => {
+    const s = series(crecMetric);
+    const ts = [...new Set([...Object.keys(s[1]), ...Object.keys(s[15])].map(Number))].sort((a, b) => a - b);
+    const isM = crecMetric === 'money';
+    const fmtV = v => isM ? mm(v) : nf(v);
+    if (charts.crec) charts.crec.destroy();
+    charts.crec = new Chart(document.getElementById('crecChart'), {
+      type: 'bar',
+      data: { labels: ts.map(mLabel), datasets: [
+        { label: 'Corte 1',  data: ts.map(t => s[1][t] ?? null),  backgroundColor: C1,  borderWidth: 0, stack: 's' },
+        { label: 'Corte 15', data: ts.map(t => s[15][t] ?? null), backgroundColor: C15, borderWidth: 0, stack: 's' },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false, layout: { padding: { top: 22 } },
+        plugins: {
+          legend: { position: 'top', align: 'end', labels: { color: '#5F5E5A', font: { size: 12 }, boxWidth: 12 } },
+          tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtV(c.parsed.y)}` + (isPreDT(c.datasetIndex === 0 ? 1 : 15, ts[c.dataIndex]) ? (crecMetric === 'gestion' ? ' (estimado, sin Cierre)' : ' (sin Cierre aún)') : ''),
+            footer: it => { const t = ts[it[0].dataIndex]; const a = s[1][t] || 0, b = s[15][t] || 0; return (a && b) ? `Total: ${fmtV(a + b)} · corte 1 = ${(a / (a + b) * 100).toFixed(0)}%` : 'Mes parcial'; } },
+            backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6 }
+        },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { color: '#888780' } },
+                  y: { stacked: true, grace: '8%', grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#888780', callback: v => isM ? '$' + (v / 1e6) + 'M' : v.toLocaleString('es-MX') } } }
+      },
+      plugins: [{ id: 'crecTot', afterDatasetsDraw(ch) {
+        const x = ch.ctx; x.save(); x.textAlign = 'center';
+        // Valor de cada corte dentro de su segmento (si cabe)
+        x.font = 'bold 11px -apple-system,sans-serif'; x.fillStyle = '#fff';
+        [0, 1].forEach(di => ch.getDatasetMeta(di).data.forEach((bar, i) => {
+          const v = ch.data.datasets[di].data[i];
+          if (v == null || Math.abs(bar.base - bar.y) < 16) return;
+          x.fillText(fmtV(v), bar.x, (bar.y + bar.base) / 2 + 4);
+        }));
+        // Total arriba de la barra
+        ts.forEach((t, i) => {
+          const a = s[1][t], b = s[15][t]; const top = ch.getDatasetMeta(b != null ? 1 : 0).data[i]; if (!top) return;
+          x.fillStyle = (a != null && b != null) ? '#1F1F1F' : '#888780';
+          x.fillText((a != null && b != null) ? fmtV(a + b) : fmtV((a || 0) + (b || 0)) + '*', top.x, top.y - 7);
+        });
+        x.restore(); } }]
+    });
+    const partial = ts.filter(t => s[1][t] == null || s[15][t] == null).map(mLabel);
+    const notes = { clientes: 'Clientes en el archivo de domiciliación de cada corte (todos los buckets).',
+                    money: 'Suma del pago esperado de todos los clientes domiciliados en el corte.',
+                    gestion: 'Clientes BKT1 que no pagaron en la domi + todos los BKT2, BKT3 y BKT4+: las cuentas que entran a gestión y campañas.' };
+    const pre = cortesMod.filter(isPre);
+    const preTxt = pre.length ? ` ${pre.join(' y ')}: solo Resultado de domi (Cierre pendiente)` + (crecMetric === 'gestion' ? '; universo estimado con la razón histórica sin pago → universo de su mismo día de corte.' : '.') : '';
+    document.getElementById('crecChartNote').textContent = notes[crecMetric] + (partial.length ? ` * ${partial.join(', ')}: mes parcial (falta un corte).` : '') + preTxt;
+  };
+  document.querySelectorAll('#crecMetric button').forEach(btn => btn.onclick = () => {
+    crecMetric = btn.dataset.m;
+    document.querySelectorAll('#crecMetric button').forEach(b => b.classList.toggle('on', b === btn));
+    drawMain();
+  });
+  drawMain();
+
+  // ── Participación corte 1 vs corte 15 (meses completos) ──
+  if (charts.crecShare) charts.crecShare.destroy();
+  const fullS = full.sort((a, b) => a - b);
+  charts.crecShare = new Chart(document.getElementById('crecShareChart'), {
+    type: 'bar',
+    data: { labels: fullS.map(mLabel), datasets: [
+      { label: 'Corte 1',  data: fullS.map(t => +(sc[1][t] / (sc[1][t] + sc[15][t]) * 100).toFixed(1)),  backgroundColor: C1,  stack: 's' },
+      { label: 'Corte 15', data: fullS.map(t => +(sc[15][t] / (sc[1][t] + sc[15][t]) * 100).toFixed(1)), backgroundColor: C15, stack: 's' } ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', align: 'end', labels: { color: '#5F5E5A', font: { size: 12 }, boxWidth: 12 } },
+                 tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}%` } } },
+      scales: { x: { stacked: true, grid: { display: false }, ticks: { color: '#888780' } },
+                y: { stacked: true, min: 0, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#888780', callback: v => v + '%' } } } },
+    plugins: [{ id: 'shareLbl', afterDatasetsDraw(ch) {
+      const x = ch.ctx; x.save(); x.font = 'bold 11px -apple-system,sans-serif'; x.textAlign = 'center'; x.fillStyle = '#fff';
+      [0, 1].forEach(di => ch.getDatasetMeta(di).data.forEach((bar, i) => {
+        const v = ch.data.datasets[di].data[i]; x.fillText(v.toFixed(0) + '%', bar.x, (bar.y + bar.base) / 2 + 4); }));
+      x.restore(); } }]
+  });
+
+  // ── Presupuesto CCC.uno (costo por cuenta tomado de las facturas reales) ──
+  const $ = id => document.getElementById(id);
+  const ls = { get: k => { try { return localStorage.getItem('cpr_crec_' + k); } catch (e) { return null; } },
+               set: (k, v) => { try { localStorage.setItem('cpr_crec_' + k, v); } catch (e) {} } };
+  const gKey = t => t < 0 ? 'dic-25' : mLabel(t);
+  const gastoTs = Object.keys(ccUnoGasto).map(k => k === 'dic-25' ? -1 : MES.indexOf(k)).sort((a, b) => a - b);
+  const IVA = 1.16;
+  ['Universo','Colchon','Meses','Costo'].forEach(k => { const v = ls.get(k); if (v != null && v !== '') $('crec' + k).value = v; });
+  let costoBase = ls.get('CostoBase') || 'prom';
+  let crecProjMode = ls.get('ProjMode') || 'cuentas';
+  let gastoChartBuilt = null;
+
+  const drawBudget = () => {
+    const u = $('crecUniverso').value, col = Math.max(0, parseFloat($('crecColchon').value) || 0) / 100, H = +$('crecMeses').value;
+    const s = series(u), g1 = fit(s[1]), g15 = fit(s[15]), Z = 1.645;
+    // costo real por cuenta: gasto del mes ÷ cuentas del universo (solo meses con ambos cortes y factura)
+    const cpc = {};
+    gastoTs.forEach(t => { if (s[1][t] != null && s[15][t] != null) cpc[t] = ccUnoGasto[gKey(t)].total / (s[1][t] + s[15][t]); });
+    const cts = Object.keys(cpc).map(Number).sort((a, b) => a - b);
+    const avg = xs => xs.reduce((a, b) => a + b, 0) / xs.length;
+    const prom = avg(cts.map(t => cpc[t])), ult3 = avg(cts.slice(-3).map(t => cpc[t]));
+    const tMax = cts.reduce((a, t) => cpc[t] > cpc[a] ? t : a, cts[0]), mx = cpc[tMax];
+    const opts = [['prom', `Promedio ${mLabel(cts[0])}–${mLabel(cts.at(-1))} · $${prom.toFixed(2)}`],
+                  ['ult3', `Últimos 3 meses · $${ult3.toFixed(2)}`],
+                  ['max',  `Máximo histórico (${mLabel(tMax)}) · $${mx.toFixed(2)}`],
+                  ['custom', 'Personalizado']];
+    $('crecCostoBase').innerHTML = opts.map(([v, l]) => `<option value="${v}" ${v === costoBase ? 'selected' : ''}>${l}</option>`).join('');
+    $('crecCostoWrap').style.display = costoBase === 'custom' ? '' : 'none';
+    const custom = parseFloat($('crecCosto').value);
+    const costo = costoBase === 'prom' ? prom : costoBase === 'ult3' ? ult3 : costoBase === 'max' ? mx : (isFinite(custom) && custom > 0 ? custom : null);
+    const hasCost = costo != null;
+    ['Universo','Colchon','Meses','Costo'].forEach(k => ls.set(k, $('crec' + k).value)); ls.set('CostoBase', costoBase);
+
+    // ── KPIs y gráfica de gasto real ──
+    const lastG = gastoTs.at(-1), prevG = gastoTs.at(-2);
+    const tot2026 = gastoTs.filter(t => t >= 0).reduce((a, t) => a + ccUnoGasto[gKey(t)].total, 0);
+    const uLbl = { gestion: 'cuenta en gestión', bkt1: 'cuenta BKT1 sin pago', clientes: 'cliente en cartera' }[u];
+    $('crecGastoKpis').innerHTML = `
+      <div class="kpi"><p class="kpi-label">Gasto de ${mLabel(lastG)} (sin IVA)</p><p class="kpi-value">${mxn(ccUnoGasto[gKey(lastG)].total)}</p><p class="kpi-sub">${ccUnoGasto[gKey(lastG)].total >= ccUnoGasto[gKey(prevG)].total ? '+' : ''}${pct(ccUnoGasto[gKey(lastG)].total, ccUnoGasto[gKey(prevG)].total)}% vs ${mLabel(prevG)} · ${ccUnoGasto[gKey(lastG)].campanas ?? '—'} campañas</p></div>
+      <div class="kpi"><p class="kpi-label">Gasto acumulado 2026 (ene–${mLabel(lastG)})</p><p class="kpi-value">${mxn(tot2026)}</p><p class="kpi-sub">${mxn(tot2026 * IVA)} con IVA</p></div>
+      <div class="kpi"><p class="kpi-label">Costo por ${uLbl} · ${mLabel(cts.at(-1))}</p><p class="kpi-value">$${cpc[cts.at(-1)].toFixed(2)}</p><p class="kpi-sub">al mes, sin IVA</p></div>
+      <div class="kpi"><p class="kpi-label">Rango histórico por ${uLbl}</p><p class="kpi-value">$${Math.min(...cts.map(t => cpc[t])).toFixed(2)}–$${mx.toFixed(2)}</p><p class="kpi-sub">promedio $${prom.toFixed(2)}</p></div>`;
+    if (charts.crecGasto) charts.crecGasto.destroy();
+    const gl = gastoTs.map(t => t < 0 ? 'dic-25' : mLabel(t)), gv = k => gastoTs.map(t => ccUnoGasto[gKey(t)][k] ?? null);
+    charts.crecGasto = new Chart($('crecGastoChart'), {
+      type: 'bar',
+      data: { labels: gl, datasets: [
+        { label: 'Blaster (voz robot)', data: gv('blaster'), backgroundColor: '#3B3ACA', stack: 's', yAxisID: 'y', order: 2 },
+        { label: 'SMS', data: gv('sms'), backgroundColor: '#9C97E8', stack: 's', yAxisID: 'y', order: 2 },
+        { label: 'Llamada manual', data: gv('manual'), backgroundColor: '#1D9E75', stack: 's', yAxisID: 'y', order: 2 },
+        { label: 'Marcador progresivo', data: gv('progresivo'), backgroundColor: '#FAC775', stack: 's', yAxisID: 'y', order: 2 },
+        { label: 'Total (sin desglose)', data: gastoTs.map(t => ccUnoGasto[gKey(t)].blaster == null ? ccUnoGasto[gKey(t)].total : null), backgroundColor: '#C9C8C2', stack: 's', yAxisID: 'y', order: 2 },
+        { type: 'line', label: `Costo por ${uLbl}`, data: gastoTs.map(t => cpc[t] != null ? +cpc[t].toFixed(2) : null), borderColor: '#E0780B', backgroundColor: '#E0780B',
+          yAxisID: 'y2', borderWidth: 2, pointRadius: 4, tension: 0.25, spanGaps: true, order: 1 } ]},
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18 } },
+        plugins: { legend: { position: 'top', align: 'end', labels: { color: '#5F5E5A', font: { size: 11.5 }, boxWidth: 12 } },
+          tooltip: { mode: 'index', intersect: false, filter: i => i.parsed.y != null,
+            callbacks: { label: c => c.dataset.yAxisID === 'y2' ? ` ${c.dataset.label}: $${c.parsed.y.toFixed(2)}` : ` ${c.dataset.label}: ${mxn(c.parsed.y)}`,
+              footer: it => { const g = ccUnoGasto[gKey(gastoTs[it[0].dataIndex])]; return `Factura ${g.factura}: ${mxn(g.total)} sin IVA` + (g.llamadasBlaster ? ` · ${g.llamadasBlaster.toLocaleString('es-MX')} llamadas blaster` : ''); } },
+            backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6 } },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { color: '#888780' } },
+                  // barras en el 58% inferior y la línea de costo/cuenta en una franja propia arriba: no se cruzan
+                  y: { stacked: true, beginAtZero: true, max: Math.ceil(Math.max(...gastoTs.map(t => ccUnoGasto[gKey(t)].total)) * 1.75 / 5000) * 5000,
+                       grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#888780', callback: v => '$' + (v / 1000) + 'k' } },
+                  y2: (() => { const vs = cts.map(t => cpc[t]), lo = Math.min(...vs), hi = Math.max(...vs), rg = Math.max(hi - lo, 0.5);
+                        return { display: false, min: lo - rg * 2.6, max: hi + rg * 0.45 }; })() } },
+      plugins: [{ id: 'gastoTot', afterDatasetsDraw(ch) {
+        const x = ch.ctx; x.save(); x.font = 'bold 11px -apple-system,sans-serif'; x.textAlign = 'center'; x.fillStyle = '#1F1F1F';
+        gastoTs.forEach((t, i) => { let top = null;
+          for (let d = 4; d >= 0; d--) { const v = ch.data.datasets[d].data[i]; if (v != null) { top = ch.getDatasetMeta(d).data[i]; break; } }
+          if (top) x.fillText('$' + (ccUnoGasto[gKey(t)].total / 1000).toFixed(1) + 'k', top.x, top.y - 7); });
+        // valor del costo por cuenta sobre cada punto de la línea
+        const lm = ch.getDatasetMeta(5); x.fillStyle = '#B85F05'; x.font = 'bold 10.5px -apple-system,sans-serif';
+        lm.data.forEach((pt, i) => { const v = ch.data.datasets[5].data[i]; if (v != null) x.fillText('$' + v.toFixed(2), pt.x, pt.y - 9); });
+        x.restore(); } }]
+    });
+
+    // ── Proyección de cuentas ──
+    const ts = [...new Set([...Object.keys(s[1]), ...Object.keys(s[15])].map(Number))];
+    const lastFull = Math.max(...ts.filter(t => s[1][t] != null && s[15][t] != null));
+    const rows = [];
+    for (let t = Math.min(...ts); t <= lastFull + H; t++) {
+      const r1 = s[1][t], r15 = s[15][t];
+      const e1 = r1 ?? Math.max(0, g1.f(t)),  h1 = r1 ?? Math.max(0, g1.f(t) + Z * g1.sd);
+      const e15 = r15 ?? Math.max(0, g15.f(t)), h15 = r15 ?? Math.max(0, g15.f(t) + Z * g15.sd);
+      const kind = (r1 != null && r15 != null) ? 'real' : (r1 == null && r15 == null) ? 'proy' : 'parcial';
+      rows.push({ t, kind, r1, r15, e1, e15, h1, h15, exp: e1 + e15, high: h1 + h15, gasto: ccUnoGasto[gKey(t)]?.total ?? null });
+    }
+    const real = rows.filter(r => r.kind === 'real'), proj = rows.filter(r => r.kind !== 'real');
+    const lastReal = real.at(-1), next = proj[0];
+    const bud = n => n * costo * (1 + col);
+    const avgProj = proj.reduce((a, r) => a + r.high, 0) / proj.length;
+    const lastSpend = ccUnoGasto[gKey(lastReal.t)]?.total;
+    $('crecBudgetKpis').innerHTML = `
+      <div class="kpi"><p class="kpi-label">Cuentas a cubrir en ${mLabel(next.t)} (escenario alto)</p><p class="kpi-value">${nf(next.high)}</p><p class="kpi-sub">Esperado ${nf(next.exp)} · real ${mLabel(lastReal.t)}: ${nf(lastReal.high)} (+${pct(next.high, lastReal.high)}%)</p></div>
+      <div class="kpi" style="border-left:3px solid #E0780B;"><p class="kpi-label">Presupuesto recomendado ${mLabel(next.t)}</p><p class="kpi-value">${hasCost ? mxn(bud(next.high)) : '—'}<span style="font-size:12px;color:#888780;"> sin IVA</span></p><p class="kpi-sub">${hasCost ? `${mxn(bud(next.high) * IVA)} con IVA` + (lastSpend ? ` · gasto real ${mLabel(lastReal.t)}: ${mxn(lastSpend)} (${bud(next.high) >= lastSpend ? '+' : ''}${mxn(bud(next.high) - lastSpend)})` : '') : 'Ingresa el costo personalizado'}</p></div>
+      <div class="kpi"><p class="kpi-label">Promedio mensual próximos ${proj.length} meses</p><p class="kpi-value">${hasCost ? mxn(bud(avgProj)) : nf(avgProj) + ' cuentas'}<span style="font-size:12px;color:#888780;">${hasCost ? ' sin IVA' : ''}</span></p><p class="kpi-sub">${hasCost ? `${mxn(bud(avgProj) * IVA)} con IVA · ${nf(avgProj)} cuentas/mes · $${costo.toFixed(2)}/cuenta · colchón ${(col * 100).toFixed(0)}%` : 'Escenario alto'}</p></div>`;
+
+    if (charts.crecProj) charts.crecProj.destroy();
+    const mode = crecProjMode === 'presupuesto' && hasCost ? 'presupuesto' : 'cuentas';
+    document.querySelectorAll('#crecProjMode button').forEach(b => b.classList.toggle('on', b.dataset.m === crecProjMode));
+    $('crecProjHint').textContent = crecProjMode === 'presupuesto' && !hasCost ? 'Ingresa el costo personalizado para ver el presupuesto.'
+      : mode === 'presupuesto' ? `Meses reales: gasto facturado. Proyección: cuentas del escenario alto × $${costo.toFixed(2)} × (1 + ${(col * 100).toFixed(0)}% colchón).` : '';
+    const k$ = v => '$' + (v / 1000).toFixed(1) + 'k';
+    const fitLbl = (x, txt, maxW) => { let f = 11; x.font = `bold ${f}px -apple-system,sans-serif`;
+      while (x.measureText(txt).width > maxW && f > 8) { f -= 0.5; x.font = `bold ${f}px -apple-system,sans-serif`; } };
+    let ds, yTick, lblFmt, tipLbl, tipFoot;
+    if (mode === 'cuentas') {
+      ds = [
+        { label: 'Corte 1 real',  data: rows.map(r => r.r1 ?? null),  backgroundColor: C1,  stack: 's', order: 2 },
+        { label: 'Corte 15 real', data: rows.map(r => r.r15 ?? null), backgroundColor: C15, stack: 's', order: 2 },
+        { label: 'Corte 1 proyectado',  data: rows.map(r => r.r1 == null ? Math.round(r.e1) : null),  backgroundColor: C1 + '55',  stack: 's', order: 2 },
+        { label: 'Corte 15 proyectado', data: rows.map(r => r.r15 == null ? Math.round(r.e15) : null), backgroundColor: C15 + '55', stack: 's', order: 2 },
+        { type: 'line', label: 'Escenario alto (base del presupuesto)', data: rows.map(r => r.kind === 'real' ? null : Math.round(r.high)),
+          borderColor: '#E0780B', backgroundColor: '#E0780B', borderDash: [5, 4], borderWidth: 2, pointRadius: 3, tension: 0, order: 1 } ];
+      yTick = v => v.toLocaleString('es-MX'); lblFmt = nf;
+      tipLbl = c => ` ${c.dataset.label}: ${nf(c.parsed.y)}`;
+      tipFoot = it => { const r = rows[it[0].dataIndex]; return r.kind === 'real' ? `Total real: ${nf(r.high)}` + (r.gasto ? ` · gasto CCC.uno ${mxn(r.gasto)}` : '') : `Esperado: ${nf(r.exp)} · alto: ${nf(r.high)}` + (hasCost ? ` · presupuesto ${mxn(bud(r.high))} sin IVA` : ''); };
+    } else {
+      // Presupuesto por corte = cuentas del escenario alto de ese corte × costo × (1+colchón).
+      // En un mes parcial, el corte que ya ocurrió usa sus cuentas reales.
+      ds = [
+        { label: 'Gasto real CCC.uno', data: rows.map(r => r.kind === 'real' ? r.gasto : null), backgroundColor: '#8F8E88', stack: 's', order: 2 },
+        { label: 'Presupuesto corte 1',  data: rows.map(r => r.kind === 'real' ? null : Math.round(bud(r.h1))),  backgroundColor: C1 + '55',  stack: 's', order: 2 },
+        { label: 'Presupuesto corte 15', data: rows.map(r => r.kind === 'real' ? null : Math.round(bud(r.h15))), backgroundColor: C15 + '55', stack: 's', order: 2 } ];
+      yTick = v => '$' + (v / 1000) + 'k'; lblFmt = k$;
+      tipLbl = c => ` ${c.dataset.label}: ${mxn(c.parsed.y)}`;
+      tipFoot = it => { const r = rows[it[0].dataIndex]; return r.kind === 'real' ? `${nf(r.high)} cuentas · $${(cpc[r.t] ?? 0).toFixed(2)} por cuenta`
+        : `Total ${mxn(bud(r.high))} sin IVA · ${mxn(bud(r.high) * IVA)} con IVA · ${nf(r.high)} cuentas`; };
+    }
+    charts.crecProj = new Chart($('crecProjChart'), {
+      type: 'bar',
+      data: { labels: rows.map(r => mLabel(r.t)), datasets: ds },
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 6 } },
+        plugins: { legend: { position: 'top', align: 'end', labels: { color: '#5F5E5A', font: { size: 11.5 }, boxWidth: 12 } },
+          tooltip: { mode: 'index', intersect: false, filter: i => i.parsed.y != null, callbacks: { label: tipLbl, footer: tipFoot },
+            backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6 } },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { color: '#888780', maxRotation: 0, autoSkip: false, font: { size: rows.length > 16 ? 10 : 12 } } },
+                  y: { stacked: true, beginAtZero: true, grace: '14%', grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#888780', callback: yTick } } } },
+      plugins: [{ id: 'projLbl', afterDatasetsDraw(ch) {
+        const x = ch.ctx; x.save(); x.textAlign = 'center';
+        const barW = ch.getDatasetMeta(0).data.find(b => b && b.width)?.width || 40, maxW = barW - 4;
+        const segs = mode === 'cuentas' ? [[0, '#fff'], [1, '#fff'], [2, C1], [3, '#13785A']] : [[1, C1], [2, '#13785A']];
+        // valor dentro de cada segmento: se omite si el segmento es muy bajo y la fuente se reduce si no cabe a lo ancho
+        segs.forEach(([di, colr]) => ch.getDatasetMeta(di).data.forEach((bar, i) => {
+          const v = ch.data.datasets[di].data[i];
+          if (v == null || Math.abs(bar.base - bar.y) < 15) return;
+          const t = lblFmt(v); fitLbl(x, t, maxW); x.fillStyle = colr; x.fillText(t, bar.x, (bar.y + bar.base) / 2 + 4);
+        }));
+        // total arriba de cada barra (en cuentas solo meses reales: en la proyección el número va sobre la línea)
+        rows.forEach((r, i) => {
+          let val, colr = '#1F1F1F', b;
+          if (mode === 'cuentas') { if (r.kind !== 'real') return; val = r.high; b = ch.getDatasetMeta(1).data[i]; }
+          else if (r.kind === 'real') { if (r.gasto == null) return; val = r.gasto; b = ch.getDatasetMeta(0).data[i]; }
+          else { val = bud(r.high); colr = '#B85F05'; b = ch.getDatasetMeta(2).data[i]; }
+          if (!b) return; const t = lblFmt(val); fitLbl(x, t, maxW + 8); x.fillStyle = colr; x.fillText(t, b.x, b.y - 6);
+        });
+        if (mode === 'cuentas') ch.getDatasetMeta(4).data.forEach((pt, i) => { const v = ch.data.datasets[4].data[i]; if (v == null) return;
+          const t = nf(v); fitLbl(x, t, maxW + 8); x.fillStyle = '#B85F05'; x.fillText(t, pt.x, pt.y - 9); });
+        x.restore(); } }]
+    });
+
+    const tag = k => `<span class="crec-tag ${k}">${k === 'real' ? 'real' : k === 'proy' ? 'proyección' : 'parcial'}</span>`;
+    const cell = (r, d) => { const v = r['r' + d];
+      if (v == null) return `<span title="esperado ${nf(r['e' + d])}">${nf(r['h' + d])}</span>`;
+      return isPreDT(d, r.t) ? `<span title="${u === 'clientes' ? 'Resultado de domi; Cierre pendiente' : 'Estimado desde el Resultado; Cierre pendiente'}">${nf(v)}<sup style="color:#8A6A12;">†</sup></span>` : nf(v); };
+    $('crecTable').innerHTML = `<thead><tr><th>Mes</th><th>Corte 1</th><th>Corte 15</th><th>Total cuentas</th><th>Esperado (tendencia)</th>
+        <th>Gasto real CCC.uno</th><th>Costo/cuenta real</th><th>Presupuesto sin IVA</th><th>Presupuesto con IVA</th></tr></thead><tbody>${
+      rows.map(r => { const isR = r.kind === 'real';
+        return `<tr class="${isR ? '' : 'proj'}"><td>${mLabel(r.t)}${tag(r.kind)}</td><td>${cell(r, 1)}</td><td>${cell(r, 15)}</td>
+        <td class="big">${nf(r.high)}</td><td>${isR ? '—' : nf(r.exp)}</td>
+        <td>${r.gasto != null ? mxn(r.gasto) : '—'}</td><td>${cpc[r.t] != null ? '$' + cpc[r.t].toFixed(2) : '—'}</td>
+        <td class="big">${!isR && hasCost ? mxn(bud(r.high)) : '—'}</td><td>${!isR && hasCost ? mxn(bud(r.high) * IVA) : '—'}</td></tr>`; }).join('')}</tbody>
+      ${preSet.size ? `<tfoot><tr><td colspan="9" style="text-align:left;color:#8A6A12;font-size:11px;background:#fff;">† Corte con Resultado de domi pero sin Cierre de moratorios todavía${u === 'clientes' ? '' : ': cuentas estimadas con la razón histórica Sin pago → ' + (u === 'bkt1' ? 'BKT1 sin pago' : 'universo en gestión') + ' de su mismo día de corte'}.</td></tr></tfoot>` : ''}`;
+  };
+  $('crecCostoBase').addEventListener('change', e => { costoBase = e.target.value; drawBudget(); });
+  document.querySelectorAll('#crecProjMode button').forEach(b => b.onclick = () => { crecProjMode = b.dataset.m; ls.set('ProjMode', crecProjMode); drawBudget(); });
+  ['crecUniverso','crecCosto','crecColchon','crecMeses'].forEach(id => $(id).addEventListener('input', drawBudget));
+  drawBudget();
+}
+
 function switchTab(tabId) {
   tabButtons.forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
   tabPanels.forEach(p  => p.classList.toggle('active',  p.id === 'tab-' + tabId));
@@ -3807,6 +4265,7 @@ function switchTab(tabId) {
     if (tabId === 'porbkt')  buildPorBktCharts();
     if (tabId === 'rolloverns') buildRolloverNsCharts();
     if (tabId === 'moratemprana') buildMoraTempranaCharts();
+    if (tabId === 'crecimiento') buildCrecimientoModule();
   }
 }
 
