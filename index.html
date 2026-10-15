@@ -276,6 +276,18 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
     <h3 style="margin-top:8px;">¿Cómo se reparte entre corte 1 y corte 15?</h3>
     <p class="meta">Participación de cada corte en la cartera del mes. Si un corte gana peso, ese corte necesita más capacidad de campañas.</p>
     <div class="chart-wrap-xs"><canvas id="crecShareChart"></canvas></div>
+
+    <hr class="divider">
+
+    <h3 style="margin-top:8px;">¿Cuántos clientes entran, salen y permanecen cada mes?</h3>
+    <p class="meta">Comparación cliente por cliente (VIN) del mes contra el mes anterior, con ambos cortes juntos. Arriba de cero lo que entra, abajo lo que sale; debajo de cada mes, el crecimiento neto.</p>
+    <div class="grid-4" id="flujoKpis"></div>
+    <div class="chart-wrap" style="height:460px;"><canvas id="flujoChart"></canvas></div>
+    <h3 style="margin:18px 0 4px;">Crecimiento neto por mes</h3>
+    <p class="meta">Nuevos − daciones − otras salidas. La línea punteada es el promedio del periodo.</p>
+    <div class="chart-wrap-xs" style="height:260px;"><canvas id="flujoNetoChart"></canvas></div>
+    <div style="overflow-x:auto;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;margin-top:14px;"><table class="crec-tbl" id="flujoTable"></table></div>
+    <p class="meta" style="margin-top:10px;"><strong>Nuevo</strong> = VIN que aparece por primera vez en 2026 (99.8% está en su mensualidad 1–3). <strong>Ausencia temporal</strong>: si un cliente no se domicilia uno o más meses y después regresa (adelanto de pagos, domi suspendida, cambio de cuenta), no se cuenta como salida ni como reingreso; sigue en la cartera esos meses (1 a 10 clientes por mes). <strong>Daciones</strong> = clientes de cualquier bucket que dejan de domiciliarse y estuvieron en Consigna, Resguardo o Dación en algún Cierre de moratorios (su dación se concretó; normalmente 1–3 cortes después de marcarse). <em>No es el mismo número que "Rollover · Dación" de la pestaña Rollover</em>: allá se cuenta a los clientes BKT1 que <em>entran</em> a dación en ese corte; aquí, a los de cualquier bucket que <em>salen</em> de la cartera por dación. <strong>Otras salidas</strong> = clientes que dejan de domiciliarse por cualquier otro motivo: terminación natural (terminan de pagar su plazo), liquidación anticipada, reestructura o refinanciamiento, adelanto de pagos, siniestro o pérdida total, envío a despacho externo o legal, y daciones que aún no aparecen en un Cierre. Los Resultados y Cierres no traen el motivo de baja, por eso se agrupan; en septiembre, 82% de estas salidas estaban al corriente el mes previo. Se cuentan clientes únicos: quien se domicilia en ambos cortes del mes cuenta una vez, por eso el total es ~1% menor que la suma de cortes de arriba. Octubre se agrega cuando llegue el Resultado del 15-oct.</p>
   </div>
 
   <div class="section">
@@ -1230,6 +1242,11 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    Proyección por corte (día 1 y día 15 por separado): regresión lineal desde ene; escenario alto =
    tendencia + 1.645 × desviación estándar de residuos. Presupuesto = alto × costo × (1+colchón).
    Costo/colchón/universo/meses se guardan en localStorage (cpr_crec_*) del navegador.
+   FLUJO DE CLIENTES (14-oct-2026, flujoCartera): VIN de los 19 Resultados ene–oct (hojas Cartera/Operaciones),
+   mes = corte 1 ∪ corte 15 (clientes únicos). Nuevo = primera aparición en 2026; ausencias temporales (meses sin domi entre dos apariciones) se rellenan como activos, sin salida ni reingreso; antes:
+   el mes previo; dación = VIN con Consigna/Resguardo/Dación en algún Cierre (hoja Data o Daciones); terminación
+   natural = sale con mensualidad 12/24/36/48/60 (solo sep: los Resultados previos no traen mensualidad).
+   Identidad validada: inicio + nuevos − salidas = fin en los 8 meses (fin = domiciliados + ausencias temporales).
    CCC.uno (14-oct-2026): costo por cuenta = gasto real de la factura UBLU (sin IVA) ÷ cuentas del universo
    elegido en ese mes (ccUnoGasto). Cobro 100% por uso (SMS 0.26, min celular 0.22, min fijo 0.12); blaster
    = 85-93% del gasto. Excels BG_PRESTEMOS_SAPI feb-sep cuadran al centavo con las facturas. 15-sep/01-oct
@@ -3931,6 +3948,9 @@ const carteraPreliminar = {
 // Clave = mes de consumo (la factura se emite a inicios del mes siguiente). Para agregar un mes: sumar BILL AMOUNT
 // del excel por canal (SMS / tts=blaster / progressive / Dialpad-TSIP=manual) y validar contra el subtotal de la factura.
 const ccUnoGasto = {"dic-25": {"total": 24684.88, "factura": "F2001"}, "ene": {"total": 27917.32, "factura": "F2373"}, "feb": {"blaster": 15523.74, "manual": 586.28, "progresivo": 51.7, "sms": 5080.92, "total": 21242.64, "llamadasBlaster": 71052, "campanas": 56, "factura": "INV/2026/00183"}, "mar": {"blaster": 20325.44, "manual": 515.06, "progresivo": 33.44, "sms": 2713.62, "total": 23587.56, "llamadasBlaster": 92942, "campanas": 43, "factura": "INV/2026/00293"}, "abr": {"blaster": 22999.58, "manual": 511.28, "progresivo": 12.88, "sms": 1566.5, "total": 25090.24, "llamadasBlaster": 105864, "campanas": 44, "factura": "INV/2026/00528"}, "may": {"blaster": 23784.98, "manual": 485.78, "progresivo": 55.6, "sms": 2710.24, "total": 27036.6, "llamadasBlaster": 109084, "campanas": 43, "factura": "INV/2026/00725"}, "jun": {"blaster": 27336.62, "manual": 1010.56, "progresivo": 43.92, "sms": 1373.06, "total": 29764.16, "llamadasBlaster": 125369, "campanas": 36, "factura": "INV/2026/00942"}, "jul": {"blaster": 19565.4, "manual": 1061.92, "progresivo": 334.14, "sms": 2333.76, "total": 23295.22, "llamadasBlaster": 89640, "campanas": 67, "factura": "INV/2026/01146"}, "ago": {"blaster": 19308.58, "manual": 565.98, "progresivo": 347.24, "sms": 2879.5, "total": 23101.3, "llamadasBlaster": 88017, "campanas": 40, "factura": "INV/2026/01334"}, "sep": {"blaster": 31667.44, "manual": 477.68, "progresivo": 426.62, "sms": 1426.1, "total": 33997.84, "llamadasBlaster": 144957, "campanas": 95, "factura": "INV/2026/01521"}};
+// ── Flujo de clientes mes a mes (VIN, corte 1 ∪ corte 15) · Resultados de domi ene–sep + Cierres (dación) ──
+// En la vista se suman termNat + otras como "Salidas" (los archivos no traen el motivo de baja; termNat solo existe para sep).
+const flujoCartera = [{"mes": "feb", "inicio": 13111, "permanecen": 12868, "nuevos": 612, "dacion": 44, "termNat": null, "otras": 199, "fin": 13480, "temporales": 4}, {"mes": "mar", "inicio": 13480, "permanecen": 13278, "nuevos": 652, "dacion": 35, "termNat": null, "otras": 167, "fin": 13930, "temporales": 9}, {"mes": "abr", "inicio": 13930, "permanecen": 13691, "nuevos": 636, "dacion": 62, "termNat": null, "otras": 177, "fin": 14327, "temporales": 6}, {"mes": "may", "inicio": 14327, "permanecen": 14064, "nuevos": 574, "dacion": 50, "termNat": null, "otras": 213, "fin": 14638, "temporales": 7}, {"mes": "jun", "inicio": 14638, "permanecen": 14394, "nuevos": 603, "dacion": 24, "termNat": null, "otras": 220, "fin": 14997, "temporales": 5}, {"mes": "jul", "inicio": 14997, "permanecen": 14731, "nuevos": 640, "dacion": 56, "termNat": null, "otras": 210, "fin": 15371, "temporales": 7}, {"mes": "ago", "inicio": 15371, "permanecen": 15084, "nuevos": 677, "dacion": 52, "termNat": null, "otras": 235, "fin": 15761, "temporales": 10}, {"mes": "sep", "inicio": 15761, "permanecen": 15502, "nuevos": 724, "dacion": 63, "termNat": 94, "otras": 102, "fin": 16226, "temporales": 1}];
 let crecMetric = 'clientes';
 function buildCrecimientoModule() {
   const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -4074,6 +4094,96 @@ function buildCrecimientoModule() {
       x.restore(); } }]
   });
 
+
+  // ── Flujo de clientes: entradas (arriba) y salidas (abajo) por mes ──
+  {
+    const F = flujoCartera, n = F.length, avg = k => F.reduce((a, r) => a + (r[k] || 0), 0) / n;
+    F.forEach(r => { r.salidas = (r.termNat || 0) + r.otras; });   // terminación natural + otros motivos = "Salidas"
+    const sal = r => r.dacion + r.salidas, ent = r => r.nuevos;
+    const ret = F.reduce((a, r) => a + r.permanecen / r.inicio, 0) / n * 100;
+    const last = F[n - 1];
+    document.getElementById('flujoKpis').innerHTML = `
+      <div class="kpi" style="border-left:3px solid #1D9E75;"><p class="kpi-label">Entran al mes (promedio)</p><p class="kpi-value">${nf(avg('nuevos'))}</p><p class="kpi-sub">${last.mes}: ${nf(ent(last))} · ${(ent(last) / last.inicio * 100).toFixed(1)}% de la cartera</p></div>
+      <div class="kpi" style="border-left:3px solid #8B2E1A;"><p class="kpi-label">Salen al mes (promedio)</p><p class="kpi-value">${nf(F.reduce((a, r) => a + sal(r), 0) / n)}</p><p class="kpi-sub">${last.mes}: ${nf(sal(last))} · daciones ${nf(avg('dacion'))}/mes en promedio</p></div>
+      <div class="kpi"><p class="kpi-label">Permanecen mes a mes</p><p class="kpi-value">${ret.toFixed(1)}%</p><p class="kpi-sub">de los clientes del mes anterior</p></div>
+      <div class="kpi" style="border-left:3px solid #3B3ACA;"><p class="kpi-label">Crecimiento neto (promedio)</p><p class="kpi-value">+${nf(F.reduce((a, r) => a + ent(r) - sal(r), 0) / n)}</p><p class="kpi-sub">clientes/mes · ${last.mes}: +${nf(ent(last) - sal(last))}</p></div>`;
+    if (charts.flujo) charts.flujo.destroy();
+    const neg = k => F.map(r => r[k] == null ? null : -r[k]);
+    charts.flujo = new Chart(document.getElementById('flujoChart'), {
+      type: 'bar',
+      data: { labels: F.map(r => r.mes), datasets: [
+        { label: 'Nuevos', data: F.map(r => r.nuevos), backgroundColor: '#1D9E75', stack: 's' },
+        { label: 'Daciones', data: neg('dacion'), backgroundColor: '#8B2E1A', stack: 's' },
+        { label: 'Otras salidas', data: neg('salidas'), backgroundColor: '#F4A198', stack: 's' } ]},
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18, bottom: 4 } },
+        plugins: { legend: { position: 'top', align: 'end', labels: { color: '#5F5E5A', font: { size: 11.5 }, boxWidth: 12 } },
+          tooltip: { mode: 'index', intersect: false, filter: i => i.parsed.y != null && i.parsed.y !== 0,
+            callbacks: { title: it => F[it[0].dataIndex].mes, label: c => ` ${c.dataset.label}: ${nf(Math.abs(c.parsed.y))}`,
+              footer: it => { const r = F[it[0].dataIndex]; return `Inicio ${nf(r.inicio)} · permanecen ${nf(r.permanecen)} · fin ${nf(r.fin)}` + (r.temporales ? `\nIncluye ${r.temporales} sin domiciliar ese mes que regresan después` : ''); } },
+            backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6 } },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { color: c => c.index === undefined ? '#888780' : '#888780', font: { size: 11.5 } } },
+                  y: { stacked: true, grace: '12%', grid: { color: c => c.tick.value === 0 ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.04)' },
+                       ticks: { color: '#888780', callback: v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('es-MX') } } } },
+      plugins: [{ id: 'flujoLbl', afterDatasetsDraw(ch) {
+        const x = ch.ctx; x.save(); x.textAlign = 'center';
+        // valor dentro de cada segmento si cabe
+        [[0, '#fff'], [1, '#fff'], [2, '#8B2E1A']].forEach(([di, colr]) => ch.getDatasetMeta(di).data.forEach((bar, i) => {
+          const v = ch.data.datasets[di].data[i], hpx = Math.abs(bar.base - bar.y); if (v == null || v === 0 || hpx < 12) return;
+          x.font = `bold ${hpx < 14 ? 9.5 : 10.5}px -apple-system,sans-serif`; x.fillStyle = colr; x.fillText(nf(Math.abs(v)), bar.x, (bar.y + bar.base) / 2 + (hpx < 14 ? 3.5 : 4)); }));
+        // totales: entradas arriba, salidas abajo
+        x.font = 'bold 11px -apple-system,sans-serif';
+        F.forEach((r, i) => {
+          const top = ch.getDatasetMeta(0).data[i];
+          const bot = [2, 1].map(d => ch.getDatasetMeta(d).data[i]).find((b, k) => b && ch.data.datasets[[2, 1][k]].data[i]);
+          if (top) { x.fillStyle = '#13785A'; x.fillText('+' + nf(ent(r)), top.x, top.y - 6); }
+          if (bot) { x.fillStyle = '#8B2E1A'; x.fillText('−' + nf(sal(r)), bot.x, bot.y + 14); }
+        });
+        x.restore(); } }]
+    });
+    // ── Crecimiento neto por mes ──
+    if (charts.flujoNeto) charts.flujoNeto.destroy();
+    const net = F.map(r => ent(r) - sal(r)), netAvg = net.reduce((a, b) => a + b, 0) / net.length;
+    charts.flujoNeto = new Chart(document.getElementById('flujoNetoChart'), {
+      type: 'bar',
+      data: { labels: F.map(r => r.mes), datasets: [
+        { label: 'Crecimiento neto', data: net, backgroundColor: net.map(v => v >= netAvg ? '#3B3ACA' : '#9C97E8'), borderRadius: 4 } ]},
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20, right: 64 } },
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { title: it => F[it[0].dataIndex].mes,
+              label: c => { const r = F[c.dataIndex]; return ` Neto: +${nf(c.parsed.y)} clientes (${(c.parsed.y / r.inicio * 100).toFixed(1)}% de la cartera de inicio)`; },
+              footer: it => { const r = F[it[0].dataIndex]; return `+${nf(r.nuevos)} nuevos · −${nf(r.dacion)} daciones · −${nf(r.salidas)} otras salidas`; } },
+            backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6 } },
+        scales: { x: { grid: { display: false }, ticks: { color: '#888780', font: { size: 11.5 } } },
+                  y: { beginAtZero: true, grace: '15%', grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#888780', callback: v => '+' + v.toLocaleString('es-MX') } } } },
+      plugins: [{ id: 'netoLbl',
+        // promedio: línea punteada detrás de las barras, con su etiqueta en el margen derecho
+        beforeDatasetsDraw(ch) {
+          const x = ch.ctx, ca = ch.chartArea, y = ch.scales.y.getPixelForValue(netAvg); x.save();
+          x.strokeStyle = '#E0780B'; x.lineWidth = 1.5; x.setLineDash([5, 4]);
+          x.beginPath(); x.moveTo(ca.left, y); x.lineTo(ca.right, y); x.stroke(); x.setLineDash([]);
+          x.textAlign = 'left'; x.fillStyle = '#B85F05'; x.font = '10px -apple-system,sans-serif'; x.fillText('prom', ca.right + 8, y - 2);
+          x.font = 'bold 10.5px -apple-system,sans-serif'; x.fillText('+' + nf(netAvg), ca.right + 8, y + 10);
+          x.restore(); },
+        // valor arriba de cada barra (con fondo blanco para que la línea no lo tape) y % de crecimiento dentro
+        afterDatasetsDraw(ch) {
+          const x = ch.ctx; x.save(); x.textAlign = 'center';
+          ch.getDatasetMeta(0).data.forEach((b, i) => {
+            const t = '+' + nf(net[i]); x.font = 'bold 11px -apple-system,sans-serif';
+            const w = x.measureText(t).width + 8, ty = b.y - 6;
+            x.fillStyle = '#fff'; x.fillRect(b.x - w / 2, ty - 11, w, 14);
+            x.fillStyle = '#1F1F1F'; x.fillText(t, b.x, ty);
+            if (Math.abs(b.base - b.y) > 18) { x.font = 'bold 10px -apple-system,sans-serif'; x.fillStyle = '#fff';
+              x.fillText('+' + (net[i] / F[i].inicio * 100).toFixed(1) + '%', b.x, (b.y + b.base) / 2 + 4); }
+          });
+          x.restore(); } }]
+    });
+    const pctT = (a, b) => (a / b * 100).toFixed(1) + '%';
+    document.getElementById('flujoTable').innerHTML = `<thead><tr><th>Mes</th><th>Inicio</th><th>Permanecen</th><th>+ Nuevos</th>
+      <th>− Daciones</th><th>− Otras salidas</th><th>Fin</th><th>Neto</th><th>Permanencia</th></tr></thead><tbody>${
+      F.map(r => `<tr><td>${r.mes}</td><td>${nf(r.inicio)}</td><td>${nf(r.permanecen)}</td><td style="color:#13785A;font-weight:600;">${nf(r.nuevos)}</td>
+        <td style="color:#8B2E1A;">${nf(r.dacion)}</td><td>${nf(r.salidas)}</td>
+        <td class="big">${nf(r.fin)}</td><td style="font-weight:600;">+${nf(ent(r) - sal(r))}</td><td>${pctT(r.permanecen, r.inicio)}</td></tr>`).join('')}</tbody>`;
+  }
   // ── Presupuesto CCC.uno (costo por cuenta tomado de las facturas reales) ──
   const $ = id => document.getElementById(id);
   const ls = { get: k => { try { return localStorage.getItem('cpr_crec_' + k); } catch (e) { return null; } },
