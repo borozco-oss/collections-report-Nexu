@@ -289,7 +289,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
     <p style="font-size:13px;font-weight:600;color:#1F1F1F;margin:18px 0 2px;">Movimientos del mes · entran, salen y crecimiento neto</p>
     <div class="chart-wrap" style="height:460px;"><canvas id="flujoChart"></canvas></div>
     <div style="overflow-x:auto;border:0.5px solid rgba(0,0,0,0.08);border-radius:8px;margin-top:14px;"><table class="crec-tbl" id="flujoTable"></table></div>
-    <p class="meta" style="margin-top:10px;"><strong>Nuevo</strong> = VIN que aparece por primera vez en 2026 (99.8% está en su mensualidad 1–3). <strong>Ausencia temporal</strong>: si un cliente no se domicilia uno o más meses y después regresa (adelanto de pagos, domi suspendida, cambio de cuenta), no se cuenta como salida ni como reingreso; sigue en la cartera esos meses (1 a 10 clientes por mes). <strong>Daciones</strong> = créditos que salen de la cartera <em>el mes en que entran</em> a Consigna, Resguardo o Dación (primer Cierre de moratorios donde aparecen así), aunque se les siga domiciliando uno o dos meses más. Los BKT1 coinciden con "Rollover · Dación" de la pestaña Rollover; el resto son de BKT2 o más. Septiembre solo trae las del corte 1 (falta el Cierre del 15-sep). <strong>Salidas</strong> = clientes que dejan de domiciliarse por cualquier otro motivo: terminación natural (terminan de pagar su plazo), liquidación anticipada, reestructura o refinanciamiento, adelanto de pagos, siniestro o pérdida total, envío a despacho externo o legal, y daciones que aún no aparecen en un Cierre. Los Resultados y Cierres no traen el motivo de baja, por eso se agrupan; en septiembre, 82% de estas salidas estaban al corriente el mes previo. Se cuentan clientes únicos: quien se domicilia en ambos cortes del mes cuenta una vez, por eso el total es ~1% menor que la suma de cortes de arriba. Octubre se agrega cuando llegue el Resultado del 15-oct.</p>
+    <p class="meta" style="margin-top:10px;"><strong>Nuevo</strong> = VIN que aparece por primera vez en 2026 (99.8% está en su mensualidad 1–3). <strong>Ausencia temporal</strong>: si un cliente no se domicilia uno o más meses y después regresa (adelanto de pagos, domi suspendida, cambio de cuenta), no se cuenta como salida ni como reingreso; sigue en la cartera esos meses (1 a 10 clientes por mes). <strong>Daciones</strong> = créditos que salen de la cartera <em>el mes en que entran</em> a Consigna, Resguardo o Dación (primer Cierre de moratorios donde aparecen así), aunque se les siga domiciliando uno o dos meses más. Los BKT1 coinciden con "Rollover · Dación" de la pestaña Rollover; el resto son de BKT2 o más. En 15-sep se suman 5 resguardos con pago parcial que Finanzas confirmó en su resumen (en la hoja Data aparecen como "Parcial"). <strong>Salidas</strong> = clientes que dejan de domiciliarse por cualquier otro motivo: terminación natural (terminan de pagar su plazo), liquidación anticipada, reestructura o refinanciamiento, adelanto de pagos, siniestro o pérdida total, envío a despacho externo o legal, y daciones que aún no aparecen en un Cierre. Los Resultados y Cierres no traen el motivo de baja, por eso se agrupan; en septiembre, 82% de estas salidas estaban al corriente el mes previo. Se cuentan clientes únicos: quien se domicilia en ambos cortes del mes cuenta una vez, por eso el total es ~1% menor que la suma de cortes de arriba. Octubre se agrega cuando llegue el Resultado del 15-oct.</p>
   </div>
 
   <div class="section">
@@ -950,6 +950,15 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
       <span class="legend-item"><span class="box2" style="background:#8B2E1A;"></span>Rollover · Dación</span>
     </div>
     <div class="chart-wrap-vol"><canvas id="rolloverVolumeChart"></canvas></div>
+
+    <hr class="divider">
+    <h3 style="margin-top:8px;">¿Cómo cambia el rollover con y sin dación?</h3>
+    <p class="meta">Solo los clientes BKT1 que rolean a BKT2, separados en los que siguen activos sin pagar (sin dación) y los que ya están en Consigna/Resguardo (dación). "Por mes" suma los dos cortes del mes (un * marca un mes con un solo corte); "Por corte" compara cada corte con el anterior del mismo día. Respeta el filtro de cortes de arriba. La línea punteada es el promedio.</p>
+    <div style="display:flex;align-items:center;gap:10px;margin:0 0 8px;">
+      <span style="font-size:12px;color:#5F5E5A;font-weight:600;">Ver:</span>
+      <div class="crec-seg" id="dacTrendMode"><button data-m="mes" class="on">Por mes</button><button data-m="corte">Por corte</button></div>
+    </div>
+    <div class="chart-wrap-md" style="height:340px;"><canvas id="rolloverDacionTrendChart"></canvas></div>
   </div>
 
   <!-- Tabla resumen -->
@@ -1253,6 +1262,20 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    elegido en ese mes (ccUnoGasto). Cobro 100% por uso (SMS 0.26, min celular 0.22, min fijo 0.12); blaster
    = 85-93% del gasto. Excels BG_PRESTEMOS_SAPI feb-sep cuadran al centavo con las facturas. 15-sep/01-oct
    preliminares (carteraPreliminar, solo Resultado; universo estimado con razón histórica sin pago).
+   *** 15-sep AJUSTE (19-oct-2026): Finanzas confirma su resumen del Análisis: BKT1 rollover 122 = 27 dación (12 Consigna +
+   15 Resguardo) + 95 sin dación (81 No pagado + 14 Parcial). La hoja Data solo marca 22 (5 resguardos con pago parcial
+   figuran como 'Parcial'; seguramente ajuste manual). Se aplica a nivel total: dacionData 15-sep 27/95; flujo sep
+   daciones +5, permanecen/fin −5; cartera real sep (corte 15) −5. Cuando lleguen sus VIN, aplicarlo por crédito.
+   Regla general: seguir cotejando el resumen del Análisis contra la base (hoja Data) en cada corte.
+   *** 15-sep-2026 AGREGADO (16-oct-2026) — Resultado_15_Sept_26_1 + Cierre_moratorios_150926 ***
+   Pipeline reconstruido y re-validado: reproduce 01-sep publicado con 0 diferencias. Resultado _1 idéntico
+   al anterior (VIN y medios de pago). Cierre: header fila 1, BKT con valores 'BKT50+' (→ BKT4+), hoja
+   Daciones (Estado). Calendario domi: 15/17/18/21-sep -> intentosDias [0,2,3,6]. Cuadra con Análisis:
+   BKT1 en cobranza 1,180 (1,261 sin pago − 81 identificados), 122 rolean a BKT2. Buckets por hoja Data
+   (BKT2 149 / BKT3 76 / BKT4+ 627; Análisis 'Cartera general' trae 156/71/628, diferencia menor en su tabla).
+   BKT1: pago a tiempo 84.01, rollover 1.55 (22 dación). 81 identificados SIN fecha de portal (76 CIB/3760 o
+   NEXU, el portal no trae sus pagos; el navegador no conectó) -> s4/D+30 provisional. Mensualidad (cartera
+   m1–m4) inferida: 15-ago + 1; VIN nunca visto en 2026 = M1. Sale de carteraPreliminar.
    *** 01-sep-2026 AGREGADO (6-oct-2026) — Resultado_1_Sept_26 + Cierre_moratorios_010926 ***
    Pipeline validado antes contra 15-ago (reproduce exacto detalle 4 buckets, curvas clientes y
    $, desglose por intento, rollover, dación, cartera, causas, bancos). Formato Cierre: header en
@@ -1535,6 +1558,12 @@ const bktCurveData = {
     bkt2: {pcts:[5.36,6.25,7.14,8.93,8.93,8.93,8.93,8.93,8.93,9.82,9.82,10.71,10.71,11.61,12.5,13.39,13.39,13.39,13.39,13.39,14.29,16.07,18.75,20.54,23.21,23.21,23.21,25.0,25.89,33.04,33.04], total:112},
     bkt3: {pcts:[1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,1.54,3.08,3.08,3.08,6.15,6.15,6.15,7.69,7.69,7.69,9.23,9.23,9.23,9.23], total:65},
     bkt4: {pcts:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0], total:375}
+  },
+  '15-sep': {
+    bkt1: {pcts:[67.99,68.0,76.53,81.34,81.35,81.37,84.05,84.11,85.69,86.72,88.02,88.71,88.83,89.92,91.21,92.67,93.53,94.0,94.16,94.2,94.73,95.16,95.62,95.9,96.1,96.2,96.24,96.45,96.68,97.43,98.45], total:7894},
+    bkt2: {pcts:[0.67,0.67,0.67,0.67,0.67,0.67,0.67,0.67,0.67,1.34,2.01,2.01,2.01,2.01,3.36,3.36,4.7,6.71,8.05,8.72,10.07,12.75,14.77,15.44,17.45,17.45,18.12,18.79,22.15,32.21,32.21], total:149},
+    bkt3: {pcts:[0.0,0.0,0.0,0.0,0.0,0.0,1.32,1.32,1.32,1.32,1.32,1.32,1.32,1.32,1.32,2.63,2.63,3.95,3.95,3.95,5.26,5.26,6.58,7.89,9.21,9.21,9.21,9.21,10.53,13.16,13.16], total:76},
+    bkt4: {pcts:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0], total:627}
   }
 };
 
@@ -1636,7 +1665,8 @@ const dataMoney = {
   '15-jul': {pcts:[0.0,61.25,67.33,72.85,75.2,75.21,75.69,77.21,78.98,79.86,80.32,80.57,80.98,81.5,82.29,82.82,83.31,83.87,83.99,84.57,85.24,85.82,86.2,86.6,86.74,86.79,87.01,87.35,87.57,88.3,89.11], total_money:106334135.91},
   '01-ago': {pcts:[0.0, 0.0, 62.47, 69.08, 72.35, 76.42, 76.42, 76.42, 79.49, 80.54, 81.36, 82.27, 83.13, 84.19, 85.37, 85.63, 86.26, 86.96, 87.64, 88.08, 88.42, 88.58, 88.61, 88.85, 89.11, 89.42, 89.62, 90.07, 90.35, 90.52, 91.28], total_money:88265350.77},
   '15-ago': {pcts:[0.01, 0.01, 60.99, 68.13, 71.2, 74.02, 74.57, 75.27, 75.54, 77.04, 78.07, 78.55, 79.16, 79.81, 80.29, 80.49, 81.2, 82.43, 83.14, 84.09, 84.85, 85.04, 85.1, 85.47, 85.77, 86.15, 86.41, 86.64, 86.92, 87.08, 88.64], total_money:108353346.52},
-  '01-sep': {pcts:[62.26,67.75,71.15,76.07,76.1,76.12,76.33,78.06,80.18,81.57,82.47,83.02,83.19,83.96,84.54,85.0,85.49,86.06,86.3,86.43,86.79,87.21,87.8,88.12,88.5,88.61,88.63,88.87,89.14,89.65,91.46], total_money:91480655.31}
+  '01-sep': {pcts:[62.26,67.75,71.15,76.07,76.1,76.12,76.33,78.06,80.18,81.57,82.47,83.02,83.19,83.96,84.54,85.0,85.49,86.06,86.3,86.43,86.79,87.21,87.8,88.12,88.5,88.61,88.63,88.87,89.14,89.65,91.46], total_money:91480655.31},
+  '15-sep': {pcts:[59.61,59.62,67.24,71.89,71.91,71.92,74.52,74.57,75.94,76.97,78.26,78.89,78.98,79.95,81.21,82.67,83.5,83.99,84.16,84.21,84.73,85.15,85.65,85.95,86.2,86.3,86.33,86.54,86.83,87.73,88.66], total_money:110604640.8}
 };
 
 const bktCurveDataMoney = {
@@ -1741,6 +1771,12 @@ const bktCurveDataMoney = {
     bkt2: {pcts:[4.76,6.73,7.59,9.22,9.22,9.22,9.22,9.22,9.22,10.02,10.02,10.64,10.64,11.29,12.37,13.19,13.19,13.19,13.19,13.19,14.48,16.56,19.29,21.76,24.18,24.18,24.18,26.3,26.9,33.84,33.84], total_money:1413837.63},
     bkt3: {pcts:[1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,1.43,2.35,2.35,2.35,4.54,4.54,4.54,5.9,5.9,5.9,7.51,7.51,7.51,7.51], total_money:826228.06},
     bkt4: {pcts:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0], total_money:5219888.89}
+  },
+  '15-sep': {
+    bkt1: {pcts:[66.71,66.72,75.24,80.45,80.47,80.48,83.36,83.42,84.95,86.09,87.53,88.22,88.32,89.41,90.81,92.43,93.35,93.84,94.03,94.06,94.6,95.01,95.52,95.82,96.04,96.15,96.18,96.39,96.64,97.47,98.5], total_money:98821556.15},
+    bkt2: {pcts:[0.62,0.62,0.62,0.62,0.62,0.62,0.62,0.62,0.62,1.28,1.99,1.99,1.99,1.99,2.85,2.85,3.73,5.2,5.99,6.94,8.47,10.99,13.67,14.31,16.67,16.67,17.21,18.19,21.4,29.63,29.63], total_money:1886687.43},
+    bkt3: {pcts:[0.0,0.0,0.0,0.0,0.0,0.0,2.98,2.98,2.98,2.98,2.98,2.98,2.98,2.98,2.98,3.82,3.82,5.16,5.16,5.16,6.64,6.64,7.99,9.46,10.93,10.93,10.93,10.93,12.31,14.67,14.67], total_money:1093392.28},
+    bkt4: {pcts:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0], total_money:8803004.94}
   }
 };
 
@@ -1905,10 +1941,17 @@ const intentoSplitData = {
     bkt2: {i1:{d:1.79, s:3.57}, i2:{d:0.89, s:0.0}, i3:{d:0.0, s:0.89}, i4:{d:0.89, s:0.89}},
     bkt3: {i1:{d:1.54, s:0.0}, i2:{d:0.0, s:0.0}, i3:{d:0.0, s:0.0}, i4:{d:0.0, s:0.0}},
     bkt4: {i1:{d:0.0, s:0.0}, i2:{d:0.0, s:0.0}, i3:{d:0.0, s:0.0}, i4:{d:0.0, s:0.0}},
+  },
+  '15-sep': {
+    all: {i1:{d:55.16, s:6.22}, i2:{d:6.23, s:1.46}, i3:{d:2.18, s:2.16}, i4:{d:1.03, s:1.39}},
+    bkt1: {i1:{d:61.1, s:6.89}, i2:{d:6.9, s:1.62}, i3:{d:2.42, s:2.39}, i4:{d:1.14, s:1.55}},
+    bkt2: {i1:{d:0.67, s:0.0}, i2:{d:0.0, s:0.0}, i3:{d:0.0, s:0.0}, i4:{d:0.0, s:0.0}},
+    bkt3: {i1:{d:0.0, s:0.0}, i2:{d:0.0, s:0.0}, i3:{d:0.0, s:0.0}, i4:{d:0.0, s:0.0}},
+    bkt4: {i1:{d:0.0, s:0.0}, i2:{d:0.0, s:0.0}, i3:{d:0.0, s:0.0}, i4:{d:0.0, s:0.0}},
   }
 };
 
-const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may','15-may','01-jun','15-jun','01-jul','15-jul','01-ago','15-ago','01-sep'];
+const allCortes = ['01-ene','15-ene','01-feb','15-feb','01-mar','15-mar','01-abr','15-abr','01-may','15-may','01-jun','15-jun','01-jul','15-jul','01-ago','15-ago','01-sep','15-sep'];
 
 // BKT1 granular breakdown: domi / SPEI durante domi / SPEI sem2 / sem3 / sem4 / no pagó
 // Source: cross-reference Resultado (BBVA+Inter+SPEI sheets) x Cierre Data (BKT per VIN)
@@ -1935,7 +1978,8 @@ const intentoPagoData = {
   '15-jul': {i1:{domi:63.94,spei:5.76}, i2:{domi:4.92,spei:1.68}, i3:{domi:2.67,spei:3.14}, i4:{domi:1.43,spei:1.15}},
   '01-ago': {i1:{domi:60.61,spei:8.78}, i2:{domi:5.4,spei:1.81}, i3:{domi:2.21,spei:1.17}, i4:{domi:1.49,spei:2.5}},
   '15-ago': {i1:{domi:64.88,spei:4.77}, i2:{domi:3.8,spei:4.01}, i3:{domi:1.63,spei:1.51}, i4:{domi:1.45,spei:1.58}},
-  '01-sep': {i1:{domi:62.48, spei:7.27}, i2:{domi:4.42, spei:1.22}, i3:{domi:2.0, spei:1.61}, i4:{domi:1.55, spei:3.42}}
+  '01-sep': {i1:{domi:62.48, spei:7.27}, i2:{domi:4.42, spei:1.22}, i3:{domi:2.0, spei:1.61}, i4:{domi:1.55, spei:3.42}},
+  '15-sep': {i1:{domi:61.1, spei:6.89}, i2:{domi:6.9, spei:1.62}, i3:{domi:2.42, spei:2.39}, i4:{domi:1.14, spei:1.55}}
 };
 
 const bkt1DetailByCorte = {
@@ -1955,7 +1999,8 @@ const bkt1DetailByCorte = {
   '15-jul': {domi:72.95, spei_domi:11.72, s1:2.13, s2:4.28, s3:3.39, s4:4.01, no_pago:1.52, total:7576},
   '01-ago': {domi:69.71, spei_domi:14.27, s1:0.0, s2:5.4, s3:3.3, s4:5.77, no_pago:1.55, total:6911},
   '15-ago': {domi:71.76, spei_domi:11.87, s1:1.49, s2:4.93, s3:4.93, s4:3.51, no_pago:1.51, total:7731},
-  '01-sep': {domi:70.46, spei_domi:13.51, s1:1.97, s2:6.31, s3:2.58, s4:4.1, no_pago:1.06, total:7142}
+  '01-sep': {domi:70.46, spei_domi:13.51, s1:1.97, s2:6.31, s3:2.58, s4:4.1, no_pago:1.06, total:7142},
+  '15-sep': {domi:71.56, spei_domi:12.45, s1:0.1, s2:7.09, s3:3.95, s4:3.29, no_pago:1.55, total:7894}
 };
 
 const bkt2DetailByCorte = {
@@ -1975,7 +2020,8 @@ const bkt2DetailByCorte = {
   '15-jul': {domi:4.05, spei_domi:2.7, s1:2.7, s2:15.54, s3:8.78, s4:10.81, no_pago:55.41, total:148},
   '01-ago': {domi:1.11, spei_domi:0.0, s1:0.0, s2:6.67, s3:3.33, s4:7.78, no_pago:81.11, total:90},
   '15-ago': {domi:1.92, spei_domi:0.0, s1:0.64, s2:3.21, s3:3.21, s4:14.1, no_pago:76.92, total:156},
-  '01-sep': {domi:3.57, spei_domi:5.36, s1:0.0, s2:3.57, s3:3.57, s4:16.96, no_pago:66.96, total:112}
+  '01-sep': {domi:3.57, spei_domi:5.36, s1:0.0, s2:3.57, s3:3.57, s4:16.96, no_pago:66.96, total:112},
+  '15-sep': {domi:0.67, spei_domi:0.0, s1:0.0, s2:2.68, s3:9.4, s4:19.46, no_pago:67.79, total:149}
 };
 
 const bkt3DetailByCorte = {
@@ -1995,7 +2041,8 @@ const bkt3DetailByCorte = {
   '15-jul': {domi:2.17, spei_domi:4.35, s1:0.0, s2:4.35, s3:0.0, s4:0.0, no_pago:89.13, total:46},
   '01-ago': {domi:0.0, spei_domi:2.44, s1:0.0, s2:2.44, s3:2.44, s4:7.32, no_pago:85.37, total:41},
   '15-ago': {domi:2.0, spei_domi:0.0, s1:0.0, s2:0.0, s3:2.0, s4:6.0, no_pago:90.0, total:50},
-  '01-sep': {domi:1.54, spei_domi:0.0, s1:0.0, s2:0.0, s3:4.62, s4:3.08, no_pago:90.77, total:65}
+  '01-sep': {domi:1.54, spei_domi:0.0, s1:0.0, s2:0.0, s3:4.62, s4:3.08, no_pago:90.77, total:65},
+  '15-sep': {domi:0.0, spei_domi:0.0, s1:1.32, s2:0.0, s3:3.95, s4:7.89, no_pago:86.84, total:76}
 };
 
 const bkt4DetailByCorte = {
@@ -2015,7 +2062,8 @@ const bkt4DetailByCorte = {
   '15-jul': {domi:0.0, spei_domi:0.17, s1:0.0, s2:0.0, s3:0.33, s4:0.5, no_pago:99.0, total:598},
   '01-ago': {domi:0.0, spei_domi:0.0, s1:0.0, s2:0.28, s3:0.0, s4:0.28, no_pago:99.44, total:359},
   '15-ago': {domi:0.0, spei_domi:0.0, s1:0.0, s2:0.0, s3:0.0, s4:0.16, no_pago:99.84, total:610},
-  '01-sep': {domi:0.0, spei_domi:0.0, s1:0.0, s2:0.0, s3:0.0, s4:0.0, no_pago:100.0, total:375}
+  '01-sep': {domi:0.0, spei_domi:0.0, s1:0.0, s2:0.0, s3:0.0, s4:0.0, no_pago:100.0, total:375},
+  '15-sep': {domi:0.0, spei_domi:0.0, s1:0.0, s2:0.0, s3:0.0, s4:0.0, no_pago:100.0, total:627}
 };
 
 // Rollover BKT1 → BKT2: universe = cartera BKT1 entering corte (full Resultado minus BKT2/3/4 entering in Cierre)
@@ -2026,6 +2074,8 @@ const bkt4DetailByCorte = {
 // (vehículo ya recuperado, camino a dación en pago) — operativamente muy distinto
 // a "sin_dacion" (cliente sigue activo, simplemente no pagó). Confirmado con Baruch
 // que dación = Consigna + Resguardo juntos. dacion + sin_dacion = total (rolloverData).
+// 15-sep: dación BKT1 = 27 (no 22) por confirmación de Finanzas: 5 clientes en resguardo con pago parcial
+// aparecen como 'Parcial' en la hoja Data; ajuste manual a nivel total (sin VIN).
 const dacionData = {
   '01-ene': {total:47, dacion:16, sin_dacion:31},
   '15-ene': {total:91, dacion:17, sin_dacion:74},
@@ -2043,7 +2093,8 @@ const dacionData = {
   '15-jul': {total:115, dacion:17, sin_dacion:98},
   '01-ago': {total:107, dacion:18, sin_dacion:89},
   '15-ago': {total:117, dacion:23, sin_dacion:94},
-  '01-sep': {total:76, dacion:13, sin_dacion:63}
+  '01-sep': {total:76, dacion:13, sin_dacion:63},
+  '15-sep': {total:122, dacion:27, sin_dacion:95}
 };
 
 const rolloverData = {
@@ -2063,7 +2114,8 @@ const rolloverData = {
   '15-jul': {total:7576, current:7461, current_pct:98.48, rolled_b2:115, rolled_b2_pct:1.52},
   '01-ago': {total:6911, current:6804, current_pct:98.45, rolled_b2:107, rolled_b2_pct:1.55},
   '15-ago': {total:7731, current:7614, current_pct:98.49, rolled_b2:117, rolled_b2_pct:1.51},
-  '01-sep': {total:7142, current:7066, current_pct:98.94, rolled_b2:76, rolled_b2_pct:1.06}
+  '01-sep': {total:7142, current:7066, current_pct:98.94, rolled_b2:76, rolled_b2_pct:1.06},
+  '15-sep': {total:7894, current:7772, current_pct:98.45, rolled_b2:122, rolled_b2_pct:1.55}
 };
 
 // Mora temprana — primeros 3 pagos por cohorte (REPORTE_GENERAL_1EROS_PAGOS)
@@ -2284,6 +2336,16 @@ const data = {
     roll: {b1b2: 1.06, b2b3: null, b3b4: null},
     outcomes: null,
     bkt1Detail: {domi: 83.97, cob: 14.96, no: 1.06}
+  },
+  '15-sep': {
+    color: '#1D9E75', day: 15, hasCierre: true,
+    pcts:[61.38,61.39,69.08,73.43,73.44,73.45,75.89,75.94,77.36,78.31,79.49,80.12,80.22,81.2,82.39,83.72,84.52,84.99,85.16,85.2,85.72,86.15,86.61,86.89,87.11,87.21,87.25,87.46,87.73,88.6,89.53],
+    intentosDias: [0,2,3,6],
+    startPct: 61.38, endPct: 89.53, delta: 28.15, endDay: 30,
+    domiIntentos: [61.38,7.7,4.35,2.46],
+    roll: {b1b2: 1.55, b2b3: null, b3b4: null},
+    outcomes: null,
+    bkt1Detail: {domi: 84.01, cob: 14.43, no: 1.55}
   }
 };
 
@@ -2304,54 +2366,55 @@ const extraData = {
   '15-jul': {cartera: {m1: 297, m2: 336, m3: 221, m4: 7514}, causas: {insuficiencia:2171,cancelada:165,bloqueada:151,domibaja:54,inexistente:32,reverso:23,otros:216}, totalRechazos: 2812, totalOperados: 6453, windowEarly: null, windowLate: null, combined: {i1: 63.2, i2: 6.0, i3: 5.27, i4: 2.35, s1: 1.98, s2: 4.17, s3: 3.25, s4: 3.86, hasC: true}},
   '15-ago': {cartera: {m1: 321, m2: 297, m3: 336, m4: 7593}, causas: {insuficiencia:2161,cancelada:166,bloqueada:154,domibaja:57,inexistente:34,reverso:18,otros:394}, totalRechazos: 2984, totalOperados: 6487, windowEarly: null, windowLate: null, combined: {i1: 63.03, i2: 7.07, i3: 2.87, i4: 2.74, s1: 1.36, s2: 4.52, s3: 4.53, s4: 3.47, hasC: true}},
   '01-ago': {cartera: {m1: 358, m2: 343, m3: 269, m4: 6431}, causas: {insuficiencia:1780,cancelada:139,bloqueada:177,domibaja:50,inexistente:24,reverso:21,otros:381}, totalRechazos: 2572, totalOperados: 5820, windowEarly: null, windowLate: null, combined: {i1: 64.8, i2: 6.74, i3: 3.16, i4: 3.74, s1: 0.0, s2: 5.15, s3: 3.14, s4: 5.54, hasC: true}},
-  '01-sep': {cartera: {m1:381, m2:358, m3:341, m4:6614}, causas: {insuficiencia:1148, cancelada:168, bloqueada:97, domibaja:60, inexistente:29, reverso:28, otros:1119}, totalRechazos: 2649, totalOperados: 6021, windowEarly: null, windowLate: null, combined: {i1:64.83, i2:5.25, i3:3.37, i4:4.64, s1:1.83, s2:5.91, s3:2.48, s4:4.08, hasC:true}}
+  '01-sep': {cartera: {m1:381, m2:358, m3:341, m4:6614}, causas: {insuficiencia:1148, cancelada:168, bloqueada:97, domibaja:60, inexistente:29, reverso:28, otros:1119}, totalRechazos: 2649, totalOperados: 6021, windowEarly: null, windowLate: null, combined: {i1:64.83, i2:5.25, i3:3.37, i4:4.64, s1:1.83, s2:5.91, s3:2.48, s4:4.08, hasC:true}},
+  '15-sep': {cartera: {m1:344, m2:321, m3:297, m4:7784}, causas: {insuficiencia:2401, cancelada:182, bloqueada:203, domibaja:67, inexistente:41, reverso:21, otros:160}, totalRechazos: 3075, totalOperados: 6661, windowEarly: null, windowLate: null, combined: {i1:61.38, i2:7.69, i3:4.34, i4:2.42, s1:0.1, s2:6.45, s3:3.76, s4:3.37, hasC:true}}
 };
 
 const bankDataV2 = {
-  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul','01-ago','15-ago','01-sep'],
-  bbva: [74.6, 71.3, 76.1, 70.0, 72.9, 71.5, 73.8, 71.5, 73.1,70.8,70.7,69.8,70.7,71.8,71.0,69.5,70.8], inter: [78.6, 77.5, 80.8, 75.9, 79.3, 76.8, 79.5, 77.9, 79.1,76.7,76.9,72.6,77.4,75.9,77.9,75.0,77.6],
-  bbvaN: [1932, 2534, 1996, 2577, 2108, 2569, 1980, 2640, 2160,2624,2253,2710,2322,2730,2355,2777,2434], interN: [3381, 4292, 3472, 4402, 3611, 4398, 3442, 4532, 3723,4584,3913,4860,4021,4733,4051,4842,4281],
-  methods: ['4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.','4 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.'], days: [1, 15, 1, 15, 1, 15, 1, 15, 1,15,1,15,1,15,1,15,1],
+  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul','01-ago','15-ago','01-sep','15-sep'],
+  bbva: [74.6, 71.3, 76.1, 70.0, 72.9, 71.5, 73.8, 71.5, 73.1,70.8,70.7,69.8,70.7,71.8,71.0,69.5,70.8,70.4], inter: [78.6, 77.5, 80.8, 75.9, 79.3, 76.8, 79.5, 77.9, 79.1,76.7,76.9,72.6,77.4,75.9,77.9,75.0,77.6,74.7],
+  bbvaN: [1932, 2534, 1996, 2577, 2108, 2569, 1980, 2640, 2160,2624,2253,2710,2322,2730,2355,2777,2434,2799], interN: [3381, 4292, 3472, 4402, 3611, 4398, 3442, 4532, 3723,4584,3913,4860,4021,4733,4051,4842,4281,4953],
+  methods: ['4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.', '4 intentos acum.','4 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.','3 intentos acum.'], days: [1, 15, 1, 15, 1, 15, 1, 15, 1,15,1,15,1,15,1,15,1,15],
 };
 
-const allMixLabels = ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul','01-ago','15-ago','01-sep'];
-const allMixTotals = [5762, 7453, 6010, 7581, 6251, 7796, 6482, 7970, 6738,8037,6933,8225,7180,8368,7401,8547,7694];
+const allMixLabels = ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul','01-ago','15-ago','01-sep','15-sep'];
+const allMixTotals = [5762, 7453, 6010, 7581, 6251, 7796, 6482, 7970, 6738,8037,6933,8225,7180,8368,7401,8547,7694,8746];
 const allMixDatasets = [
-  {label:'BBVA Bancomer',data:[2097, 2751, 2180, 2778, 2274, 2858, 2350, 2900, 2435,2918,2253,2710,2322,2730,2355,2777,2434],backgroundColor:'#3B3ACA',borderWidth:0,stack:'s'},
-        {label:'Santander',data:[827, 955, 868, 971, 906, 991, 939, 1023, 970,1037,948,1117,984,1142,1022,1169,1080],backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
-        {label:'Banorte',data:[778, 927, 825, 956, 859, 984, 898, 1008, 938,1020,933,1099,968,1123,1005,1150,1062],backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
-        {label:'Banamex',data:[808, 1048, 833, 1086, 861, 1124, 892, 1149, 923,1158,1059,1248,1099,1275,1141,1305,1206],backgroundColor:'#1D9E75',borderWidth:0,stack:'s'},
-        {label:'HSBC',data:[363, 512, 379, 520, 397, 536, 412, 552, 437,551,504,594,523,607,543,621,574],backgroundColor:'#D4537E',borderWidth:0,stack:'s'},
-        {label:'Azteca',data:[271, 357, 282, 358, 290, 367, 306, 374, 318,375,343,404,356,413,370,423,391],backgroundColor:'#7F77DD',borderWidth:0,stack:'s'},
-        {label:'Scotiabank',data:[145, 223, 157, 224, 161, 234, 163, 240, 177,245,224,264,233,270,242,276,256],backgroundColor:'#854F0B',borderWidth:0,stack:'s'},
-        {label:'BanCoppel',data:[137, 168, 136, 170, 140, 172, 148, 181, 153,185,169,199,176,204,182,209,192],backgroundColor:'#378ADD',borderWidth:0,stack:'s'},
-        {label:'Inbursa',data:[107, 166, 115, 165, 119, 162, 123, 169, 126,173,158,186,164,191,171,195,181],backgroundColor:'#888780',borderWidth:0,stack:'s'},
-        {label:'Bajío',data:[81, 131, 84, 132, 89, 141, 90, 141, 94,142,130,153,135,156,140,160,148],backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
-        {label:'Banregio',data:[65, 92, 67, 96, 65, 100, 66, 102, 67,101,92,109,96,111,100,114,106],backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
-        {label:'Otros',data:[72, 116, 73, 114, 79, 116, 84, 118, 89,119,121,142,125,145,130,149,137],backgroundColor:'#CECDCA',borderWidth:0,stack:'s'}
+  {label:'BBVA Bancomer',data:[2097, 2751, 2180, 2778, 2274, 2858, 2350, 2900, 2435,2918,2253,2710,2322,2730,2355,2777,2434,2799],backgroundColor:'#3B3ACA',borderWidth:0,stack:'s'},
+        {label:'Santander',data:[827, 955, 868, 971, 906, 991, 939, 1023, 970,1037,948,1117,984,1142,1022,1169,1080,1196],backgroundColor:'#D85A30',borderWidth:0,stack:'s'},
+        {label:'Banorte',data:[778, 927, 825, 956, 859, 984, 898, 1008, 938,1020,933,1099,968,1123,1005,1150,1062,1176],backgroundColor:'#EF9F27',borderWidth:0,stack:'s'},
+        {label:'Banamex',data:[808, 1048, 833, 1086, 861, 1124, 892, 1149, 923,1158,1059,1248,1099,1275,1141,1305,1206,1335],backgroundColor:'#1D9E75',borderWidth:0,stack:'s'},
+        {label:'HSBC',data:[363, 512, 379, 520, 397, 536, 412, 552, 437,551,504,594,523,607,543,621,574,635],backgroundColor:'#D4537E',borderWidth:0,stack:'s'},
+        {label:'Azteca',data:[271, 357, 282, 358, 290, 367, 306, 374, 318,375,343,404,356,413,370,423,391,433],backgroundColor:'#7F77DD',borderWidth:0,stack:'s'},
+        {label:'Scotiabank',data:[145, 223, 157, 224, 161, 234, 163, 240, 177,245,224,264,233,270,242,276,256,282],backgroundColor:'#854F0B',borderWidth:0,stack:'s'},
+        {label:'BanCoppel',data:[137, 168, 136, 170, 140, 172, 148, 181, 153,185,169,199,176,204,182,209,192,214],backgroundColor:'#378ADD',borderWidth:0,stack:'s'},
+        {label:'Inbursa',data:[107, 166, 115, 165, 119, 162, 123, 169, 126,173,158,186,164,191,171,195,181,199],backgroundColor:'#888780',borderWidth:0,stack:'s'},
+        {label:'Bajío',data:[81, 131, 84, 132, 89, 141, 90, 141, 94,142,130,153,135,156,140,160,148,164],backgroundColor:'#9FE1CB',borderWidth:0,stack:'s'},
+        {label:'Banregio',data:[65, 92, 67, 96, 65, 100, 66, 102, 67,101,92,109,96,111,100,114,106,117],backgroundColor:'#FAC775',borderWidth:0,stack:'s'},
+        {label:'Otros',data:[72, 116, 73, 114, 79, 116, 84, 118, 89,119,121,142,125,145,130,149,137,152],backgroundColor:'#CECDCA',borderWidth:0,stack:'s'}
 ];
 
 const northStarData = {
-  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul','01-ago','15-ago', '01-sep'],
+  labels: ['01-ene', '15-ene', '01-feb', '15-feb', '01-mar', '15-mar', '01-abr', '15-abr', '01-may','15-may','01-jun','15-jun','01-jul','15-jul','01-ago','15-ago', '01-sep', '15-sep'],
   // BKT1 total at corte date (from Cierre Análisis row "BKT 1")
   // 01-mar, 15-abr, may: sin cierre disponible
-  bkt1Total:  [5385, 6791, 5641, 6897, 5872, 7099, 6074, 7265, 6322, 7314, 6500, 7457, 6725, 7576, 6911, 7731, 7142],
+  bkt1Total:  [5385, 6791, 5641, 6897, 5872, 7099, 6074, 7265, 6322, 7314, 6500, 7457, 6725, 7576, 6911, 7731, 7142, 7894],
   // Clients rolled BKT1→BKT2: from "BKT ACTUALIZADO AL SIGUIENTE CORTE" column
   // in the Data sheet of each Cierre de moratorios file (all 8 cortes confirmed)
   // Rolled = BKT1→BKT2 excluyendo En Consigna y Resguardo (labor terminada, no roll operativo)
   // Rolled: tabla "Cartera sin daciones" del Análisis, BKT1→BKT2 (excluye consigna/resguardo/daciones)
-  rolled:     [31,   74,   29,   58,   47,   68,   44,   80,   60,   80,   64,   84,   77,   115,   107,   117, 76],
+  rolled:     [31,   74,   29,   58,   47,   68,   44,   80,   60,   80,   64,   84,   77,   115,   107,   117, 76, 122],
   // M1: % BKT1→BKT2 / total BKT1 (salud de cartera — métrica de negocio)
-  pctSalud:   [0.58, 1.09, 0.51, 0.84, 0.80, 0.96, 0.72, 1.10, 0.95, 1.09, 0.98, 1.13, 1.14, 1.52, 1.55, 1.51, 1.06],
+  pctSalud:   [0.58, 1.09, 0.51, 0.84, 0.80, 0.96, 0.72, 1.10, 0.95, 1.09, 0.98, 1.13, 1.14, 1.52, 1.55, 1.51, 1.06, 1.55],
   // M2: % BKT1→BKT2 / cobranza (de los que llegaron a cobranza sin pagar, cuántos rolaron a BKT2)
-  cobranza:   [913, 1104, 820, 1226, 1020, 1125, 888, 1123, 1015, 1203, 1157, 1262, 1156, 1161, 1107, 1266, 1145],
-  pctRoloSinPago: [3.4, 6.7, 3.5, 4.7, 4.6, 6.0, 5.0, 7.1, 5.9, 6.7, 5.5, 6.7, 6.7, 9.9, 9.7, 9.2, 6.6],
+  cobranza:   [913, 1104, 820, 1226, 1020, 1125, 888, 1123, 1015, 1203, 1157, 1262, 1156, 1161, 1107, 1266, 1145, 1262],
+  pctRoloSinPago: [3.4, 6.7, 3.5, 4.7, 4.6, 6.0, 5.0, 7.1, 5.9, 6.7, 5.5, 6.7, 6.7, 9.9, 9.7, 9.2, 6.6, 9.7],
   // M3: % SPEI durante domi / no-domi (efectividad comunicaciones — todos los cortes)
-  pctComms:   [25.9, 26.8, 31.5, 24.1, 27.7, 31.4, 42.6, 30.6, 37.6, 30.3, 32.4, 28.6, 34.0, 31.8, 38.4, 30.8, 36.7],
+  pctComms:   [25.9, 26.8, 31.5, 24.1, 27.7, 31.4, 42.6, 30.6, 37.6, 30.3, 32.4, 28.6, 34.0, 31.8, 38.4, 30.8, 36.7, 32.1],
   // Raw counts
-  noDomi:     [1717, 2358, 1718, 2477, 1914, 2623, 2332, 2593, 2270, 2723, 2332, 2804, 2430, 2817, 2573, 2978, 2644],
-  speiDur:    [445,  633,  542,  598,  530,  823,  994,  793,  853,  825, 756, 802, 827, 896, 987, 918, 971],
-  sinPago:    [1271, 1725, 1176, 1876, 1384, 1794, 1276, 1800, 1417, 1898, 1569, 1997, 1596, 1915, 1581, 2060, 1673],
+  noDomi:     [1717, 2358, 1718, 2477, 1914, 2623, 2332, 2593, 2270, 2723, 2332, 2804, 2430, 2817, 2573, 2978, 2644, 3069],
+  speiDur:    [445,  633,  542,  598,  530,  823,  994,  793,  853,  825, 756, 802, 827, 896, 987, 918, 971, 984],
+  sinPago:    [1271, 1725, 1176, 1876, 1384, 1794, 1276, 1800, 1417, 1898, 1569, 1997, 1596, 1915, 1581, 2060, 1673, 2085],
 };
 
 const vintageData = {
@@ -3943,7 +4006,6 @@ const tabPanels  = document.querySelectorAll('.tab-panel');
 // Resultado × la razón histórica de cortes del mismo día. Al llegar el Cierre, el corte se
 // agrega normal a allCortes y se borra de aquí.
 const carteraPreliminar = {
-  '15-sep': {clientes:8746, money:110604640.8, sinPago:2085},
   '01-oct': {clientes:8014, money:94998705.18, sinPago:1761},
 };
 // ── Gasto real CCC.uno (facturas UBLU, subtotal sin IVA) · desglose por canal desde reportes BG_PRESTEMOS_SAPI ──
@@ -3954,11 +4016,11 @@ const ccUnoGasto = {"dic-25": {"total": 24684.88, "factura": "F2001"}, "ene": {"
 // En la vista se suman termNat + otras como "Salidas". Opción B (16-oct-2026): la dación cuenta el mes en que el VIN entra a
 // Consigna/Resguardo/Dación (primer Cierre, hoja Data · ESTATUS DE PAGO); desde ese mes sale de la cartera activa.
 // VIN que solo aparecen en la hoja 'Daciones' (inventario sin fecha) cuentan al dejar de domiciliarse.
-const flujoCartera = [{"mes": "feb", "inicio": 13055, "permanecen": 12811, "nuevos": 612, "dacion": 45, "termNat": null, "otras": 199, "fin": 13423, "temporales": 4}, {"mes": "mar", "inicio": 13423, "permanecen": 13195, "nuevos": 650, "dacion": 61, "termNat": null, "otras": 167, "fin": 13845, "temporales": 8}, {"mes": "abr", "inicio": 13845, "permanecen": 13609, "nuevos": 634, "dacion": 59, "termNat": null, "otras": 177, "fin": 14243, "temporales": 3}, {"mes": "may", "inicio": 14243, "permanecen": 13991, "nuevos": 573, "dacion": 39, "termNat": null, "otras": 213, "fin": 14564, "temporales": 1}, {"mes": "jun", "inicio": 14564, "permanecen": 14314, "nuevos": 603, "dacion": 38, "termNat": null, "otras": 212, "fin": 14917, "temporales": 1}, {"mes": "jul", "inicio": 14917, "permanecen": 14650, "nuevos": 640, "dacion": 58, "termNat": null, "otras": 209, "fin": 15290, "temporales": 3}, {"mes": "ago", "inicio": 15290, "permanecen": 14993, "nuevos": 677, "dacion": 62, "termNat": null, "otras": 235, "fin": 15670, "temporales": 8}, {"mes": "sep", "inicio": 15670, "permanecen": 15441, "nuevos": 724, "dacion": 33, "termNat": null, "otras": 196, "fin": 16165, "temporales": 1}];
+const flujoCartera = [{"mes": "feb", "inicio": 13055, "permanecen": 12811, "nuevos": 612, "dacion": 45, "termNat": null, "otras": 199, "fin": 13423, "temporales": 4}, {"mes": "mar", "inicio": 13423, "permanecen": 13195, "nuevos": 650, "dacion": 61, "termNat": null, "otras": 167, "fin": 13845, "temporales": 8}, {"mes": "abr", "inicio": 13845, "permanecen": 13609, "nuevos": 634, "dacion": 59, "termNat": null, "otras": 177, "fin": 14243, "temporales": 3}, {"mes": "may", "inicio": 14243, "permanecen": 13991, "nuevos": 573, "dacion": 39, "termNat": null, "otras": 213, "fin": 14564, "temporales": 1}, {"mes": "jun", "inicio": 14564, "permanecen": 14314, "nuevos": 603, "dacion": 38, "termNat": null, "otras": 212, "fin": 14917, "temporales": 1}, {"mes": "jul", "inicio": 14917, "permanecen": 14650, "nuevos": 640, "dacion": 58, "termNat": null, "otras": 209, "fin": 15290, "temporales": 3}, {"mes": "ago", "inicio": 15290, "permanecen": 14993, "nuevos": 677, "dacion": 62, "termNat": null, "otras": 235, "fin": 15670, "temporales": 8}, {"mes": "sep", "inicio": 15670, "permanecen": 15408, "nuevos": 723, "dacion": 66, "termNat": null, "otras": 196, "fin": 16131, "temporales": 1, "ajusteFinanzas": 5}];
 // ── Cartera real: créditos únicos (VIN) por mes, corte 1 ∪ corte 15 + ausencias temporales (= "Fin" del flujo) ──
 // dobles = VIN domiciliados en ambos cortes del mes (misma mensualidad); se cuentan una vez.
 // r1/r15 = cartera real por corte: cada VIN va a su corte habitual (donde aparece más meses; empate → corte 1).
-const carteraReal = [{"mes": "ene", "total": 13055, "c1": 5762, "c15": 7453, "dobles": 104, "temporales": 0, "r1": 5749, "r15": 7306}, {"mes": "feb", "total": 13423, "c1": 6010, "c15": 7579, "dobles": 113, "temporales": 4, "r1": 5982, "r15": 7441}, {"mes": "mar", "total": 13845, "c1": 6251, "c15": 7790, "dobles": 120, "temporales": 8, "r1": 6198, "r15": 7647}, {"mes": "abr", "total": 14243, "c1": 6482, "c15": 7970, "dobles": 131, "temporales": 3, "r1": 6419, "r15": 7824}, {"mes": "may", "total": 14564, "c1": 6738, "c15": 8037, "dobles": 144, "temporales": 1, "r1": 6672, "r15": 7892}, {"mes": "jun", "total": 14917, "c1": 6932, "c15": 8224, "dobles": 164, "temporales": 1, "r1": 6839, "r15": 8078}, {"mes": "jul", "total": 15290, "c1": 7180, "c15": 8368, "dobles": 184, "temporales": 3, "r1": 7080, "r15": 8210}, {"mes": "ago", "total": 15670, "c1": 7401, "c15": 8547, "dobles": 197, "temporales": 8, "r1": 7307, "r15": 8363}, {"mes": "sep", "total": 16165, "c1": 7694, "c15": 8746, "dobles": 215, "temporales": 1, "r1": 7574, "r15": 8591}];
+const carteraReal = [{"mes": "ene", "total": 13055, "c1": 5762, "c15": 7453, "dobles": 104, "temporales": 0, "r1": 5749, "r15": 7306}, {"mes": "feb", "total": 13423, "c1": 6010, "c15": 7579, "dobles": 113, "temporales": 4, "r1": 5982, "r15": 7441}, {"mes": "mar", "total": 13845, "c1": 6251, "c15": 7790, "dobles": 120, "temporales": 8, "r1": 6198, "r15": 7647}, {"mes": "abr", "total": 14243, "c1": 6482, "c15": 7970, "dobles": 131, "temporales": 3, "r1": 6419, "r15": 7824}, {"mes": "may", "total": 14564, "c1": 6738, "c15": 8037, "dobles": 144, "temporales": 1, "r1": 6672, "r15": 7892}, {"mes": "jun", "total": 14917, "c1": 6932, "c15": 8224, "dobles": 164, "temporales": 1, "r1": 6839, "r15": 8078}, {"mes": "jul", "total": 15290, "c1": 7180, "c15": 8368, "dobles": 184, "temporales": 3, "r1": 7080, "r15": 8210}, {"mes": "ago", "total": 15670, "c1": 7401, "c15": 8547, "dobles": 197, "temporales": 8, "r1": 7307, "r15": 8363}, {"mes": "sep", "total": 16131, "c1": 7694, "c15": 8746, "dobles": 215, "temporales": 1, "r1": 7574, "r15": 8557}];
 let crecMetric = 'clientes';
 function buildCrecimientoModule() {
   const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -5257,6 +5319,53 @@ function buildRolloverNsCharts() {
       }
     }]
   });
+
+  // ── Tendencia: rollover sin dación vs con dación · por mes (suma de cortes) o por corte ──
+  if (charts.rolloverDacionTrend) charts.rolloverDacionTrend.destroy();
+  {
+    const mode = window.__dacTrendMode || 'mes';
+    document.querySelectorAll('#dacTrendMode button').forEach(b => { b.classList.toggle('on', b.dataset.m === mode);
+      b.onclick = () => { window.__dacTrendMode = b.dataset.m; buildRolloverNsCharts(); }; });
+    let L, SD, DA, NC;
+    if (mode === 'mes') {
+      const g = {};
+      cortes.forEach((c, i) => { const m = c.slice(3); (g[m] = g[m] || { sd: 0, da: 0, n: 0 }); g[m].sd += sinDacionAbs[i]; g[m].da += dacionAbs[i]; g[m].n++; });
+      const ms = [...new Set(cortes.map(c => c.slice(3)))];
+      const nMax = Math.max(...ms.map(m => g[m].n));
+      L = ms.map(m => g[m].n < nMax ? m + '*' : m); SD = ms.map(m => g[m].sd); DA = ms.map(m => g[m].da); NC = ms.map(m => g[m].n);
+    } else { L = cortes.slice(); SD = sinDacionAbs.slice(); DA = dacionAbs.slice(); NC = cortes.map(() => 1); }
+    const prevIdx = i => { if (mode === 'mes') return i - 1; const d = L[i].slice(0, 2); for (let k = i - 1; k >= 0; k--) if (L[k].slice(0, 2) === d) return k; return -1; };
+    const chg = (arr, i) => { const k = prevIdx(i); if (k < 0 || !arr[k] || (mode === 'mes' && NC[i] !== NC[k])) return ''; const v = arr[i] - arr[k]; return ` (${v >= 0 ? '+' : ''}${v} vs ${L[k].replace('*', '')}, ${v >= 0 ? '+' : ''}${Math.round(v / arr[k] * 100)}%)`; };
+    const full = (a) => a.filter((_, i) => NC[i] === Math.max(...NC));
+    const avg = a => { const f = full(a); return f.reduce((s, v) => s + v, 0) / (f.length || 1); };
+    charts.rolloverDacionTrend = new Chart(document.getElementById('rolloverDacionTrendChart'), {
+      type: 'line',
+      data: { labels: L, datasets: [
+        { label: 'Rollover sin dación', data: SD, borderColor: '#EF9F27', backgroundColor: '#EF9F27', borderWidth: 2.5, pointRadius: 4.5, pointBorderColor: '#fff', pointBorderWidth: 1.5, tension: 0.25,
+          segment: { borderDash: c => NC[c.p1DataIndex] < Math.max(...NC) ? [5, 4] : undefined } },
+        { label: 'Rollover · Dación', data: DA, borderColor: '#8B2E1A', backgroundColor: '#8B2E1A', borderWidth: 2.5, pointRadius: 4.5, pointBorderColor: '#fff', pointBorderWidth: 1.5, tension: 0.25,
+          segment: { borderDash: c => NC[c.p1DataIndex] < Math.max(...NC) ? [5, 4] : undefined } } ]},
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 16, right: 70 } },
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'top', align: 'end', labels: { color: '#5F5E5A', font: { size: 11.5 }, boxWidth: 12 } },
+          tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}` + chg(c.datasetIndex ? DA : SD, c.dataIndex),
+              footer: it => { const i = it[0].dataIndex, t = SD[i] + DA[i]; return `Rollover total: ${t} · dación = ${t ? Math.round(DA[i] / t * 100) : 0}%` + (NC[i] < Math.max(...NC) ? '\n* Mes parcial: solo un corte' : ''); } },
+            backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6 } },
+        scales: { x: { grid: { display: false }, ticks: { color: '#888780', font: { size: 11.5 } } },
+                  y: { beginAtZero: true, grace: '15%', grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#888780' }, title: { display: true, text: 'Clientes BKT1 que rolean', color: '#888780', font: { size: 11 } } } } },
+      plugins: [{ id: 'dacTrendLbl', afterDatasetsDraw(ch) {
+        const x = ch.ctx, ca = ch.chartArea; x.save(); x.textAlign = 'center'; x.font = 'bold 10.5px -apple-system,sans-serif';
+        ch.getDatasetMeta(0).data.forEach((p, i) => { x.fillStyle = '#C47A0E'; x.fillText(SD[i], p.x, p.y - 9); });
+        ch.getDatasetMeta(1).data.forEach((p, i) => { x.fillStyle = '#8B2E1A'; x.fillText(DA[i], p.x, p.y + 16); });
+        [[SD, '#C47A0E'], [DA, '#8B2E1A']].forEach(([a, col]) => {
+          const y = ch.scales.y.getPixelForValue(avg(a));
+          x.strokeStyle = col + '66'; x.setLineDash([4, 4]); x.lineWidth = 1; x.beginPath(); x.moveTo(ca.left, y); x.lineTo(ca.right, y); x.stroke(); x.setLineDash([]);
+          x.textAlign = 'left'; x.fillStyle = col; x.font = '10px -apple-system,sans-serif'; x.fillText('prom', ca.right + 8, y - 2);
+          x.font = 'bold 10.5px -apple-system,sans-serif'; x.fillText(avg(a).toFixed(0), ca.right + 8, y + 10); x.textAlign = 'center';
+        });
+        x.restore(); } }]
+    });
+  }
 
   // ── Table ──
   const tbody = document.getElementById('rolloverTableBody');
