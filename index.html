@@ -384,6 +384,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
     </div>
 
     <div class="chart-wrap-md"><canvas id="nsPayChart"></canvas></div>
+    <p class="meta" style="margin-top:6px;">○ Punto hueco y tramo punteado = <strong>previo</strong>: calculado solo con el Resultado de domi (bucket tomado del Cierre anterior). Cuando llega el Cierre de moratorios se recalcula, se coteja y queda el valor final.</p>
 
     <div class="info-box" style="margin-top:14px;">
       <p class="info-title">Cómo leer esta gráfica</p>
@@ -809,6 +810,7 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
     <h2 style="margin-bottom:4px;">¿Está mejorando el pago a tiempo en BKT1?</h2>
     <p class="subtitle">% de clientes BKT1 que pagaron durante el proceso de domi (domi + SPEI durante domi), corte a corte. Esta es la métrica de pago a tiempo.</p>
     <div class="chart-wrap-md"><canvas id="bkt1TrendChart"></canvas></div>
+    <p class="meta" style="margin-top:6px;">○ Punto hueco y tramo punteado = <strong>previo</strong>: calculado solo con el Resultado de domi (bucket tomado del Cierre anterior). Cuando llega el Cierre de moratorios se recalcula, se coteja y queda el valor final.</p>
   </div>
 
   <div class="section">
@@ -1262,6 +1264,12 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    elegido en ese mes (ccUnoGasto). Cobro 100% por uso (SMS 0.26, min celular 0.22, min fijo 0.12); blaster
    = 85-93% del gasto. Excels BG_PRESTEMOS_SAPI feb-sep cuadran al centavo con las facturas. 15-sep/01-oct
    preliminares (carteraPreliminar, solo Resultado; universo estimado con razón histórica sin pago).
+   *** REGLA PREVIO → FINAL (21-oct-2026): cuando solo hay Resultado de domi, el pago a tiempo se publica como PREVIO
+   (pagoATiempoPrevio: bucket = 'BKT ACTUALIZADO AL SIGUIENTE CORTE' del Cierre anterior del mismo día). Al llegar el
+   Cierre: correr el pipeline completo, COTEJAR contra el previo (validado: 01-sep 83.96→83.97, 15-sep 83.98→84.01),
+   reportar la diferencia y borrar el corte de pagoATiempoPrevio; el valor con Cierre siempre es el FINAL.
+   *** 15-oct PRELIMINAR (20-oct-2026): Resultado_15_Oct (8,891 VIN, domi 15/16/19/20-oct). Solo alimenta Crecimiento
+   de cartera (carteraPreliminar); el resto de pestañas espera su Cierre de moratorios (D+30 = 14-nov).
    *** 15-sep AJUSTE (19-oct-2026): Finanzas confirma su resumen del Análisis: BKT1 rollover 122 = 27 dación (12 Consigna +
    15 Resguardo) + 95 sin dación (81 No pagado + 14 Parcial). La hoja Data solo marca 22 (5 resguardos con pago parcial
    figuran como 'Parcial'; seguramente ajuste manual). Se aplica a nivel total: dacionData 15-sep 27/95; flujo sep
@@ -3709,6 +3717,12 @@ function buildNsPayChart() {
 
   const seriesD1  = cortesD1.map(c => ({ label: c, ...payAt(c) }));
   const seriesD15 = cortesD15.map(c => ({ label: c, ...payAt(c) }));
+  // Previo (solo Resultado): se agrega si el corte aún no tiene Cierre, respetando el filtro de día
+  Object.entries(pagoATiempoPrevio).forEach(([c, p]) => {
+    if (data[c]) return; const day = +c.slice(0, 2);
+    if (day === 1 && currentFilter !== 'day15') seriesD1.push({ label: c, pct: p.cartera, closingDay: p.closingDay, prev: true });
+    if (day === 15 && currentFilter !== 'day1') seriesD15.push({ label: c, pct: p.cartera, closingDay: p.closingDay, prev: true });
+  });
 
   // KPI cards
   const avgD1  = seriesD1.length  ? seriesD1.reduce((a,s)=>a+s.pct,0)/seriesD1.length   : null;
@@ -3718,10 +3732,11 @@ function buildNsPayChart() {
   document.getElementById('nsPayD15').textContent = avgD15 !== null ? avgD15.toFixed(1)+'%' : '—';
 
   // Último corte visible
-  const allSeries = [...seriesD1, ...seriesD15].sort((a,b) => cortes.indexOf(a.label) - cortes.indexOf(b.label));
+  const ordC = [...cortes, ...Object.keys(pagoATiempoPrevio)];
+  const allSeries = [...seriesD1, ...seriesD15].sort((a,b) => ordC.indexOf(a.label) - ordC.indexOf(b.label));
   const last = allSeries[allSeries.length - 1];
   document.getElementById('nsPayLast').textContent    = last ? last.pct.toFixed(1)+'%' : '—';
-  document.getElementById('nsPayLastSub').textContent = last ? `${last.label} · cierra D+${last.closingDay}` : '—';
+  document.getElementById('nsPayLastSub').textContent = last ? `${last.label} · cierra D+${last.closingDay}` + (last.prev ? ' · previo' : '') : '—';
 
   const showD1  = currentFilter !== 'day15';
   const showD15 = currentFilter !== 'day1';
@@ -3729,7 +3744,7 @@ function buildNsPayChart() {
   // Eje X: los meses (ene, feb, mar...) como categorías compartidas
   // Usamos el mes extraído del label para alinear ambas series
   const monthOf = c => c.split('-')[1]; // '01-ene' → 'ene'
-  const allMonths = [...new Set(cortes.map(monthOf))]; // ['ene','feb','mar','abr','may']
+  const allMonths = [...new Set([...cortes, ...seriesD1.map(s => s.label), ...seriesD15.map(s => s.label)].map(monthOf))];
 
   // Construir datos por mes para cada serie
   const d1ByMonth  = {};
@@ -3751,7 +3766,8 @@ function buildNsPayChart() {
       tension: 0.3,
       pointRadius: allMonths.map(m => d1ByMonth[m] != null ? 6 : 0),
       pointHoverRadius: 8,
-      pointBackgroundColor: '#1D9E75',
+      pointBackgroundColor: allMonths.map(m => metaD1ByMonth[m]?.prev ? '#fff' : '#1D9E75'), pointBorderColor: '#1D9E75', pointBorderWidth: 2,
+      segment: { borderDash: c => metaD1ByMonth[allMonths[c.p1DataIndex]]?.prev ? [2,3] : undefined },
       fill: false,
       spanGaps: true,
       nsMeta: allMonths.map(m => metaD1ByMonth[m] ?? null),
@@ -3767,7 +3783,8 @@ function buildNsPayChart() {
       tension: 0.3,
       pointRadius: allMonths.map(m => d15ByMonth[m] != null ? 6 : 0),
       pointHoverRadius: 8,
-      pointBackgroundColor: '#3B3ACA',
+      pointBackgroundColor: allMonths.map(m => metaD15ByMonth[m]?.prev ? '#fff' : '#3B3ACA'), pointBorderColor: '#3B3ACA', pointBorderWidth: 2,
+      segment: { borderDash: c => metaD15ByMonth[allMonths[c.p1DataIndex]]?.prev ? [2,3] : [5,4] },
       borderDash: [5,4],
       fill: false,
       spanGaps: true,
@@ -3787,6 +3804,7 @@ function buildNsPayChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { right: 56 } },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: {
@@ -3808,7 +3826,7 @@ function buildNsPayChart() {
               const m = allMonths[ctx.dataIndex];
               const meta = ctx.dataset.nsMeta ? ctx.dataset.nsMeta[ctx.dataIndex] : null;
               const dStr = meta ? ` — cierra D+${meta.closingDay}` : '';
-              return ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%${dStr}`;
+              return ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%${dStr}` + (meta && meta.prev ? ' · PREVIO (solo Resultado; el final llega con el Cierre)' : '');
             }
           },
           backgroundColor: 'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
@@ -4007,6 +4025,7 @@ const tabPanels  = document.querySelectorAll('.tab-panel');
 // agrega normal a allCortes y se borra de aquí.
 const carteraPreliminar = {
   '01-oct': {clientes:8014, money:94998705.18, sinPago:1761},
+  '15-oct': {clientes:8891, money:112060721.29, sinPago:2225},
 };
 // ── Gasto real CCC.uno (facturas UBLU, subtotal sin IVA) · desglose por canal desde reportes BG_PRESTEMOS_SAPI ──
 // Clave = mes de consumo (la factura se emite a inicios del mes siguiente). Para agregar un mes: sumar BILL AMOUNT
@@ -4021,6 +4040,16 @@ const flujoCartera = [{"mes": "feb", "inicio": 13055, "permanecen": 12811, "nuev
 // dobles = VIN domiciliados en ambos cortes del mes (misma mensualidad); se cuentan una vez.
 // r1/r15 = cartera real por corte: cada VIN va a su corte habitual (donde aparece más meses; empate → corte 1).
 const carteraReal = [{"mes": "ene", "total": 13055, "c1": 5762, "c15": 7453, "dobles": 104, "temporales": 0, "r1": 5749, "r15": 7306}, {"mes": "feb", "total": 13423, "c1": 6010, "c15": 7579, "dobles": 113, "temporales": 4, "r1": 5982, "r15": 7441}, {"mes": "mar", "total": 13845, "c1": 6251, "c15": 7790, "dobles": 120, "temporales": 8, "r1": 6198, "r15": 7647}, {"mes": "abr", "total": 14243, "c1": 6482, "c15": 7970, "dobles": 131, "temporales": 3, "r1": 6419, "r15": 7824}, {"mes": "may", "total": 14564, "c1": 6738, "c15": 8037, "dobles": 144, "temporales": 1, "r1": 6672, "r15": 7892}, {"mes": "jun", "total": 14917, "c1": 6932, "c15": 8224, "dobles": 164, "temporales": 1, "r1": 6839, "r15": 8078}, {"mes": "jul", "total": 15290, "c1": 7180, "c15": 8368, "dobles": 184, "temporales": 3, "r1": 7080, "r15": 8210}, {"mes": "ago", "total": 15670, "c1": 7401, "c15": 8547, "dobles": 197, "temporales": 8, "r1": 7307, "r15": 8363}, {"mes": "sep", "total": 16131, "c1": 7694, "c15": 8746, "dobles": 215, "temporales": 1, "r1": 7574, "r15": 8557}];
+// ── PAGO A TIEMPO PREVIO (solo Resultado de domi, sin Cierre) ──────────────────────────────
+// Regla: con solo el Resultado, el pago a tiempo es PREVIO; al llegar el Cierre de moratorios se recalcula
+// con el pipeline completo, se coteja contra este previo y el del Cierre queda como FINAL (y se borra de aquí).
+// Método: pagados (Domi/Plan/SPEI) del Resultado ÷ clientes; bucket = 'BKT actualizado al siguiente corte'
+// del Cierre previo del mismo día (no está en ese Cierre → BKT1). Validado: 01-sep 83.96 vs 83.97 final;
+// 15-sep 83.98 vs 84.01 final. cartera = todos los buckets (comparable con North Star de Recaudación).
+const pagoATiempoPrevio = {
+  '01-oct': {bkt1:83.61, bkt1N:7456, cartera:78.03, n:8014, closingDay:5, fuente:'Resultado 1-oct + Cierre 01-sep'},
+  '15-oct': {bkt1:83.42, bkt1N:7912, cartera:74.97, n:8891, closingDay:5, fuente:'Resultado 15-oct + Cierre 15-sep'},
+};
 let crecMetric = 'clientes';
 function buildCrecimientoModule() {
   const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -4657,7 +4686,8 @@ function buildPorBktCharts() {
   const trendCortes = cortesGlobal.filter(c => bkt1DetailByCorte[c]);
   const monthOf = c => c.split('-')[1];
   const dayOf   = c => data[c]?.day;
-  const months  = [...new Set(trendCortes.map(monthOf))];
+  const prevCortes = Object.keys(pagoATiempoPrevio).filter(c => !bkt1DetailByCorte[c] && (currentFilter === 'all' || (currentFilter === 'day1') === (c.slice(0, 2) === '01')));
+  const months  = [...new Set([...trendCortes, ...prevCortes].map(monthOf))];
 
   const d1Map = {}, d15Map = {};
   trendCortes.forEach(c => {
@@ -4670,13 +4700,15 @@ function buildPorBktCharts() {
   const showD1  = currentFilter !== 'day15';
   const showD15 = currentFilter !== 'day1';
 
+  prevCortes.forEach(c => { const v = pagoATiempoPrevio[c].bkt1; (c.slice(0, 2) === '01' ? d1Map : d15Map)[monthOf(c)] = { v, d: null, prev: true }; });
   const trendDatasets = [];
   if (showD1) trendDatasets.push({
     label: 'Corte 1', data: months.map(m => d1Map[m]?.v ?? null),
     borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.05)',
     borderWidth: 2.5, tension: 0.3,
     pointRadius: 6, pointHoverRadius: 8,
-    pointBackgroundColor: '#1D9E75', pointBorderColor: '#fff', pointBorderWidth: 2,
+    pointBackgroundColor: months.map(m => d1Map[m]?.prev ? '#fff' : '#1D9E75'), pointBorderColor: months.map(m => d1Map[m]?.prev ? '#1D9E75' : '#fff'), pointBorderWidth: 2,
+    segment: { borderDash: c => d1Map[months[c.p1DataIndex]]?.prev ? [2,3] : undefined }, prevFlags: months.map(m => !!d1Map[m]?.prev),
     fill: false, spanGaps: true,
   });
   if (showD15) trendDatasets.push({
@@ -4684,7 +4716,8 @@ function buildPorBktCharts() {
     borderColor: '#3B3ACA', backgroundColor: 'rgba(59,58,202,0.05)',
     borderWidth: 2.5, tension: 0.3, borderDash: [6,4],
     pointRadius: 6, pointHoverRadius: 8,
-    pointBackgroundColor: '#3B3ACA', pointBorderColor: '#fff', pointBorderWidth: 2,
+    pointBackgroundColor: months.map(m => d15Map[m]?.prev ? '#fff' : '#3B3ACA'), pointBorderColor: months.map(m => d15Map[m]?.prev ? '#3B3ACA' : '#fff'), pointBorderWidth: 2,
+    segment: { borderDash: c => d15Map[months[c.p1DataIndex]]?.prev ? [2,3] : [6,4] }, prevFlags: months.map(m => !!d15Map[m]?.prev),
     fill: false, spanGaps: true,
   });
 
@@ -4694,6 +4727,7 @@ function buildPorBktCharts() {
     data: { labels: months, datasets: trendDatasets },
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 64 } },
       interaction: { mode:'index', intersect:false },
       plugins: {
         legend: {
@@ -4706,7 +4740,8 @@ function buildPorBktCharts() {
               if (ctx.parsed.y == null) return null;
               const m = months[ctx.dataIndex];
               const src = ctx.dataset.label === 'Corte 1' ? d1Map[m] : d15Map[m];
-              return ` ${ctx.dataset.label}: ${ctx.parsed.y}% (domi ${src.d.domi}% + SPEI domi ${src.d.spei_domi}%)`;
+              return src.prev ? ` ${ctx.dataset.label}: ${ctx.parsed.y}% · PREVIO (solo Resultado; el final llega con el Cierre)`
+                              : ` ${ctx.dataset.label}: ${ctx.parsed.y}% (domi ${src.d.domi}% + SPEI domi ${src.d.spei_domi}%)`;
             }
           },
           backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
@@ -4732,7 +4767,7 @@ function buildPorBktCharts() {
             const val = ds.data[i];
             if (val == null) return;
             const pt = metas[dsIdx].data[i];
-            pts.push({ val, x: pt.x, y: pt.y, color: ds.borderColor });
+            pts.push({ val, x: pt.x, y: pt.y, color: ds.borderColor, prev: !!(ds.prevFlags && ds.prevFlags[i]) });
           });
           if (pts.length === 0) continue;
 
@@ -4742,7 +4777,7 @@ function buildPorBktCharts() {
 
           if (pts.length === 1) {
             ctx2.fillStyle = pts[0].color;
-            ctx2.fillText(pts[0].val.toFixed(1)+'%', pts[0].x, pts[0].y - 14);
+            ctx2.fillText(pts[0].val.toFixed(1)+'%' + (pts[0].prev ? ' previo' : ''), pts[0].x, pts[0].y - 14);
           } else {
             // Ordenar por posición vertical real (no por índice de dataset)
             pts.sort((a,b) => a.y - b.y);
@@ -4750,9 +4785,9 @@ function buildPorBktCharts() {
             const gap = bottom.y - top.y;
             const [topOffset, bottomOffset] = gap < MIN_GAP ? [-16, 16] : [-12, 14];
             ctx2.fillStyle = top.color;
-            ctx2.fillText(top.val.toFixed(1)+'%', top.x, top.y + topOffset);
+            ctx2.fillText(top.val.toFixed(1)+'%' + (top.prev ? ' previo' : ''), top.x, top.y + topOffset);
             ctx2.fillStyle = bottom.color;
-            ctx2.fillText(bottom.val.toFixed(1)+'%', bottom.x, bottom.y + bottomOffset);
+            ctx2.fillText(bottom.val.toFixed(1)+'%' + (bottom.prev ? ' previo' : ''), bottom.x, bottom.y + bottomOffset);
           }
           ctx2.restore();
         }
