@@ -5416,11 +5416,11 @@ function buildRolloverDiagCharts() {
     const step = labels.length > 1 ? (xs.getPixelForValue(1) - xs.getPixelForValue(0)) : 40;
     if (labels[0] === 'Prom Ene–Jun') { const c0 = ch.ctx, xa = ch.chartArea.left, xb = xs.getPixelForValue(0) + step/2;
       c0.save(); c0.fillStyle = 'rgba(59,58,202,0.08)'; c0.fillRect(xa, ch.chartArea.top, xb-xa, ch.chartArea.bottom-ch.chartArea.top);
-      c0.fillStyle = '#3B3ACA'; c0.font = 'bold 10px -apple-system,sans-serif'; c0.textAlign='left'; c0.fillText('Referencia', xa+4, ch.chartArea.top-6); c0.restore(); }
+      c0.fillStyle = '#3B3ACA'; c0.font = 'bold 10px -apple-system,sans-serif'; c0.textAlign='left'; c0.fillText('Referencia', xa+4, ch.chartArea.top-((ch.$shadeOff)||6)); c0.restore(); }
     if (i0 < 0) return;
     const x0 = xs.getPixelForValue(i0) - step/2, x1 = ch.chartArea.right;
     const c = ch.ctx; c.save(); c.fillStyle = 'rgba(216,90,48,0.06)'; c.fillRect(x0, ch.chartArea.top, x1-x0, ch.chartArea.bottom-ch.chartArea.top);
-    c.fillStyle = '#D85A30'; c.font = 'bold 10px -apple-system,sans-serif'; c.textAlign='right'; c.fillText('Jul–Sep', x1-4, ch.chartArea.top-6); c.restore(); } });
+    c.fillStyle = '#D85A30'; c.font = 'bold 10px -apple-system,sans-serif'; c.textAlign='right'; c.fillText('Jul–Sep', x1-4, ch.chartArea.top-((ch.$shadeOff)||6)); c.restore(); } });
   const avgLine = (val, axis, txt) => ({ id:'diagAvg', afterDatasetsDraw(ch){
     const y = ch.scales[axis].getPixelForValue(val), c = ch.ctx; c.save();
     c.strokeStyle='rgba(136,135,128,0.6)'; c.setLineDash([4,4]); c.beginPath(); c.moveTo(ch.chartArea.left,y); c.lineTo(ch.chartArea.right,y); c.stroke();
@@ -5568,7 +5568,7 @@ function buildRolloverDiagCharts() {
   charts[chartKey] = new Chart(document.getElementById(canvasId), {
     type:'bar',
     data:{ labels:flowLabels, datasets: SEG.map(sg => ({ label:sg.label, data:flowLabels.map(l=>val(l, sg.fn)), backgroundColor:sg.col, borderWidth:0, stack:'s', barPercentage:0.72 })) },
-    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:22, right:34}},
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top: flowLabels.length > 12 ? (pctMode ? 46 : 22) : 22, right: flowLabels.length > 12 ? 8 : 34}},
       plugins:{ legend:{display:true, position:'bottom', labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
         tooltip:{...tip, callbacks:{ title: it => it[0].label === 'Prom Ene–Jun' ? `Promedio Ene–Jun por corte (${preF1.length} cortes)` : `Corte ${it[0].label} · ${npOf(it[0].label).toLocaleString()} clientes no pagaron en domi`,
           label: ctx => { const l = flowLabels[ctx.dataIndex], fn = SEG[ctx.datasetIndex].fn;
@@ -5576,17 +5576,24 @@ function buildRolloverDiagCharts() {
             const pc = l==='Prom Ene–Jun' ? sumOf(preF1, fn)/preN*100 : fn(D[l])/D[l].np*100;
             return ` ${ctx.dataset.label}: ${Math.round(n).toLocaleString()} clientes (${pc.toFixed(1)}%)`; } } } },
       scales:{ x:{ stacked:true, grid:{display:false}, ticks:{color:'#1F1F1F', font: c => ({size:11, weight: c.index===0 ? '700' : '400'})} },
-        y:{ stacked:true, min:0, max: pctMode ? 100 : undefined, suggestedMax: pctMode ? undefined : 1400, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#888780', callback: v => pctMode ? v+'%' : v.toLocaleString()},
+        y:{ stacked:true, min:0, max: pctMode ? 100 : undefined, suggestedMax: pctMode ? undefined : (flowLabels.length > 12 ? 1600 : 1400), grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#888780', callback: v => pctMode ? v+'%' : v.toLocaleString()},
           title:{display:true,text: pctMode ? '% de los clientes que no pagaron en domi' : 'clientes que no pagaron en domi',color:'#888780',font:{size:11}} } } },
-    plugins:[shade(flowLabels), { id:'flowVals', afterDatasetsDraw(ch){ const c = ch.ctx; c.save(); c.textAlign='center'; c.textBaseline='middle';
+    plugins:[{ id:'flowCrowd', beforeDraw(ch){ const b0 = ch.getDatasetMeta(0).data[0]; ch.$crowd = flowLabels.length > 12; ch.$shadeOff = ch.$crowd ? (pctMode ? 32 : 6) : 6; } }, shade(flowLabels), { id:'flowVals', afterDatasetsDraw(ch){ const c = ch.ctx; c.save(); c.textAlign='center'; c.textBaseline='middle';
+      const crowd = ch.$crowd, top = ch.getDatasetMeta(ch.data.datasets.length-1).data;
+      const fit = (txt, w, max) => { let fs = max; c.font = `bold ${fs}px -apple-system,sans-serif`; while (fs > 7 && c.measureText(txt).width > w - 3) { fs -= 0.5; c.font = `bold ${fs}px -apple-system,sans-serif`; } return fs; };
       ch.data.datasets.forEach((ds,k) => { ch.getDatasetMeta(k).data.forEach((bar,i) => { const v = ds.data[i]; if (v==null) return;
-        if (k===2) { c.save(); c.font='bold 10px -apple-system,sans-serif'; c.fillStyle='#3B3ACA'; c.textAlign='left'; c.fillText(fmtV(v), bar.x + bar.width/2 + 3, (bar.y + bar.base)/2); c.restore(); return; }
-        c.font = 'bold 11px -apple-system,sans-serif'; c.fillStyle = k===1 ? '#0F5C44' : '#fff';
-        if (Math.abs(bar.base - bar.y) < 13) return;
+        if (k===2) { c.save(); c.fillStyle='#3B3ACA';
+          if (crowd) { const tb = top[i]; c.textBaseline='bottom'; fit(fmtV(v), bar.width + 10, 10);
+            c.fillText(fmtV(v), bar.x, pctMode ? ch.chartArea.top - 17 : tb.y - 30); }
+          else { c.font='bold 10px -apple-system,sans-serif'; c.textAlign='left'; c.fillText(fmtV(v), bar.x + bar.width/2 + 3, (bar.y + bar.base)/2); }
+          c.restore(); return; }
+        if (crowd && k===3) { c.save(); c.fillStyle='#D85A30'; c.textBaseline='bottom'; fit(fmtV(v), bar.width + 10, 10);
+          c.fillText(fmtV(v), bar.x, pctMode ? ch.chartArea.top - 4 : top[i].y - 17); c.restore(); return; }
+        const fs = fit(fmtV(v), bar.width, crowd ? 10 : 11); c.fillStyle = k===1 ? '#0F5C44' : '#fff';
+        const hh = Math.abs(bar.base - bar.y); if (hh < 8) return; if (hh < fs + 2) c.font = `bold ${Math.max(7, hh - 1)}px -apple-system,sans-serif`;
         c.fillText(fmtV(v), bar.x, (bar.y + bar.base)/2); }); });
-      if (!pctMode) { const top = ch.getDatasetMeta(ch.data.datasets.length-1).data;
-        top.forEach((bar,i) => { const l = flowLabels[i]; if (l !== 'Prom Ene–Jun' && D[l].f2 == null) return;
-          c.font='bold 11px -apple-system,sans-serif'; c.fillStyle='#1F1F1F'; c.textBaseline='bottom'; c.fillText(Math.round(npOf(l)).toLocaleString(), bar.x, bar.y-3); }); }
+      if (!pctMode) { top.forEach((bar,i) => { const l = flowLabels[i]; if (l !== 'Prom Ene–Jun' && D[l].f2 == null) return;
+          const t = Math.round(npOf(l)).toLocaleString(); fit(t, bar.width + 10, 11); c.fillStyle='#1F1F1F'; c.textBaseline='bottom'; c.fillText(t, bar.x, bar.y-3); }); }
       c.restore(); } }]
   });
   };
@@ -5675,7 +5682,7 @@ function buildRolloverDiagCharts() {
         tooltip:{...tip, callbacks:{ label: ctx => { const o = qRec(qs[ctx.datasetIndex], BANDS[ctx.dataIndex].k); return ` ${qs[ctx.datasetIndex]}: ${o.r} de ${o.f2} se recuperaron en Fase 2 (${o.pct.toFixed(1)}%)`; } } } },
       scales:{ x:{grid:{display:false},ticks:{color:'#1F1F1F',font:{size:12,weight:'600'}}}, y:{min:60,max:95,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',callback:v=>v+'%'},title:{display:true,text:'% que se recupera en Fase 2',color:'#888780',font:{size:11}}} } },
     plugins:[{ id:'bandF2Vals', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.font='bold 11px -apple-system,sans-serif'; c.textAlign='center'; c.fillStyle='#1F1F1F';
-      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ const o = CKD[csK[i]][GRP[k].k]; const ast = (diagColkM!=='f1' && o && o.partial) ? '*' : ''; c.fillText(ds.data[i].toFixed(1)+'%'+ast, bar.x, bar.y-6); }); }); c.restore(); } }]
+      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ c.fillText(ds.data[i].toFixed(1)+'%', bar.x, bar.y-6); }); }); c.restore(); } }]
   });
   if (!Q['Jul–Sep'].length || !Q['Ene–Mar'].length) { document.getElementById('diagBandF2Take').innerHTML = '<strong>Para contarlo:</strong> faltan datos de Jul–Sep o Ene–Mar para el filtro elegido.'; } else {
   const dB = b => qRec('Jul–Sep',b).pct - qRec('Ene–Mar',b).pct;
@@ -5693,7 +5700,7 @@ function buildRolloverDiagCharts() {
         tooltip:{...tip, callbacks:{ label: ctx => { const o = qRec1(qs[ctx.datasetIndex], BANDS[ctx.dataIndex].k); return ` ${qs[ctx.datasetIndex]}: ${o.r} de ${o.n} se recuperaron en Fase 1 (${o.pct.toFixed(1)}%)`; } } } },
       scales:{ x:{grid:{display:false},ticks:{color:'#1F1F1F',font:{size:12,weight:'600'}}}, y:{min:30,max:70,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',callback:v=>v+'%'},title:{display:true,text:'% que se recupera en Fase 1',color:'#888780',font:{size:11}}} } },
     plugins:[{ id:'bandF1Vals', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.font='bold 11px -apple-system,sans-serif'; c.textAlign='center'; c.fillStyle='#1F1F1F';
-      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ const o = CKD[csK[i]][GRP[k].k]; const ast = (diagColkM!=='f1' && o && o.partial) ? '*' : ''; c.fillText(ds.data[i].toFixed(1)+'%'+ast, bar.x, bar.y-6); }); }); c.restore(); } }]
+      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ c.fillText(ds.data[i].toFixed(1)+'%', bar.x, bar.y-6); }); }); c.restore(); } }]
   });
   if (!Q['Jul–Sep'].length || !Q['Abr–Jun'].length) { document.getElementById('diagBandF1Take').innerHTML = '<strong>Para contarlo:</strong> faltan datos de Jul–Sep o Abr–Jun para el filtro elegido.'; } else {
   const d1 = b => qRec1('Jul–Sep',b).pct - qRec1('Abr–Jun',b).pct;
