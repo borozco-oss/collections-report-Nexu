@@ -85,6 +85,24 @@ body{
 .bkt-vals tr.sub-row td .sub-note{font-weight:400;color:#888780;margin-left:4px;}
 .bkt-vals .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
 
+/* MÓDULO DIAGNÓSTICO ROLLOVER CORTE 15 (27-oct-2026) */
+.diag-story{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 18px;}
+.diag-card{border-radius:8px;padding:14px 16px;background:#F7F7FC;border-left:3px solid #888780;}
+.diag-card .dc-step{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#888780;margin:0 0 6px;}
+.diag-card .dc-big{font-size:24px;font-weight:700;margin:0;line-height:1.1;}
+.diag-card .dc-vs{font-size:12px;color:#5F5E5A;margin:4px 0 6px;}
+.diag-card .dc-txt{font-size:12.5px;color:#1F1F1F;margin:0;line-height:1.45;}
+.diag-card.ok{border-left-color:#1D9E75;} .diag-card.ok .dc-big{color:#1D9E75;}
+.diag-card.bad{border-left-color:#D85A30;} .diag-card.bad .dc-big{color:#D85A30;}
+.diag-grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.diag-grid2>div,.diag-story>div{min-width:0;}
+#rolloverDiagSection .diag-wrap{min-width:0;width:100%;}
+.diag-h{font-size:14px;font-weight:700;margin:0 0 2px;color:#1F1F1F;}
+.diag-sub{font-size:12px;color:#5F5E5A;margin:0 0 8px;}
+.diag-wrap{position:relative;height:300px;}
+.diag-take{font-size:12.5px;color:#1F1F1F;background:#FFF8E6;border-left:3px solid #EF9F27;border-radius:6px;padding:9px 12px;margin:10px 0 0;}
+@media (max-width:760px){.diag-story,.diag-grid2{grid-template-columns:1fr;}}
+
 /* MÓDULO CRECIMIENTO DE CARTERA */
 .crec-controls{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;margin:0 0 18px;padding:14px 16px;background:#F7F7FC;border-radius:8px;}
 .crec-field{display:flex;flex-direction:column;gap:5px;}
@@ -962,6 +980,104 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
     </div>
     <div class="chart-wrap-md"><canvas id="rolloverTrendChart"></canvas></div>
     <p style="font-size:11px;color:#888780;margin:6px 0 0;">Verde sólida: cortes del día 1. Azul punteada: cortes del día 15. Línea punteada gris: promedio global. <strong>Dación</strong> = cliente en estatus "En Consigna" o "Resguardo/En Resguardo" (vehículo ya recuperado, camino a dación en pago) — un caso muy distinto operativamente a alguien que simplemente no pagó y sigue activo.</p>
+  </div>
+
+  <!-- DIAGNÓSTICO ROLLOVER CORTE 15 (27-oct-2026) -->
+  <div class="section" style="margin-bottom:16px;" id="rolloverDiagSection">
+    <span style="font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:#3B3ACA;background:#EEEEFB;border:0.5px solid #3B3ACA;border-radius:4px;padding:2px 8px;">Diagnóstico · <span id="diagScope">Corte 15</span></span>
+    <h2 style="margin:10px 0 4px;">¿Dónde se pierden las cuentas que rolan?</h2>
+    <p class="subtitle" style="margin:0;">El % de BKT1 que no paga en domi no cambió (~16%). Lo que cambió es qué pasa <em>después</em> de la domi: en julio y agosto falló Fase 1 (y Fase 2 recibió más cuentas); en septiembre Fase 1 ya se recuperó, pero falló Fase 2. Y las cuentas que se dejan rodar son las de renta baja.</p>
+
+    <div class="diag-story" id="diagStory"></div>
+
+    <p class="diag-h">¿Qué pasó con los clientes que no pagaron en domi?</p>
+    <p class="diag-sub">Cada barra es toda la cartera BKT1 de ese corte que no pagó en domi y entró a gestión, y cómo terminó: se recuperó en Fase 1, se recuperó en Fase 2 o roló a Bkt 2 (corte 1: F1 = día 1 al 14, F2 = día 15 a fin de mes; corte 15: F1 = día 15 a fin de mes, F2 = día 1 al 14 del mes siguiente). Arriba, en %, para comparar cortes de distinto tamaño; abajo, los mismos datos en número de clientes (el % de arriba × el total del corte da el número de abajo). En julio y agosto se encoge el verde fuerte (falla Fase 1); en septiembre el verde fuerte regresa, pero se encoge el verde claro y crece el rojo (falla Fase 2).</p>
+    <p class="diag-h" style="font-size:13px;margin-top:6px;">En % del total de clientes que no pagaron en domi</p>
+    <div class="diag-wrap" style="height:340px;"><canvas id="diagFlowPctChart"></canvas></div>
+    <p class="diag-h" style="font-size:13px;margin-top:18px;">En número de clientes</p>
+    <div class="diag-wrap" style="height:360px;"><canvas id="diagFlowChart"></canvas></div>
+    <hr class="divider" style="margin:18px 0;">
+    <div class="diag-grid2">
+      <div>
+        <p class="diag-h">① Fase 1 · % de clientes que se recuperan en Fase 1</p>
+        <p class="diag-sub">Fase 1 = día 1 al 14 (corte 1) o día 15 a fin de mes (corte 15). Más alto es mejor. Barras grises = cuentas que llegan a F1 (no pagaron en domi). Julio y agosto caen con 1 gestor + Colektia; septiembre regresa a su nivel.</p>
+        <div class="diag-wrap"><canvas id="diagF1Chart"></canvas></div>
+      </div>
+      <div>
+        <p class="diag-h">② Fase 2 · % de clientes que se recuperan en Fase 2</p>
+        <p class="diag-sub">Fase 2 = día 15 a fin de mes (corte 1) o día 1 al 14 del mes siguiente (corte 15). Más alto es mejor. Barras grises = cuentas que llegan a F2: en septiembre llegó un volumen similar al normal y se recuperó menos.</p>
+        <div class="diag-wrap"><canvas id="diagF2Chart"></canvas></div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#888780;margin:6px 0 0;">No pagador = BKT1 con "Sin pago" al terminar el último intento de domi. Recuperado en F1 = quedó al corriente con FECHA PAGO entre el día 15 y el último día del mes (Fase 1 del corte 15); el resto pasa a F2, que va del día 1 al 14 del mes siguiente. Corte 1 (cuando se agregue): F1 = día 1 al 14, F2 = día 15 a fin de mes. <strong>15-abr:</strong> la FECHA PAGO venía como número de serie de Excel; se convirtió a fecha (un pago con año 2025 se corrigió a 2026). <strong>15-ago:</strong> la FECHA PAGO se validó contra el portal de Nexu (último pago del periodo 15-ago a 14-sep, hora CDMX, 27-oct): 285 de 763 fechas estaban mal, 158 de ellas con 14-sep por default. En todos los cortes, los clientes que Finanzas saca del Cierre como "Pagos identificados vía SPEI/STP" (pagaron por transferencia al inicio del periodo; de 57 a 403 por corte) cuentan como recuperados en F1. Línea punteada = promedio Ene–Jun. Zona sombreada = Jul–Sep.</p>
+    <p class="diag-h" style="margin-top:22px;">Fase 1 · cuentas por gestor vs % que se recupera</p>
+    <p class="diag-sub">Barras = cuentas que llegan a Fase 1 entre el número de gestores de BKT1 Fase 1 en ese corte (número arriba). Línea = % que se recupera en Fase 1. Zona morada = Colektia operando los primeros días de Fase 1.</p>
+    <div class="diag-wrap" style="height:320px;"><canvas id="diagF1HcChart"></canvas></div>
+    <p class="diag-take" id="diagF1HcTake"></p>
+    <p style="font-size:11px;color:#888780;margin:6px 0 0;">Gestores BKT1 F1 (dato de Baruch, 27-oct-2026): ene Edwin y Alberto; feb–abr Edwin, Alberto y Karina; may Edwin y Alberto; del corte 15-jun al 01-ago solo Alberto; en el 15-ago solo Edwin (Alberto pasa a Fase 2); desde el 01-sep Alberto y Edwin. Colektia: cortes de julio y agosto.</p>
+    <p class="diag-h" style="margin-top:22px;">¿Cuánto pesó Colektia? · Colektia vs Control vs resto de la cartera</p>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <p class="diag-sub" style="margin:0;max-width:760px;">Solo cortes de julio y agosto. Colektia y Control son el mismo segmento elegible partido al azar; "Resto" son los demás no pagadores, que trabajó el gestor interno. Compara Colektia contra Control: es la comparación justa.</p>
+      <div class="crec-seg" id="diagColkM"><button data-m="f1" class="on">% recuperado en F1</button><button data-m="roll">% que rola a Bkt 2</button></div>
+    </div>
+    <div class="diag-wrap" style="height:300px;margin-top:10px;"><canvas id="diagColkChart"></canvas></div>
+    <p class="diag-take" id="diagColkTake"></p>
+    <p style="font-size:11px;color:#888780;margin:6px 0 0;">Fuente: archivos "Asignación Colektia-Nexu" de 1-jul, 15-jul, 1-ago y 15-ago cruzados por VIN con los no pagadores de domi de cada corte (Resultados + Cierres). Fase 1 y rollover con la misma regla que el resto del diagnóstico.</p>
+    <p class="diag-h" style="margin-top:22px;">Fase 2 · cuentas por persona vs % que se recupera</p>
+    <p class="diag-sub">Barras = cuentas que llegan a Fase 2 entre las personas de BKT1 Fase 2 en las fechas en que corre esa Fase 2 (corte 1: día 15 a fin de mes; corte 15: día 1 al 14 del mes siguiente). Línea = % que se recupera en Fase 2. Pasa el cursor para ver quiénes estaban. "s/d" = sin asignación confirmada.</p>
+    <div class="diag-wrap" style="height:320px;"><canvas id="diagF2HcChart"></canvas></div>
+    <p class="diag-take" id="diagF2HcTake"></p>
+    <p style="font-size:11px;color:#888780;margin:6px 0 0;">Personas en BKT1 F2 (tablas de asignación de Heidi y dato de Baruch, 27-oct-2026): abr Gloria, Citlali, Bianca y Carlos; del 15-jun al 31-ago 5 personas (jun: Vanessa, Edwin, Carlos, Bianca, Heidi · jul: Viridiana, Edwin, Carlos, Bianca, Heidi · 1–14 ago: Viridiana, Edwin, Gloria, Bianca, Heidi · 15–31 ago: Viridiana, Alberto, Gloria, Bianca, Heidi); desde el 1-sep 4 personas (Gloria, Heidi, Bianca, Viridiana). Ene–mar y may: pendiente.</p>
+
+    <hr class="divider">
+
+    <p class="diag-h">③ ¿Quiénes son los clientes que rolan? · por tamaño de renta</p>
+    <p class="diag-sub">Ya vimos que rolan más clientes. Cada barra son los clientes que rolaron a Bkt 2 en ese corte, separados por su renta mensual. En julio el salto fue en rentas mayores a $13k (Fase 1 con 1 gestor + Colektia). Desde agosto, lo que crece es la renta menor a $13k (rojos más fuertes) y los de renta mayor a $13k regresaron a su nivel.</p>
+    <div class="diag-wrap" style="height:330px;"><canvas id="diagRentaChart"></canvas></div>
+    <p class="diag-h" style="font-size:13px;margin-top:18px;">¿Cuántos rolaron de más en Jul–Sep? · reales vs esperados con la tasa de Ene–Jun</p>
+    <p class="diag-sub">Esperados = no pagadores de cada renta en Jul–Sep × la tasa de rollover que tenía esa renta en Ene–Jun. La diferencia son los clientes que rolaron "de más".</p>
+    <div class="diag-wrap" style="height:260px;"><canvas id="diagRentaExtraChart"></canvas></div>
+    <p class="diag-take" id="diagRentaTake"></p>
+    <p class="diag-h" style="font-size:13px;margin-top:22px;">En Fase 1, ¿qué tamaño de cuentas se está recuperando? · % que se recupera de lo que llega a F1, por trimestre</p>
+    <p class="diag-sub">Fase 1 = día 1 al 14 (corte 1) o día 15 a fin de mes (corte 15). Si la caída fuera por priorizar cuentas grandes, aquí también bajarían más las rentas bajas.</p>
+    <div class="diag-wrap" style="height:280px;"><canvas id="diagBandF1Chart"></canvas></div>
+    <p class="diag-take" id="diagBandF1Take"></p>
+    <p class="diag-h" style="font-size:13px;margin-top:22px;">En Fase 2, ¿qué tamaño de cuentas se está recuperando? · % que se recupera de lo que llega a F2, por trimestre</p>
+    <p class="diag-sub">Fase 2 = día 15 a fin de mes (corte 1) o día 1 al 14 del mes siguiente (corte 15). Si el equipo está saturado y prioriza las cuentas grandes, la recuperación de rentas altas se sostiene y la de rentas bajas cae.</p>
+    <div class="diag-wrap" style="height:280px;"><canvas id="diagBandF2Chart"></canvas></div>
+    <p class="diag-take" id="diagBandF2Take"></p>
+
+    <hr class="divider">
+
+    <p class="diag-h">④ Rollover por clientes vs por monto</p>
+    <p class="diag-sub">Si se dejan rodar las cuentas chicas, el monto se protege pero el número de clientes no. Por eso el rollover por monto casi regresó a su nivel y el de clientes sigue arriba.</p>
+    <div class="diag-wrap"><canvas id="diagMontoChart"></canvas></div>
+    <p style="font-size:11px;color:#888780;margin:6px 0 0;">Rollover sin dación. Por clientes = clientes que rolan ÷ cartera BKT1. Por monto = renta mensual de los que rolan ÷ renta esperada de la cartera BKT1. Respeta el filtro de cortes de arriba (Todos / Solo día 1 / Solo día 15).</p>
+
+    <hr class="divider">
+    <p class="diag-h">⑤ Fase 2 día por día · ¿en qué momento se pierde la recuperación?</p>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <p class="diag-sub" style="margin:0;max-width:760px;">% acumulado de las cuentas que llegaron a Fase 2 y ya se recuperaron, por día de la fase. Si la caída fuera pareja, las curvas irían separadas desde el día 1; si es por saturación o por quedarse sin herramientas al cierre de quincena, se separan en la segunda semana.</p>
+      <div class="crec-seg" id="diagCurveBand"><button data-b="all" class="on">Todas</button><button data-b="bajo">Renta &lt; $9k</button><button data-b="medio">$9k–$13k</button><button data-b="alto">Renta &gt; $13k</button></div>
+    </div>
+    <div class="diag-wrap" style="height:320px;margin-top:10px;"><canvas id="diagCurveChart"></canvas></div>
+    <p class="diag-take" id="diagCurveTake"></p>
+
+    <hr class="divider">
+    <p class="diag-h">⑥ ¿Qué pasa con los clientes que rolan? · dónde están un mes después</p>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <p class="diag-sub" style="margin:0;max-width:760px;">Cada barra son los clientes que rolaron a Bkt 2 en ese corte, y dónde aparecen en el Cierre del mismo corte uno o dos meses después. "Regresó a Bkt 1" = pagó lo suficiente para bajar de bucket; "Ya no aparece" = salió de cobranza (normalmente porque se puso al corriente).</p>
+      <div class="crec-seg" id="diagDestH"><button data-h="30" class="on">A 30 días</button><button data-h="60">A 60 días</button></div>
+    </div>
+    <div class="diag-wrap" style="height:340px;margin-top:10px;"><canvas id="diagDestChart"></canvas></div>
+    <p class="diag-take" id="diagDestTake"></p>
+
+    <hr class="divider">
+    <p class="diag-h">⑦ Carga del equipo por quincena · todas las cuentas en gestión al mismo tiempo</p>
+    <p class="diag-sub">En cada quincena se trabajan a la vez la Fase 1 de un corte, la Fase 2 del otro y los Bkt 2 y Bkt 3 de ambos. La línea es el % que se recupera en la Fase 2 que corre en esa quincena. La línea sube y baja porque la Fase 2 del corte 1 (15 a fin de mes) siempre recupera más que la del corte 15 (1 al 14); hay que comparar quincenas del mismo tipo. Esta gráfica junta los dos cortes, por eso no cambia con el filtro.</p>
+    <div class="diag-wrap" style="height:360px;"><canvas id="diagLoadChart"></canvas></div>
+    <p class="diag-take" id="diagLoadTake"></p>
+    <p style="font-size:11px;color:#888780;margin:6px 0 0;">Cuentas = clientes BKT1 que no pagaron en domi (F1), los que pasaron a Fase 2 (F2) y las entradas a Bkt 2 y Bkt 3 de los Cierres de ambos cortes activos. No incluye Bkt 4+. 1–14 oct es estimado: la Fase 1 del 01-oct sale del Resultado 1 Oct y sus Bkt 2/3 del Cierre 01-sep. Es carga total del equipo, no por gestor: falta la asignación por gestor para llevarla a "cuentas por persona".</p>
   </div>
 
   <!-- Outcomes desagregados -->
@@ -5239,7 +5355,458 @@ function buildIntentoProgresionChart() {
 
 let rollMode = 'total'; // 'total' | 'sinDacion'
 
+// ── DIAGNÓSTICO ROLLOVER CORTE 15 (27-oct-2026) ─────────────────────────────
+// Fuente: Cierre de moratorios (Data + Análisis) + Resultado de domiciliación, cortes 15.
+// np = no pagadores BKT1 en domi presentes en el Cierre; curF1 = recuperados en F1 (FECHA PAGO entre día 15 y fin de mes; corte 1: día 1-14);
+// f2 = pasan a Fase 2 (np - curF1 - dación); rollF2 = rollover sin dación (todos vienen de F2).
+// bajo/medio/alto = no pagadores por renta (<$9k, $9-13k, >$13k) y cuántos rolaron (sin dación).
+// cnt_pct / amt_pct = rollover sin dación por clientes / por renta mensual. 15-abr: FECHA PAGO en serial Excel, convertida (27-oct).
+// 15-ago: FECHA PAGO validada en portal team.nexu.mx (27-oct); np incluye los 403 pagos SPEI pre-domi que Finanzas sacó del Cierre, contados como recuperados en F1.
+// Corte 1 (día 1): Fase 1 = día 1 al 14, Fase 2 = día 15 a fin de mes. Fuente: Cierres + Resultados corte 1 (proyecto Collections).
+const rolloverDiagCurves = {"01-ene": {"days": 17, "all": {"n": 416, "cum": [66, 107, 120, 125, 157, 211, 252, 276, 301, 309, 310, 324, 330, 348, 354, 369, 385]}, "bajo": {"n": 126, "cum": [20, 35, 39, 39, 48, 57, 72, 80, 90, 92, 92, 98, 100, 105, 108, 112, 117]}, "medio": {"n": 150, "cum": [19, 37, 41, 46, 54, 74, 85, 95, 102, 107, 107, 113, 115, 125, 127, 133, 139]}, "alto": {"n": 140, "cum": [27, 35, 40, 40, 55, 80, 95, 101, 109, 110, 111, 113, 115, 118, 119, 124, 129]}}, "15-ene": {"days": 14, "all": {"n": 440, "cum": [18, 28, 74, 134, 191, 231, 247, 251, 265, 291, 315, 332, 348, 368]}, "bajo": {"n": 103, "cum": [7, 8, 19, 34, 46, 54, 56, 57, 57, 65, 68, 73, 78, 85]}, "medio": {"n": 156, "cum": [4, 9, 21, 40, 58, 78, 85, 87, 94, 104, 114, 118, 122, 130]}, "alto": {"n": 181, "cum": [7, 11, 34, 60, 87, 99, 106, 107, 114, 122, 133, 141, 148, 153]}}, "01-feb": {"days": 14, "all": {"n": 374, "cum": [9, 43, 99, 135, 161, 198, 208, 209, 222, 244, 272, 290, 322, 345]}, "bajo": {"n": 102, "cum": [2, 14, 27, 35, 44, 52, 54, 54, 60, 64, 72, 77, 86, 94]}, "medio": {"n": 124, "cum": [5, 13, 29, 42, 48, 56, 60, 60, 64, 76, 90, 95, 106, 113]}, "alto": {"n": 148, "cum": [2, 16, 43, 58, 69, 90, 94, 95, 98, 104, 110, 118, 130, 138]}}, "15-feb": {"days": 14, "all": {"n": 479, "cum": [17, 80, 134, 174, 219, 255, 276, 278, 301, 334, 351, 374, 398, 415]}, "bajo": {"n": 118, "cum": [7, 22, 32, 44, 55, 65, 73, 74, 80, 88, 93, 97, 100, 108]}, "medio": {"n": 173, "cum": [9, 29, 51, 62, 73, 86, 91, 92, 102, 113, 120, 132, 141, 146]}, "alto": {"n": 188, "cum": [1, 29, 51, 68, 91, 104, 112, 112, 119, 133, 138, 145, 157, 161]}}, "01-mar": {"days": 17, "all": {"n": 361, "cum": [8, 20, 63, 113, 154, 185, 193, 200, 221, 235, 253, 268, 278, 282, 282, 289, 309]}, "bajo": {"n": 95, "cum": [5, 7, 19, 28, 39, 47, 47, 50, 57, 60, 64, 67, 71, 73, 73, 73, 82]}, "medio": {"n": 129, "cum": [0, 4, 21, 46, 58, 68, 73, 75, 84, 89, 98, 104, 106, 106, 106, 108, 111]}, "alto": {"n": 137, "cum": [3, 9, 23, 39, 57, 70, 73, 75, 80, 86, 91, 97, 101, 103, 103, 108, 116]}}, "15-mar": {"days": 14, "all": {"n": 423, "cum": [75, 106, 121, 125, 127, 144, 183, 220, 262, 288, 301, 302, 312, 358]}, "bajo": {"n": 123, "cum": [34, 41, 43, 45, 46, 53, 58, 69, 76, 84, 89, 90, 93, 107]}, "medio": {"n": 148, "cum": [24, 37, 45, 46, 46, 52, 69, 81, 99, 107, 112, 112, 114, 130]}, "alto": {"n": 152, "cum": [17, 28, 33, 34, 35, 39, 56, 70, 87, 97, 100, 100, 105, 121]}}, "01-abr": {"days": 16, "all": {"n": 418, "cum": [73, 131, 182, 202, 205, 232, 258, 280, 300, 315, 326, 329, 334, 339, 347, 374]}, "bajo": {"n": 128, "cum": [21, 40, 52, 57, 57, 65, 72, 80, 86, 89, 91, 92, 94, 94, 100, 111]}, "medio": {"n": 153, "cum": [31, 55, 77, 84, 84, 95, 103, 114, 118, 124, 127, 129, 131, 134, 135, 139]}, "alto": {"n": 137, "cum": [21, 36, 53, 61, 64, 72, 83, 86, 96, 102, 108, 108, 109, 111, 112, 124]}}, "15-abr": {"days": 14, "all": {"n": 456, "cum": [66, 86, 97, 128, 185, 219, 236, 278, 297, 303, 328, 338, 347, 391]}, "bajo": {"n": 109, "cum": [19, 28, 28, 43, 53, 58, 62, 75, 79, 80, 86, 87, 89, 99]}, "medio": {"n": 164, "cum": [27, 32, 41, 50, 80, 94, 100, 107, 110, 111, 119, 125, 129, 139]}, "alto": {"n": 183, "cum": [20, 26, 28, 35, 52, 67, 74, 96, 108, 112, 123, 126, 129, 153]}}, "01-may": {"days": 17, "all": {"n": 439, "cum": [79, 112, 122, 155, 190, 221, 249, 272, 283, 291, 304, 325, 348, 355, 374, 389, 393]}, "bajo": {"n": 131, "cum": [29, 39, 41, 53, 60, 71, 82, 89, 92, 93, 96, 104, 112, 113, 119, 122, 124]}, "medio": {"n": 161, "cum": [28, 40, 46, 54, 66, 76, 89, 98, 104, 107, 112, 117, 124, 128, 134, 139, 140]}, "alto": {"n": 147, "cum": [22, 33, 35, 48, 64, 74, 78, 85, 87, 91, 96, 104, 112, 114, 121, 128, 129]}}, "15-may": {"days": 14, "all": {"n": 365, "cum": [47, 93, 132, 165, 192, 198, 202, 219, 237, 249, 257, 266, 278, 294]}, "bajo": {"n": 87, "cum": [6, 16, 21, 28, 33, 35, 37, 43, 49, 54, 57, 59, 61, 66]}, "medio": {"n": 129, "cum": [18, 35, 49, 62, 71, 71, 72, 78, 84, 88, 91, 94, 98, 103]}, "alto": {"n": 149, "cum": [23, 42, 62, 75, 88, 92, 93, 98, 104, 107, 109, 113, 119, 125]}}, "01-jun": {"days": 16, "all": {"n": 435, "cum": [47, 108, 145, 163, 196, 207, 211, 231, 257, 285, 303, 323, 333, 335, 358, 388]}, "bajo": {"n": 110, "cum": [14, 24, 33, 34, 41, 44, 46, 52, 63, 73, 75, 82, 84, 84, 89, 99]}, "medio": {"n": 164, "cum": [18, 50, 64, 73, 82, 85, 85, 92, 99, 109, 116, 124, 131, 132, 138, 146]}, "alto": {"n": 161, "cum": [15, 34, 48, 56, 73, 78, 80, 87, 95, 103, 112, 117, 118, 119, 131, 143]}}, "15-jun": {"days": 14, "all": {"n": 494, "cum": [49, 135, 204, 223, 225, 247, 280, 301, 324, 343, 348, 351, 374, 412]}, "bajo": {"n": 109, "cum": [11, 29, 46, 51, 51, 55, 62, 69, 73, 79, 81, 81, 88, 97]}, "medio": {"n": 175, "cum": [18, 48, 73, 83, 83, 90, 99, 107, 114, 121, 122, 125, 130, 142]}, "alto": {"n": 210, "cum": [20, 58, 85, 89, 91, 102, 119, 125, 137, 143, 145, 145, 156, 173]}}, "01-jul": {"days": 17, "all": {"n": 542, "cum": [66, 139, 175, 192, 197, 227, 279, 303, 335, 357, 367, 369, 391, 413, 428, 454, 485]}, "bajo": {"n": 159, "cum": [28, 50, 63, 68, 69, 72, 85, 89, 102, 110, 113, 113, 118, 125, 129, 135, 143]}, "medio": {"n": 204, "cum": [22, 48, 62, 69, 70, 85, 106, 115, 123, 130, 132, 134, 142, 152, 157, 167, 180]}, "alto": {"n": 179, "cum": [16, 41, 50, 55, 58, 70, 88, 99, 110, 117, 122, 122, 131, 136, 142, 152, 162]}}, "15-jul": {"days": 14, "all": {"n": 514, "cum": [35, 47, 88, 139, 179, 202, 235, 247, 251, 271, 295, 311, 359, 419]}, "bajo": {"n": 108, "cum": [4, 8, 15, 29, 37, 40, 47, 50, 50, 59, 63, 65, 70, 88]}, "medio": {"n": 180, "cum": [12, 17, 30, 53, 70, 75, 89, 93, 94, 101, 112, 116, 135, 154]}, "alto": {"n": 226, "cum": [19, 22, 43, 57, 72, 87, 99, 104, 107, 111, 120, 130, 154, 177]}}, "01-ago": {"days": 17, "all": {"n": 570, "cum": [74, 96, 139, 191, 236, 266, 289, 302, 304, 321, 341, 360, 372, 401, 416, 429, 482]}, "bajo": {"n": 159, "cum": [15, 25, 37, 52, 60, 66, 74, 79, 79, 84, 93, 98, 101, 112, 115, 117, 132]}, "medio": {"n": 217, "cum": [32, 39, 55, 77, 96, 110, 116, 119, 120, 126, 133, 138, 141, 151, 156, 163, 182]}, "alto": {"n": 194, "cum": [27, 32, 47, 62, 80, 90, 99, 104, 105, 111, 115, 124, 130, 138, 145, 149, 168]}}, "15-ago": {"days": 14, "all": {"n": 572, "cum": [66, 138, 208, 263, 277, 284, 313, 337, 363, 381, 403, 422, 429, 477]}, "bajo": {"n": 141, "cum": [15, 30, 50, 63, 66, 69, 77, 81, 91, 95, 96, 102, 103, 113]}, "medio": {"n": 209, "cum": [28, 56, 81, 100, 106, 109, 114, 123, 128, 133, 143, 151, 154, 171]}, "alto": {"n": 222, "cum": [23, 52, 77, 100, 105, 106, 122, 133, 144, 153, 164, 169, 172, 193]}}, "01-sep": {"days": 16, "all": {"n": 451, "cum": [45, 82, 116, 154, 171, 181, 204, 228, 267, 289, 312, 321, 323, 334, 354, 388]}, "bajo": {"n": 130, "cum": [13, 30, 36, 45, 48, 51, 56, 65, 74, 83, 87, 89, 90, 92, 98, 110]}, "medio": {"n": 171, "cum": [19, 31, 47, 62, 70, 73, 79, 86, 103, 108, 117, 121, 122, 127, 132, 144]}, "alto": {"n": 150, "cum": [13, 21, 33, 47, 53, 57, 69, 77, 90, 98, 108, 111, 111, 115, 124, 134]}}, "15-sep": {"days": 14, "all": {"n": 471, "cum": [68, 105, 118, 121, 163, 196, 232, 254, 270, 277, 280, 297, 315, 376]}, "bajo": {"n": 103, "cum": [12, 23, 24, 24, 30, 36, 45, 47, 53, 53, 53, 58, 64, 76]}, "medio": {"n": 191, "cum": [26, 35, 40, 43, 65, 80, 92, 101, 105, 110, 113, 122, 127, 150]}, "alto": {"n": 177, "cum": [30, 47, 54, 54, 68, 80, 95, 106, 112, 114, 114, 117, 124, 150]}}};
+const rolloverDiagDest = {"01-ene": {"30": {"recupero": 9, "bkt2": 11, "bkt3plus": 11, "dacion": 0, "sin_dato": 0, "deuda": 372065, "n": 31}, "60": {"recupero": 5, "bkt2": 8, "bkt3plus": 13, "dacion": 0, "sin_dato": 5, "deuda": 498674, "n": 31}}, "15-ene": {"30": {"recupero": 20, "bkt2": 21, "bkt3plus": 32, "dacion": 1, "sin_dato": 0, "deuda": 1131364, "n": 74}, "60": {"recupero": 19, "bkt2": 14, "bkt3plus": 36, "dacion": 0, "sin_dato": 5, "deuda": 1329200, "n": 74}}, "01-feb": {"30": {"recupero": 14, "bkt2": 6, "bkt3plus": 9, "dacion": 0, "sin_dato": 0, "deuda": 370171, "n": 29}, "60": {"recupero": 8, "bkt2": 8, "bkt3plus": 7, "dacion": 2, "sin_dato": 4, "deuda": 472524, "n": 29}}, "15-feb": {"30": {"recupero": 16, "bkt2": 13, "bkt3plus": 22, "dacion": 7, "sin_dato": 0, "deuda": 1005114, "n": 58}, "60": {"recupero": 11, "bkt2": 9, "bkt3plus": 25, "dacion": 0, "sin_dato": 13, "deuda": 1096339, "n": 58}}, "01-mar": {"30": {"recupero": 13, "bkt2": 12, "bkt3plus": 21, "dacion": 1, "sin_dato": 0, "deuda": 553908, "n": 47}, "60": {"recupero": 5, "bkt2": 13, "bkt3plus": 23, "dacion": 0, "sin_dato": 6, "deuda": 751018, "n": 47}}, "15-mar": {"30": {"recupero": 19, "bkt2": 18, "bkt3plus": 25, "dacion": 1, "sin_dato": 0, "deuda": 850652, "n": 63}, "60": {"recupero": 14, "bkt2": 13, "bkt3plus": 24, "dacion": 2, "sin_dato": 10, "deuda": 1080546, "n": 63}}, "01-abr": {"30": {"recupero": 15, "bkt2": 14, "bkt3plus": 14, "dacion": 0, "sin_dato": 1, "deuda": 513029, "n": 44}, "60": {"recupero": 13, "bkt2": 10, "bkt3plus": 17, "dacion": 1, "sin_dato": 3, "deuda": 658086, "n": 44}}, "15-abr": {"30": {"recupero": 15, "bkt2": 18, "bkt3plus": 30, "dacion": 4, "sin_dato": 0, "deuda": 1139196, "n": 67}, "60": {"recupero": 16, "bkt2": 14, "bkt3plus": 30, "dacion": 0, "sin_dato": 7, "deuda": 1282250, "n": 67}}, "01-may": {"30": {"recupero": 10, "bkt2": 10, "bkt3plus": 23, "dacion": 2, "sin_dato": 0, "deuda": 805543, "n": 45}, "60": {"recupero": 2, "bkt2": 6, "bkt3plus": 26, "dacion": 3, "sin_dato": 8, "deuda": 1118445, "n": 45}}, "15-may": {"30": {"recupero": 33, "bkt2": 14, "bkt3plus": 20, "dacion": 3, "sin_dato": 0, "deuda": 695575, "n": 70}, "60": {"recupero": 18, "bkt2": 16, "bkt3plus": 24, "dacion": 0, "sin_dato": 12, "deuda": 947401, "n": 70}}, "01-jun": {"30": {"recupero": 16, "bkt2": 8, "bkt3plus": 22, "dacion": 1, "sin_dato": 0, "deuda": 734118, "n": 47}, "60": {"recupero": 11, "bkt2": 13, "bkt3plus": 20, "dacion": 0, "sin_dato": 3, "deuda": 763485, "n": 47}}, "15-jun": {"30": {"recupero": 28, "bkt2": 11, "bkt3plus": 31, "dacion": 1, "sin_dato": 1, "deuda": 885883, "n": 72}, "60": {"recupero": 16, "bkt2": 18, "bkt3plus": 29, "dacion": 2, "sin_dato": 7, "deuda": 1294808, "n": 72}}, "01-jul": {"30": {"recupero": 12, "bkt2": 9, "bkt3plus": 32, "dacion": 1, "sin_dato": 0, "deuda": 756434, "n": 54}, "60": {"recupero": 10, "bkt2": 11, "bkt3plus": 28, "dacion": 1, "sin_dato": 4, "deuda": 860883, "n": 54}}, "15-jul": {"30": {"recupero": 27, "bkt2": 21, "bkt3plus": 36, "dacion": 6, "sin_dato": 9, "deuda": 1360297, "n": 99}, "60": {"recupero": 27, "bkt2": 18, "bkt3plus": 33, "dacion": 4, "sin_dato": 17, "deuda": 1495201, "n": 99}}, "01-ago": {"30": {"recupero": 32, "bkt2": 15, "bkt3plus": 38, "dacion": 5, "sin_dato": 0, "deuda": 1122092, "n": 90}}, "15-ago": {"30": {"recupero": 39, "bkt2": 15, "bkt3plus": 37, "dacion": 3, "sin_dato": 0, "deuda": 899152, "n": 94}}};
+const rolloverDiagLoad = [{"q": "15–fin ene", "f1": 1102, "f1k": "15-ene", "f2": 416, "f2k": "01-ene", "b23": 277, "rec2": 92.54807692307693, "tot": 1795}, {"q": "1–14 feb", "f1": 820, "f1k": "01-feb", "f2": 440, "f2k": "15-ene", "b23": 261, "rec2": 83.63636363636363, "tot": 1521}, {"q": "15–fin feb", "f1": 1223, "f1k": "15-feb", "f2": 374, "f2k": "01-feb", "b23": 285, "rec2": 92.24598930481284, "tot": 1882}, {"q": "1–14 mar", "f1": 1020, "f1k": "01-mar", "f2": 479, "f2k": "15-feb", "b23": 281, "rec2": 88.10020876826722, "tot": 1780}, {"q": "15–fin mar", "f1": 1124, "f1k": "15-mar", "f2": 361, "f2k": "01-mar", "b23": 269, "rec2": 86.98060941828255, "tot": 1754}, {"q": "1–14 abr", "f1": 887, "f1k": "01-abr", "f2": 423, "f2k": "15-mar", "b23": 293, "rec2": 85.34278959810875, "tot": 1603}, {"q": "15–fin abr", "f1": 1121, "f1k": "15-abr", "f2": 418, "f2k": "01-abr", "b23": 270, "rec2": 89.71291866028707, "tot": 1809}, {"q": "1–14 may", "f1": 1015, "f1k": "01-may", "f2": 456, "f2k": "15-abr", "b23": 278, "rec2": 85.74561403508771, "tot": 1749}, {"q": "15–fin may", "f1": 1202, "f1k": "15-may", "f2": 439, "f2k": "01-may", "b23": 275, "rec2": 89.749430523918, "tot": 1916}, {"q": "1–14 jun", "f1": 1156, "f1k": "01-jun", "f2": 365, "f2k": "15-may", "b23": 271, "rec2": 81.0958904109589, "tot": 1792}, {"q": "15–fin jun", "f1": 1260, "f1k": "15-jun", "f2": 435, "f2k": "01-jun", "b23": 304, "rec2": 89.19540229885058, "tot": 1999}, {"q": "1–14 jul", "f1": 1156, "f1k": "01-jul", "f2": 494, "f2k": "15-jun", "b23": 309, "rec2": 85.82995951417004, "tot": 1959}, {"q": "15–fin jul", "f1": 1158, "f1k": "15-jul", "f2": 542, "f2k": "01-jul", "b23": 331, "rec2": 90.03690036900369, "tot": 2031}, {"q": "1–14 ago", "f1": 1106, "f1k": "01-ago", "f2": 514, "f2k": "15-jul", "b23": 346, "rec2": 81.51750972762646, "tot": 1966}, {"q": "15–fin ago", "f1": 1265, "f1k": "15-ago", "f2": 570, "f2k": "01-ago", "b23": 337, "rec2": 84.56140350877193, "tot": 2172}, {"q": "1–14 sep", "f1": 1145, "f1k": "01-sep", "f2": 572, "f2k": "15-ago", "b23": 384, "rec2": 83.56643356643356, "tot": 2101}, {"q": "15–fin sep", "f1": 1260, "f1k": "15-sep", "f2": 451, "f2k": "01-sep", "b23": 409, "rec2": 86.0310421286031, "tot": 2120}, {"q": "1–14 oct", "f1": 1222, "f1k": "01-oct (estimado)", "f2": 471, "f2k": "15-sep", "b23": 408, "rec2": 79.83014861995754, "tot": 2101}];
+const rolloverDiagColektia = {"01-jul": {"colektia": {"n": 319, "f1": 104, "f2": 209, "roll": 20}, "control": {"n": 340, "f1": 164, "f2": 175, "roll": 4, "partial": true}, "resto": {"n": 497, "f1": 323, "f2": 158, "roll": 30}}, "15-jul": {"colektia": {"n": 314, "f1": 133, "f2": 174, "roll": 23}, "control": {"n": 359, "f1": 192, "f2": 161, "roll": 34}, "resto": {"n": 485, "f1": 302, "f2": 179, "roll": 38}}, "01-ago": {"colektia": {"n": 272, "f1": 89, "f2": 181, "roll": 38}, "control": {"n": 320, "f1": 121, "f2": 191, "roll": 20}, "resto": {"n": 514, "f1": 308, "f2": 198, "roll": 30}}, "15-ago": {"colektia": {"n": 355, "f1": 143, "f2": 204, "roll": 20}, "control": {"n": 329, "f1": 182, "f2": 140, "roll": 29}, "resto": {"n": 581, "f1": 345, "f2": 228, "roll": 45}}};
+const rolloverDiag1 = {"01-ene": {"bajo": {"n": 282, "roll": 9}, "medio": {"n": 323, "roll": 11}, "alto": {"n": 307, "roll": 11}, "cnt_pct": 0.58, "amt_pct": 0.6, "rollers": 31, "monto_roll": 384351, "cartera_n": 5385, "cartera_m": 63901389, "np": 912, "curF1": 480, "f2": 416, "rollF2": 31}, "01-feb": {"bajo": {"n": 235, "roll": 8}, "medio": {"n": 284, "roll": 11}, "alto": {"n": 301, "roll": 10}, "cnt_pct": 0.51, "amt_pct": 0.54, "rollers": 29, "monto_roll": 363337, "cartera_n": 5641, "cartera_m": 66918946, "np": 820, "curF1": 429, "f2": 374, "rollF2": 29}, "01-mar": {"bajo": {"n": 286, "roll": 12}, "medio": {"n": 350, "roll": 17}, "alto": {"n": 384, "roll": 18}, "cnt_pct": 0.8, "amt_pct": 0.85, "rollers": 47, "monto_roll": 595068, "cartera_n": 5872, "cartera_m": 69815657, "np": 1020, "curF1": 636, "f2": 361, "rollF2": 47}, "01-abr": {"bajo": {"n": 266, "roll": 17}, "medio": {"n": 309, "roll": 14}, "alto": {"n": 312, "roll": 12}, "cnt_pct": 0.72, "amt_pct": 0.71, "rollers": 44, "monto_roll": 512335, "cartera_n": 6074, "cartera_m": 71810872, "np": 887, "curF1": 451, "f2": 418, "rollF2": 43}, "01-may": {"bajo": {"n": 283, "roll": 7}, "medio": {"n": 377, "roll": 20}, "alto": {"n": 355, "roll": 18}, "cnt_pct": 0.71, "amt_pct": 0.77, "rollers": 45, "monto_roll": 577614, "cartera_n": 6322, "cartera_m": 74974856, "np": 1015, "curF1": 562, "f2": 439, "rollF2": 45}, "01-jun": {"bajo": {"n": 307, "roll": 11}, "medio": {"n": 434, "roll": 18}, "alto": {"n": 415, "roll": 18}, "cnt_pct": 0.72, "amt_pct": 0.79, "rollers": 47, "monto_roll": 607860, "cartera_n": 6499, "cartera_m": 76840830, "np": 1156, "curF1": 704, "f2": 435, "rollF2": 47}, "01-jul": {"bajo": {"n": 342, "roll": 16}, "medio": {"n": 419, "roll": 23}, "alto": {"n": 395, "roll": 15}, "cnt_pct": 0.8, "amt_pct": 0.8, "rollers": 54, "monto_roll": 638305, "cartera_n": 6725, "cartera_m": 79369876, "np": 1156, "curF1": 591, "f2": 542, "rollF2": 54}, "01-ago": {"bajo": {"n": 308, "roll": 27}, "medio": {"n": 395, "roll": 35}, "alto": {"n": 403, "roll": 26}, "cnt_pct": 1.31, "amt_pct": 1.34, "rollers": 90, "monto_roll": 1075998, "cartera_n": 6854, "cartera_m": 80032683, "np": 1106, "curF1": 518, "f2": 570, "rollF2": 88}, "01-sep": {"bajo": {"n": 315, "roll": 20}, "medio": {"n": 415, "roll": 27}, "alto": {"n": 415, "roll": 16}, "cnt_pct": 0.88, "amt_pct": 0.89, "rollers": 63, "monto_roll": 751784, "cartera_n": 7142, "cartera_m": 84020701, "np": 1145, "curF1": 681, "f2": 451, "rollF2": 63}};
+const rolloverDiagBandF1_1 = {"01-ene": {"bajo": {"n": 282, "rec": 153}, "medio": {"n": 323, "rec": 164}, "alto": {"n": 307, "rec": 163}}, "01-feb": {"bajo": {"n": 235, "rec": 128}, "medio": {"n": 284, "rec": 154}, "alto": {"n": 301, "rec": 147}}, "01-mar": {"bajo": {"n": 286, "rec": 182}, "medio": {"n": 350, "rec": 216}, "alto": {"n": 384, "rec": 238}}, "01-abr": {"bajo": {"n": 266, "rec": 132}, "medio": {"n": 309, "rec": 150}, "alto": {"n": 312, "rec": 169}}, "01-may": {"bajo": {"n": 283, "rec": 149}, "medio": {"n": 377, "rec": 208}, "alto": {"n": 355, "rec": 205}}, "01-jun": {"bajo": {"n": 307, "rec": 195}, "medio": {"n": 434, "rec": 263}, "alto": {"n": 415, "rec": 246}}, "01-jul": {"bajo": {"n": 342, "rec": 179}, "medio": {"n": 419, "rec": 206}, "alto": {"n": 395, "rec": 206}}, "01-ago": {"bajo": {"n": 308, "rec": 146}, "medio": {"n": 395, "rec": 170}, "alto": {"n": 403, "rec": 202}}, "01-sep": {"bajo": {"n": 315, "rec": 181}, "medio": {"n": 415, "rec": 240}, "alto": {"n": 415, "rec": 260}}};
+const rolloverDiagBandF2_1 = {"01-ene": {"bajo": {"f2": 126, "rec": 117}, "medio": {"f2": 150, "rec": 139}, "alto": {"f2": 140, "rec": 129}}, "01-feb": {"bajo": {"f2": 102, "rec": 94}, "medio": {"f2": 124, "rec": 113}, "alto": {"f2": 148, "rec": 138}}, "01-mar": {"bajo": {"f2": 95, "rec": 83}, "medio": {"f2": 129, "rec": 112}, "alto": {"f2": 137, "rec": 119}}, "01-abr": {"bajo": {"f2": 128, "rec": 111}, "medio": {"f2": 153, "rec": 139}, "alto": {"f2": 137, "rec": 125}}, "01-may": {"bajo": {"f2": 131, "rec": 124}, "medio": {"f2": 161, "rec": 141}, "alto": {"f2": 147, "rec": 129}}, "01-jun": {"bajo": {"f2": 110, "rec": 99}, "medio": {"f2": 164, "rec": 146}, "alto": {"f2": 161, "rec": 143}}, "01-jul": {"bajo": {"f2": 159, "rec": 143}, "medio": {"f2": 204, "rec": 181}, "alto": {"f2": 179, "rec": 164}}, "01-ago": {"bajo": {"f2": 159, "rec": 132}, "medio": {"f2": 217, "rec": 182}, "alto": {"f2": 194, "rec": 168}}, "01-sep": {"bajo": {"f2": 130, "rec": 110}, "medio": {"f2": 171, "rec": 144}, "alto": {"f2": 150, "rec": 134}}};
+const rolloverDiagBandF1 = {"15-ene": {"bajo": {"n": 279, "rec": 173}, "medio": {"n": 386, "rec": 223}, "alto": {"n": 437, "rec": 249}}, "15-feb": {"bajo": {"n": 327, "rec": 207}, "medio": {"n": 422, "rec": 245}, "alto": {"n": 474, "rec": 280}}, "15-mar": {"bajo": {"n": 304, "rec": 177}, "medio": {"n": 390, "rec": 233}, "alto": {"n": 430, "rec": 273}}, "15-abr": {"bajo": {"n": 260, "rec": 150}, "medio": {"n": 383, "rec": 213}, "alto": {"n": 478, "rec": 280}}, "15-may": {"bajo": {"n": 267, "rec": 179}, "medio": {"n": 424, "rec": 291}, "alto": {"n": 511, "rec": 357}}, "15-jun": {"bajo": {"n": 285, "rec": 172}, "medio": {"n": 460, "rec": 281}, "alto": {"n": 515, "rec": 301}}, "15-jul": {"bajo": {"n": 260, "rec": 151}, "medio": {"n": 422, "rec": 237}, "alto": {"n": 476, "rec": 239}}, "15-ago": {"bajo": {"n": 307, "rec": 161}, "medio": {"n": 454, "rec": 238}, "alto": {"n": 504, "rec": 271}}, "15-sep": {"bajo": {"n": 299, "rec": 190}, "medio": {"n": 475, "rec": 272}, "alto": {"n": 486, "rec": 300}}};
+const rolloverDiagBandF2 = {"15-ene": {"bajo": {"f2": 103, "rec": 85}, "medio": {"f2": 156, "rec": 130}, "alto": {"f2": 181, "rec": 153}}, "15-feb": {"bajo": {"f2": 118, "rec": 110}, "medio": {"f2": 173, "rec": 149}, "alto": {"f2": 188, "rec": 163}}, "15-mar": {"bajo": {"f2": 123, "rec": 108}, "medio": {"f2": 148, "rec": 131}, "alto": {"f2": 152, "rec": 122}}, "15-abr": {"bajo": {"f2": 109, "rec": 99}, "medio": {"f2": 164, "rec": 139}, "alto": {"f2": 183, "rec": 153}}, "15-may": {"bajo": {"f2": 87, "rec": 66}, "medio": {"f2": 129, "rec": 104}, "alto": {"f2": 149, "rec": 126}}, "15-jun": {"bajo": {"f2": 109, "rec": 98}, "medio": {"f2": 175, "rec": 146}, "alto": {"f2": 210, "rec": 180}}, "15-jul": {"bajo": {"f2": 108, "rec": 88}, "medio": {"f2": 180, "rec": 154}, "alto": {"f2": 226, "rec": 177}}, "15-ago": {"bajo": {"f2": 141, "rec": 113}, "medio": {"f2": 209, "rec": 171}, "alto": {"f2": 222, "rec": 194}}, "15-sep": {"bajo": {"f2": 103, "rec": 76}, "medio": {"f2": 191, "rec": 150}, "alto": {"f2": 177, "rec": 150}}};
+const rolloverDiag15 = {"15-ene": {"bajo": {"n": 279, "roll": 18}, "medio": {"n": 386, "roll": 26}, "alto": {"n": 437, "roll": 28}, "cnt_pct": 1.09, "amt_pct": 1.1, "rollers": 74, "monto_roll": 950494, "cartera_n": 6791, "cartera_m": 86026400, "np": 1102, "curF1": 645, "f2": 440, "rollF2": 72}, "15-feb": {"bajo": {"n": 327, "roll": 8}, "medio": {"n": 422, "roll": 24}, "alto": {"n": 474, "roll": 25}, "cnt_pct": 0.84, "amt_pct": 0.94, "rollers": 58, "monto_roll": 818999, "cartera_n": 6897, "cartera_m": 87339380, "np": 1223, "curF1": 732, "f2": 479, "rollF2": 57}, "15-mar": {"bajo": {"n": 304, "roll": 15}, "medio": {"n": 390, "roll": 17}, "alto": {"n": 430, "roll": 30}, "cnt_pct": 0.89, "amt_pct": 0.9, "rollers": 63, "monto_roll": 806496, "cartera_n": 7099, "cartera_m": 89408160, "np": 1124, "curF1": 683, "f2": 423, "rollF2": 62}, "15-abr": {"bajo": {"n": 260, "roll": 10}, "medio": {"n": 383, "roll": 25}, "alto": {"n": 478, "roll": 30}, "cnt_pct": 0.92, "amt_pct": 0.96, "rollers": 67, "monto_roll": 878917, "cartera_n": 7265, "cartera_m": 91586899, "np": 1121, "curF1": 643, "f2": 456, "rollF2": 65}, "15-may": {"bajo": {"n": 267, "roll": 21}, "medio": {"n": 424, "roll": 25}, "alto": {"n": 511, "roll": 23}, "cnt_pct": 0.96, "amt_pct": 0.88, "rollers": 70, "monto_roll": 812678, "cartera_n": 7314, "cartera_m": 92082165, "np": 1202, "curF1": 827, "f2": 365, "rollF2": 69}, "15-jun": {"bajo": {"n": 285, "roll": 11}, "medio": {"n": 460, "roll": 29}, "alto": {"n": 515, "roll": 30}, "cnt_pct": 0.97, "amt_pct": 0.99, "rollers": 72, "monto_roll": 934572, "cartera_n": 7456, "cartera_m": 94185612, "np": 1260, "curF1": 754, "f2": 494, "rollF2": 70}, "15-jul": {"bajo": {"n": 260, "roll": 20}, "medio": {"n": 422, "roll": 26}, "alto": {"n": 476, "roll": 49}, "cnt_pct": 1.29, "amt_pct": 1.41, "rollers": 98, "monto_roll": 1342087, "cartera_n": 7576, "cartera_m": 95462276, "np": 1158, "curF1": 627, "f2": 514, "rollF2": 95}, "15-ago": {"bajo": {"n": 307, "roll": 28}, "medio": {"n": 454, "roll": 38}, "alto": {"n": 504, "roll": 28}, "cnt_pct": 1.22, "amt_pct": 1.14, "rollers": 94, "monto_roll": 1106466, "cartera_n": 7732, "cartera_m": 97087346, "np": 1265, "curF1": 670, "f2": 572, "rollF2": 94}, "15-sep": {"bajo": {"n": 299, "roll": 27}, "medio": {"n": 475, "roll": 41}, "alto": {"n": 486, "roll": 27}, "cnt_pct": 1.2, "amt_pct": 1.11, "rollers": 95, "monto_roll": 1093301, "cartera_n": 7891, "cartera_m": 98688591, "np": 1260, "curF1": 762, "f2": 471, "rollF2": 95}};
+
+let diagCurveBand = 'all', diagDestH = '30', diagColkM = 'f1';
+function buildRolloverDiagCharts() {
+  const D = Object.assign({}, rolloverDiag1, rolloverDiag15);
+  const POST_M = ['jul','ago','sep','oct','nov','dic'];
+  const monthOf = c => String(c).split('-')[1];
+  const isPost = c => POST_M.includes(monthOf(c));
+  const cs = (typeof getSelectedCortes === 'function' ? getSelectedCortes() : Object.keys(D)).filter(c => D[c]);
+  const scopeEl = document.getElementById('diagScope');
+  if (scopeEl) scopeEl.textContent = currentFilter === 'day1' ? 'Corte 1' : currentFilter === 'day15' ? 'Corte 15' : 'Cortes 1 y 15';
+  if (!cs.length) return;
+  const pre = cs.filter(c => !isPost(c));
+  const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+  const f1 = c => D[c].curF1 == null ? null : D[c].curF1 / D[c].np * 100;
+  const f2 = c => D[c].f2 == null ? null : D[c].rollF2 / D[c].f2 * 100;
+  const rec2 = c => D[c].f2 == null ? null : (D[c].f2 - D[c].rollF2) / D[c].f2 * 100;
+  const preF1 = pre.filter(c=>D[c].curF1!=null);
+  const avgF1 = preF1.reduce((a,c)=>a+D[c].curF1,0) / preF1.reduce((a,c)=>a+D[c].np,0) * 100;
+  const avgF2 = preF1.reduce((a,c)=>a+D[c].rollF2,0) / preF1.reduce((a,c)=>a+D[c].f2,0) * 100;
+  const avgF2n = avg(preF1.map(c=>D[c].f2));
+  const band = (list, b) => { const n = list.reduce((a,c)=>a+D[c][b].n,0), r = list.reduce((a,c)=>a+D[c][b].roll,0); return r/n*100; };
+  const last = cs.filter(c => D[c].f2 != null).at(-1) || cs.at(-1);
+  const inM = (...ms) => cs.filter(c => ms.includes(monthOf(c)));
+  const PER = { 'Ene–Jun': pre, 'Jul': inM('jul'), 'Ago–Sep': inM('ago','sep') };
+  const julAgo = inM('jul','ago').filter(c => D[c].curF1 != null);
+
+  // ── Story cards ──
+  const card = (cls, step, big, vs, txt) => `<div class="diag-card ${cls}"><p class="dc-step">${step}</p><p class="dc-big">${big}</p><p class="dc-vs">${vs}</p><p class="dc-txt">${txt}</p></div>`;
+  document.getElementById('diagStory').innerHTML =
+    card(f1(last) >= avgF1 - 3 ? 'ok' : 'bad', f1(last) >= avgF1 - 3 ? '1 · Fase 1 ya se recuperó' : '1 · Fase 1 sigue abajo', f1(last).toFixed(1)+'%', `recuperados en Fase 1 en ${last} · prom Ene–Jun ${avgF1.toFixed(1)}%`,
+      julAgo.length ? `En julio y agosto (1 gestor + Colektia) Fase 1 recuperó ${julAgo.map(c => `${f1(c).toFixed(1)}% (${c})`).join(', ')}. Con 2 gestores en F1 regresó a su nivel.` : 'Sin datos de julio y agosto para el filtro elegido.') +
+    card('bad', '2 · El problema se movió a Fase 2', rec2(last).toFixed(1)+'%', `se recupera en Fase 2 en ${last} · prom Ene–Jun ${(100-avgF2).toFixed(1)}%`,
+      `Llegaron ${D[last].f2} cuentas a F2 (prom ${Math.round(avgF2n)}), un volumen similar y el mismo tipo de cliente. Se recuperaron menos y ${D[last].rollF2} rolaron a Bkt 2.`) +
+    (!PER['Ago–Sep'].length ? card('bad','3 · Rentas bajas','—','faltan cortes de Ago–Sep para el filtro elegido','Cuando se carguen los cortes de agosto y septiembre aparece esta comparación.') :
+    card('bad', '3 · Se dejan rodar las rentas bajas', band(PER['Ago–Sep'],'bajo').toFixed(1), `rolan por cada 100 con renta &lt;$9k en Ago–Sep · antes ${band(pre,'bajo').toFixed(1)}`,
+      `Las rentas &gt;$13k regresaron a su nivel (${band(PER['Ago–Sep'],'alto').toFixed(1)} vs ${band(pre,'alto').toFixed(1)}). Rollover por monto ${D[last].amt_pct.toFixed(2)}% vs por clientes ${D[last].cnt_pct.toFixed(2)}%.`));
+
+  // ── Plugins comunes: sombreado Jul–Sep y línea de promedio ──
+  const shade = labels => ({ id:'diagShade', beforeDatasetsDraw(ch){
+    const xs = ch.scales.x, i0 = labels.findIndex(isPost);
+    const step = labels.length > 1 ? (xs.getPixelForValue(1) - xs.getPixelForValue(0)) : 40;
+    if (labels[0] === 'Prom Ene–Jun') { const c0 = ch.ctx, xa = ch.chartArea.left, xb = xs.getPixelForValue(0) + step/2;
+      c0.save(); c0.fillStyle = 'rgba(59,58,202,0.08)'; c0.fillRect(xa, ch.chartArea.top, xb-xa, ch.chartArea.bottom-ch.chartArea.top);
+      c0.fillStyle = '#3B3ACA'; c0.font = 'bold 10px -apple-system,sans-serif'; c0.textAlign='left'; c0.fillText('Referencia', xa+4, ch.chartArea.top-6); c0.restore(); }
+    if (i0 < 0) return;
+    const x0 = xs.getPixelForValue(i0) - step/2, x1 = ch.chartArea.right;
+    const c = ch.ctx; c.save(); c.fillStyle = 'rgba(216,90,48,0.06)'; c.fillRect(x0, ch.chartArea.top, x1-x0, ch.chartArea.bottom-ch.chartArea.top);
+    c.fillStyle = '#D85A30'; c.font = 'bold 10px -apple-system,sans-serif'; c.textAlign='right'; c.fillText('Jul–Sep', x1-4, ch.chartArea.top-6); c.restore(); } });
+  const avgLine = (val, axis, txt) => ({ id:'diagAvg', afterDatasetsDraw(ch){
+    const y = ch.scales[axis].getPixelForValue(val), c = ch.ctx; c.save();
+    c.strokeStyle='rgba(136,135,128,0.6)'; c.setLineDash([4,4]); c.beginPath(); c.moveTo(ch.chartArea.left,y); c.lineTo(ch.chartArea.right,y); c.stroke();
+    c.setLineDash([]);
+    const tx = ch.chartArea.left + 8, ty = ch.chartArea.top + 12;
+    c.strokeStyle='rgba(136,135,128,0.8)'; c.setLineDash([4,3]); c.beginPath(); c.moveTo(tx,ty-4); c.lineTo(tx+22,ty-4); c.stroke(); c.setLineDash([]);
+    c.fillStyle='#5F5E5A'; c.font='bold 11px -apple-system,sans-serif'; c.textAlign='left'; c.fillText(txt, tx+28, ty);
+    ch.data.labels.forEach((l,i) => { if (ch.data.datasets[0].data[i] == null) { c.fillStyle='#B5B4AE'; c.font='10px -apple-system,sans-serif'; c.textAlign='center'; c.fillText('s/d', ch.scales.x.getPixelForValue(i), ch.chartArea.bottom-6); } });
+    c.restore(); } });
+  const valLabels = (fmt, dsIdx=[0]) => ({ id:'diagVals', afterDatasetsDraw(ch){
+    const c = ch.ctx; c.save(); c.font='bold 11px -apple-system,sans-serif'; c.textAlign='center';
+    dsIdx.forEach(k => { const ds = ch.data.datasets[k], m = ch.getDatasetMeta(k); if (m.hidden) return;
+      ds.data.forEach((v,i) => { if (v==null) return; const pt = m.data[i]; c.fillStyle = Array.isArray(ds.pointBackgroundColor) ? ds.pointBackgroundColor[i] : ds.borderColor; c.fillText(fmt(v), pt.x, pt.y-12); }); });
+    c.restore(); } });
+  const tip = { backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6 };
+  const gridX = { grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#888780',font:{size:11}} };
+  const ptCol = (good, bad) => cs.map(c => isPost(c) ? bad : good);
+
+  // ① Fase 1
+  if (charts.diagF1) charts.diagF1.destroy();
+  charts.diagF1 = new Chart(document.getElementById('diagF1Chart'), {
+    data:{ labels:cs, datasets:[{ type:'line', label:'% que se recupera en F1', data:cs.map(f1), yAxisID:'y', borderColor:'#1D9E75', borderWidth:2.5, tension:0.25, spanGaps:false, order:0,
+      pointRadius:6, pointBackgroundColor:cs.map(c => (f1(c) != null && f1(c) < avgF1 - 4) ? '#D85A30' : '#1D9E75'), pointBorderColor:'#fff', pointBorderWidth:2 },
+      { type:'bar', label:'Cuentas que llegan a F1', data:cs.map(c=>D[c].np), yAxisID:'y2', backgroundColor:'rgba(136,135,128,0.22)', borderWidth:0, order:1 }]},
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:16}},
+      plugins:{ legend:{display:true, position:'bottom', labels:{color:'#5F5E5A',font:{size:11},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ label: ctx => { const d = D[cs[ctx.dataIndex]]; if (ctx.parsed.y==null) return null;
+          return ctx.dataset.type==='bar' ? ` ${d.np.toLocaleString()} cuentas llegan a F1 (no pagaron en domi)` : ` ${d.curF1} de ${d.np} se recuperaron en Fase 1 (${ctx.parsed.y.toFixed(1)}%)`; } } } },
+      scales:{ x:gridX, y:{ min:30, max:80, position:'left', grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#1D9E75',callback:v=>v+'%'} },
+        y2:{ min:0, max:2500, position:'right', grid:{display:false}, ticks:{color:'#B5B4AE'} } } },
+    plugins:[shade(cs), avgLine(avgF1,'y',`prom Ene–Jun ${avgF1.toFixed(1)}%`), valLabels(v=>v.toFixed(1)+'%')]
+  });
+
+  // ①b Fase 1: cuentas por gestor
+  const F1HC = {'ene':2,'feb':3,'mar':3,'abr':3,'may':2,'jun':2,'jul':1,'ago':1,'sep':2};
+  const hcOf = c => c === '15-jun' ? 1 : F1HC[monthOf(c)];
+  const F1WHO = c => c==='15-ago' ? 'Edwin' : ['15-jun','01-jul','15-jul','01-ago'].includes(c) ? 'Alberto' : ['feb','mar','abr'].includes(monthOf(c)) ? 'Edwin, Alberto y Karina' : 'Edwin y Alberto';
+  const COLK = c => ['jul','ago'].includes(monthOf(c));
+  const csH = cs.filter(c => hcOf(c) && D[c].curF1 != null);
+  if (charts.diagF1Hc) charts.diagF1Hc.destroy();
+  charts.diagF1Hc = new Chart(document.getElementById('diagF1HcChart'), {
+    data:{ labels: csH, datasets:[
+      { type:'line', label:'% que se recupera en F1', data: csH.map(f1), yAxisID:'y2', borderColor:'#1D9E75', backgroundColor:'#1D9E75', borderWidth:2.5, tension:0.25, pointRadius:5, order:0 },
+      { type:'bar', label:'Cuentas de F1 por gestor', data: csH.map(c => D[c].np / hcOf(c)), yAxisID:'y', backgroundColor: csH.map(c => hcOf(c)===1 ? 'rgba(216,90,48,0.55)' : 'rgba(136,135,128,0.35)'), borderWidth:0, order:1 } ]},
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:24}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ label: ctx => { const c = csH[ctx.dataIndex]; return ctx.dataset.type==='line' ? ` ${f1(c).toFixed(1)}% se recuperó en Fase 1` : ` ${D[c].np.toLocaleString()} cuentas / ${hcOf(c)} gestor${hcOf(c)>1?'es':''} (${F1WHO(c)}) = ${Math.round(D[c].np/hcOf(c)).toLocaleString()} por gestor${COLK(c)?' · con Colektia':''}`; } } } },
+      scales:{ x:{grid:{display:false},ticks:{color:'#1F1F1F',font:{size:11}}}, y:{min:0,max:1500,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780'},title:{display:true,text:'cuentas de F1 por gestor',color:'#888780',font:{size:11}}},
+        y2:{position:'right',min:30,max:80,grid:{display:false},ticks:{color:'#1D9E75',callback:v=>v+'%'}} } },
+    plugins:[{ id:'hcBg', beforeDatasetsDraw(ch){ const xs=ch.scales.x, c=ch.ctx; const step = csH.length>1 ? xs.getPixelForValue(1)-xs.getPixelForValue(0) : 40; c.save();
+        csH.forEach((k,i)=>{ if (!COLK(k)) return; c.fillStyle='rgba(59,58,202,0.08)'; c.fillRect(xs.getPixelForValue(i)-step/2, ch.chartArea.top, step, ch.chartArea.bottom-ch.chartArea.top); });
+        const ci = csH.findIndex(COLK); if (ci>=0) { c.fillStyle='#3B3ACA'; c.font='bold 10px -apple-system,sans-serif'; c.textAlign='left'; c.fillText('Colektia', xs.getPixelForValue(ci)-step/2+3, ch.chartArea.top-6); } c.restore(); },
+      afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.textAlign='center'; c.font='bold 10px -apple-system,sans-serif';
+        ch.getDatasetMeta(1).data.forEach((bar,i)=>{ const h=hcOf(csH[i]); c.fillStyle = h===1 ? '#D85A30' : '#5F5E5A'; c.fillText(`${h} gestor${h>1?'es':''}`, bar.x, bar.y-4); });
+        ch.getDatasetMeta(0).data.forEach((pt,i)=>{ c.fillStyle='#1D9E75'; c.fillText(f1(csH[i]).toFixed(1)+'%', pt.x, pt.y-10); }); c.restore(); } }]
+  });
+  { const grp = f => csH.filter(f); const avF = l => l.length ? l.reduce((a,c)=>a+D[c].curF1,0)/l.reduce((a,c)=>a+D[c].np,0)*100 : NaN;
+    const three = grp(c=>hcOf(c)===3), two = grp(c=>hcOf(c)===2), oneNoC = grp(c=>hcOf(c)===1 && !COLK(c)), oneC = grp(c=>hcOf(c)===1 && COLK(c));
+    const parts = [];
+    if (three.length) parts.push(`con 3 gestores ${avF(three).toFixed(1)}%`);
+    if (two.length) parts.push(`con 2 gestores ${avF(two).toFixed(1)}%`);
+    if (oneNoC.length) parts.push(`con 1 gestor sin Colektia (${oneNoC.join(', ')}) ${avF(oneNoC).toFixed(1)}%`);
+    if (oneC.length) parts.push(`con 1 gestor y Colektia ${avF(oneC).toFixed(1)}%`);
+    document.getElementById('diagF1HcTake').innerHTML = `<strong>Para contarlo:</strong> % recuperado en Fase 1 ${parts.join(', ')}. Pasar de 2 a 3 gestores no mejoró la Fase 1, y el primer corte con un solo gestor (15-jun, ~1,260 cuentas) todavía recuperó normal. La caída llega en julio y agosto, cuando a un solo gestor se le suma Colektia trabajando los primeros días con la mensajería interna pausada. Con un solo dato sin Colektia no se puede separar del todo: puede ser Colektia, el desgaste de sostener ~1,200 cuentas varios cortes seguidos, o ambos.`; }
+
+  // ①c Fase 2: cuentas por persona (según quién estaba cuando corre la F2)
+  const F2STAFF = {
+    '01-abr':['Gloria','Citlali','Bianca','Carlos'], '15-abr':['Gloria','Citlali','Bianca','Carlos'],
+    '01-jun':['Vanessa','Edwin','Carlos','Bianca','Heidi'], '15-jun':['Viridiana','Edwin','Carlos','Bianca','Heidi'],
+    '01-jul':['Viridiana','Edwin','Carlos','Bianca','Heidi'], '15-jul':['Viridiana','Edwin','Gloria','Bianca','Heidi'],
+    '01-ago':['Viridiana','Alberto','Gloria','Bianca','Heidi'], '15-ago':['Gloria','Heidi','Bianca','Viridiana'],
+    '01-sep':['Gloria','Heidi','Bianca','Viridiana'], '15-sep':['Gloria','Heidi','Bianca','Viridiana'] };
+  const csF2 = cs.filter(c => D[c].f2 != null);
+  const pp = c => F2STAFF[c] ? D[c].f2 / F2STAFF[c].length : null;
+  if (charts.diagF2Hc) charts.diagF2Hc.destroy();
+  charts.diagF2Hc = new Chart(document.getElementById('diagF2HcChart'), {
+    data:{ labels: csF2, datasets:[
+      { type:'line', label:'% que se recupera en F2', data: csF2.map(rec2), yAxisID:'y2', borderColor:'#1D9E75', backgroundColor:'#1D9E75', borderWidth:2.5, tension:0.25, pointRadius:5, order:0 },
+      { type:'bar', label:'Cuentas de F2 por persona', data: csF2.map(pp), yAxisID:'y', backgroundColor: csF2.map(c => F2STAFF[c] && F2STAFF[c].length===4 && ['ago','sep'].includes(monthOf(c)) ? 'rgba(216,90,48,0.55)' : 'rgba(136,135,128,0.35)'), borderWidth:0, order:1 } ]},
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:24}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ label: ctx => { const c = csF2[ctx.dataIndex]; if (ctx.dataset.type==='line') return ` ${rec2(c).toFixed(1)}% se recuperó en Fase 2 (${D[c].f2-D[c].rollF2} de ${D[c].f2})`;
+          return F2STAFF[c] ? ` ${D[c].f2} cuentas / ${F2STAFF[c].length} personas (${F2STAFF[c].join(', ')}) = ${Math.round(pp(c))} por persona` : ' Sin asignación confirmada'; } } } },
+      scales:{ x:{grid:{display:false},ticks:{color:'#1F1F1F',font:{size:11}}}, y:{min:0,max:200,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780'},title:{display:true,text:'cuentas de F2 por persona',color:'#888780',font:{size:11}}},
+        y2:{position:'right',min:70,max:100,grid:{display:false},ticks:{color:'#1D9E75',callback:v=>v+'%'}} } },
+    plugins:[{ id:'f2hcLab', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.textAlign='center'; c.font='bold 10px -apple-system,sans-serif';
+        ch.getDatasetMeta(1).data.forEach((bar,i)=>{ const k=csF2[i]; if (!F2STAFF[k]) { c.fillStyle='#B5B4AE'; c.fillText('s/d', bar.x, ch.chartArea.bottom-6); return; } const n=F2STAFF[k].length; c.fillStyle = n===4 && ['ago','sep'].includes(monthOf(k)) ? '#D85A30' : '#5F5E5A'; c.fillText(`${n} pers.`, bar.x, ch.chartArea.bottom-6); });
+        ch.getDatasetMeta(0).data.forEach((pt,i)=>{ c.fillStyle='#1D9E75'; c.fillText(rec2(csF2[i]).toFixed(1)+'%', pt.x, pt.y-10); }); c.restore(); } }]
+  });
+  { const known = csF2.filter(c => F2STAFF[c]); const g = f => known.filter(f); const av = l => l.length ? l.reduce((a,c)=>a+D[c].f2-D[c].rollF2,0)/l.reduce((a,c)=>a+D[c].f2,0)*100 : NaN; const avp = l => l.length ? l.reduce((a,c)=>a+pp(c),0)/l.length : NaN;
+    const five = g(c=>F2STAFF[c].length===5), fourNew = g(c=>F2STAFF[c].length===4 && ['ago','sep'].includes(monthOf(c))), fourOld = g(c=>F2STAFF[c].length===4 && monthOf(c)==='abr');
+    document.getElementById('diagF2HcTake').innerHTML = known.length ? `<strong>Para contarlo:</strong> con 5 personas (jun–ago) Fase 2 recuperó ${av(five).toFixed(1)}% con ~${Math.round(avp(five))} cuentas por persona; con 4 personas desde septiembre recuperó ${av(fourNew).toFixed(1)}% con ~${Math.round(avp(fourNew))} por persona. ${fourOld.length ? `En abril también eran 4 (Gloria, Citlali, Bianca, Carlos) con ~${Math.round(avp(fourOld))} por persona y recuperaron ${av(fourOld).toFixed(1)}%: no es solo cuántas personas hay, sino quiénes.` : ''} De las 4 personas de Fase 2 de abril, en septiembre solo siguen Gloria y Bianca; entraron Heidi (de BKT4) y Viridiana (de BKT2). Para medir el efecto de cada persona falta el resultado por gestor de Collections Center.` : '<strong>Para contarlo:</strong> no hay asignación confirmada para los cortes del filtro elegido.'; }
+
+  // ①d Colektia vs Control vs resto
+  const CKD = rolloverDiagColektia, csK = cs.filter(c => CKD[c]);
+  const GRP = [ {k:'colektia',label:'Colektia',col:'#3B3ACA'}, {k:'control',label:'Control (gestor interno)',col:'rgba(59,58,202,0.35)'}, {k:'resto',label:'Resto de no pagadores',col:'#C4C3BD'} ];
+  const mval = (o) => !o ? null : diagColkM === 'f1' ? o.f1/o.n*100 : o.roll/o.n*100;
+  if (charts.diagColk) charts.diagColk.destroy();
+  charts.diagColk = new Chart(document.getElementById('diagColkChart'), {
+    type:'bar',
+    data:{ labels: csK, datasets: GRP.map(gp => ({ label:gp.label, data: csK.map(c => mval(CKD[c][gp.k])), backgroundColor:gp.col, borderWidth:0, borderRadius:4 })) },
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:20}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ label: ctx => { const o = CKD[csK[ctx.dataIndex]][GRP[ctx.datasetIndex].k]; if (!o) return null;
+          return diagColkM==='f1' ? ` ${GRP[ctx.datasetIndex].label}: ${o.f1} de ${o.n} se recuperaron en Fase 1 (${ctx.parsed.y.toFixed(1)}%)` : ` ${GRP[ctx.datasetIndex].label}: ${o.roll} de ${o.n} rolaron a Bkt 2 (${ctx.parsed.y.toFixed(1)}%)` + (o.partial ? ' · subestimado: el export omite cuentas que rolaron' : ''); } } } },
+      scales:{ x:{grid:{display:false},ticks:{color:'#1F1F1F',font:{size:12,weight:'600'}}}, y:{min:0, max: diagColkM==='f1' ? 80 : 16, grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',callback:v=>v+'%'}} } },
+    plugins:[{ id:'ckVals', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.font='bold 11px -apple-system,sans-serif'; c.textAlign='center'; c.fillStyle='#1F1F1F';
+      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ if (ds.data[i]==null) return; const o = CKD[csK[i]][GRP[k].k]; const ast = (diagColkM!=='f1' && o && o.partial) ? '*' : ''; c.fillText(ds.data[i].toFixed(1)+'%'+ast, bar.x, bar.y-6); }); }); c.restore(); } }]
+  });
+  { const withC = csK.filter(c => CKD[c].control);
+    if (withC.length) { const sum = (L,g,f) => L.reduce((a,c)=>a+CKD[c][g][f],0);
+      const f1c = sum(withC,'colektia','f1')/sum(withC,'colektia','n')*100, f1k = sum(withC,'control','f1')/sum(withC,'control','n')*100;
+      const rollC = withC.filter(c => !CKD[c].control.partial);
+      const rc = rollC.length ? sum(rollC,'colektia','roll')/sum(rollC,'colektia','n')*100 : null, rk = rollC.length ? sum(rollC,'control','roll')/sum(rollC,'control','n')*100 : null;
+      const ex = c => (CKD[c].control.f1/CKD[c].control.n - CKD[c].colektia.f1/CKD[c].colektia.n)*CKD[c].colektia.n;
+      const extraF2 = withC.reduce((a,c)=>a+ex(c),0);
+      const tot = c => ['colektia','control','resto'].reduce((a,g)=>({n:a.n+CKD[c][g].n, f1:a.f1+CKD[c][g].f1}),{n:0,f1:0});
+      const cf = c => { const t = tot(c); return {real: t.f1/t.n*100, sin: (t.f1+ex(c))/t.n*100}; };
+      const PROM = {'15':60.9,'01':56.1};
+      const cfTxt = ['15','01'].map(d => { const L = withC.filter(c => c.startsWith(d)); if (!L.length) return '';
+        return `Corte ${d==='15'?'15':'1'} (prom Ene–Jun ${PROM[d]}%): ` + L.map(c => { const v = cf(c); return `${c} ${v.real.toFixed(1)}% → ${v.sin.toFixed(1)}%`; }).join(', ') + '.'; }).filter(Boolean).join(' ');
+      const rollTxt = rc==null ? '' : ` Pero al cierre rolaron casi igual (${rc.toFixed(1)}% vs ${rk.toFixed(1)}% en ${rollC.join(', ')}): Fase 2 las rescató. Colektia no subió el rollover por sí solo; lo que hizo fue retrasar la recuperación y cargarle trabajo a Fase 2 justo cuando Fase 1 tenía un solo gestor.`;
+      const partTxt = withC.some(c => CKD[c].control.partial) ? ' <span style="color:#888780">(*) En el 01-jul el rollover de Control sale subestimado: el export de la plataforma omite cuentas que rolaron (en los otros cortes faltaban 7–31, casi todas roladas), así que ese corte no entra a la comparación de rollover.</span>' : '';
+      document.getElementById('diagColkTake').innerHTML = `<strong>Para contarlo:</strong> en Fase 1, las cuentas de Colektia se recuperaron mucho menos que las del grupo Control (${f1c.toFixed(1)}% vs ${f1k.toFixed(1)}% en ${withC.join(', ')}). Eso le mandó ~${Math.round(extraF2)} cuentas de más a Fase 2 (~${Math.round(extraF2/withC.length)} por corte).${rollTxt} <strong>Fase 1 total, real → sin el efecto Colektia:</strong> ${cfTxt} Lo que queda abajo del promedio es lo atribuible al gestor único y a otros factores.${partTxt}`; }
+    else document.getElementById('diagColkTake').innerHTML = '<strong>Para contarlo:</strong> no hay cortes con Colektia en el filtro elegido.'; }
+
+  // ⓪ Recorrido de los clientes que no pagaron en domi (barras apiladas; modo clientes o %)
+  const flowLabels = ['Prom Ene–Jun', ...cs];
+  const sumOf = (list, fn) => list.reduce((a,c)=>a+fn(D[c]),0);
+  const preN = sumOf(preF1, d=>d.np);
+  const drawFlow = (canvasId, chartKey, pctMode) => {
+  const val = (lab, fn) => {
+    if (lab === 'Prom Ene–Jun') return pctMode ? sumOf(preF1, fn)/preN*100 : sumOf(preF1, fn)/preF1.length;
+    if (D[lab].f2 == null) return null;
+    return pctMode ? fn(D[lab])/D[lab].np*100 : fn(D[lab]);
+  };
+  const npOf = lab => lab === 'Prom Ene–Jun' ? preN/preF1.length : D[lab].np;
+  const SEG = [
+    { label:'Se recuperan en Fase 1', fn:d=>d.curF1, col:'#1D9E75' },
+    { label:'Se recuperan en Fase 2', fn:d=>d.f2-d.rollF2, col:'rgba(29,158,117,0.42)' },
+    { label:'Dación', fn:d=>d.np-d.curF1-d.f2, col:'#3B3ACA' },
+    { label:'Rolan a Bkt 2', fn:d=>d.rollF2, col:'#D85A30' } ];
+  const fmtV = v => pctMode ? v.toFixed(1)+'%' : Math.round(v).toLocaleString();
+  if (charts[chartKey]) charts[chartKey].destroy();
+  charts[chartKey] = new Chart(document.getElementById(canvasId), {
+    type:'bar',
+    data:{ labels:flowLabels, datasets: SEG.map(sg => ({ label:sg.label, data:flowLabels.map(l=>val(l, sg.fn)), backgroundColor:sg.col, borderWidth:0, stack:'s', barPercentage:0.72 })) },
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:22, right:34}},
+      plugins:{ legend:{display:true, position:'bottom', labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ title: it => it[0].label === 'Prom Ene–Jun' ? `Promedio Ene–Jun por corte (${preF1.length} cortes)` : `Corte ${it[0].label} · ${npOf(it[0].label).toLocaleString()} clientes no pagaron en domi`,
+          label: ctx => { const l = flowLabels[ctx.dataIndex], fn = SEG[ctx.datasetIndex].fn;
+            const n = l==='Prom Ene–Jun' ? sumOf(preF1, fn)/preF1.length : fn(D[l]);
+            const pc = l==='Prom Ene–Jun' ? sumOf(preF1, fn)/preN*100 : fn(D[l])/D[l].np*100;
+            return ` ${ctx.dataset.label}: ${Math.round(n).toLocaleString()} clientes (${pc.toFixed(1)}%)`; } } } },
+      scales:{ x:{ stacked:true, grid:{display:false}, ticks:{color:'#1F1F1F', font: c => ({size:11, weight: c.index===0 ? '700' : '400'})} },
+        y:{ stacked:true, min:0, max: pctMode ? 100 : undefined, suggestedMax: pctMode ? undefined : 1400, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#888780', callback: v => pctMode ? v+'%' : v.toLocaleString()},
+          title:{display:true,text: pctMode ? '% de los clientes que no pagaron en domi' : 'clientes que no pagaron en domi',color:'#888780',font:{size:11}} } } },
+    plugins:[shade(flowLabels), { id:'flowVals', afterDatasetsDraw(ch){ const c = ch.ctx; c.save(); c.textAlign='center'; c.textBaseline='middle';
+      ch.data.datasets.forEach((ds,k) => { ch.getDatasetMeta(k).data.forEach((bar,i) => { const v = ds.data[i]; if (v==null) return;
+        if (k===2) { c.save(); c.font='bold 10px -apple-system,sans-serif'; c.fillStyle='#3B3ACA'; c.textAlign='left'; c.fillText(fmtV(v), bar.x + bar.width/2 + 3, (bar.y + bar.base)/2); c.restore(); return; }
+        c.font = 'bold 11px -apple-system,sans-serif'; c.fillStyle = k===1 ? '#0F5C44' : '#fff';
+        if (Math.abs(bar.base - bar.y) < 13) return;
+        c.fillText(fmtV(v), bar.x, (bar.y + bar.base)/2); }); });
+      if (!pctMode) { const top = ch.getDatasetMeta(ch.data.datasets.length-1).data;
+        top.forEach((bar,i) => { const l = flowLabels[i]; if (l !== 'Prom Ene–Jun' && D[l].f2 == null) return;
+          c.font='bold 11px -apple-system,sans-serif'; c.fillStyle='#1F1F1F'; c.textBaseline='bottom'; c.fillText(Math.round(npOf(l)).toLocaleString(), bar.x, bar.y-3); }); }
+      c.restore(); } }]
+  });
+  };
+  drawFlow('diagFlowChart','diagFlow',false);
+  drawFlow('diagFlowPctChart','diagFlowPct',true);
+  // ② Fase 2 (línea % que se recupera + barras cuentas que llegan)
+  if (charts.diagF2) charts.diagF2.destroy();
+  charts.diagF2 = new Chart(document.getElementById('diagF2Chart'), {
+    data:{ labels:cs, datasets:[
+      { type:'line', label:'% que se recupera en F2', data:cs.map(rec2), yAxisID:'y', borderColor:'#1D9E75', borderWidth:2.5, tension:0.25, spanGaps:false,
+        pointRadius:6, pointBackgroundColor:cs.map(c => (rec2(c) != null && rec2(c) < 100 - avgF2 - 4) ? '#D85A30' : '#1D9E75'), pointBorderColor:'#fff', pointBorderWidth:2, order:0 },
+      { type:'bar', label:'Cuentas que llegan a F2', data:cs.map(c=>D[c].f2), yAxisID:'y2', backgroundColor:'rgba(136,135,128,0.22)', borderWidth:0, order:1 } ]},
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:16}},
+      plugins:{ legend:{display:true, position:'bottom', labels:{color:'#5F5E5A',font:{size:11},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ label: ctx => { const d = D[cs[ctx.dataIndex]]; if (ctx.parsed.y==null) return null;
+          return ctx.dataset.type==='bar' ? ` ${d.f2} cuentas llegan a F2` : ` ${d.f2 - d.rollF2} de ${d.f2} se recuperaron en Fase 2 (${ctx.parsed.y.toFixed(1)}%) · ${d.rollF2} rolaron a Bkt 2`; } } } },
+      scales:{ x:gridX, y:{ min:60, max:100, position:'left', grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#1D9E75',callback:v=>v+'%'} },
+        y2:{ min:0, max:1000, position:'right', grid:{display:false}, ticks:{color:'#B5B4AE'} } } },
+    plugins:[shade(cs), avgLine(100-avgF2,'y',`prom Ene–Jun ${(100-avgF2).toFixed(1)}%`), valLabels(v=>v.toFixed(1)+'%')]
+  });
+
+  // ③ ¿Quiénes rolan? · rollers por banda de renta
+  const BANDS = [ {k:'bajo', label:'Renta < $9k', col:'#D85A30'}, {k:'medio', label:'Renta $9k–$13k', col:'rgba(216,90,48,0.55)'}, {k:'alto', label:'Renta > $13k', col:'rgba(216,90,48,0.22)'} ];
+  const rLabels = ['Prom Ene–Jun', ...cs];
+  const rv = (l, b) => l === 'Prom Ene–Jun' ? pre.reduce((a,c)=>a+D[c][b].roll,0)/pre.length : D[l][b].roll;
+  const rtot = l => BANDS.reduce((a,b)=>a+rv(l,b.k),0);
+  if (charts.diagRenta) charts.diagRenta.destroy();
+  charts.diagRenta = new Chart(document.getElementById('diagRentaChart'), {
+    type:'bar',
+    data:{ labels:rLabels, datasets: BANDS.map(b => ({ label:b.label, data:rLabels.map(l=>rv(l,b.k)), backgroundColor:b.col, borderWidth:0, stack:'r', barPercentage:0.72 })) },
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:22}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ title: it => it[0].label==='Prom Ene–Jun' ? 'Promedio Ene–Jun por corte' : `Corte ${it[0].label} · ${Math.round(rtot(it[0].label))} clientes rolaron`,
+          label: ctx => { const l = rLabels[ctx.dataIndex], b = BANDS[ctx.datasetIndex].k; const v = rv(l,b);
+            const n = l==='Prom Ene–Jun' ? pre.reduce((a,c)=>a+D[c][b].n,0)/pre.length : D[l][b].n;
+            return ` ${BANDS[ctx.datasetIndex].label}: ${Math.round(v)} rolaron de ${Math.round(n)} no pagadores (${(v/n*100).toFixed(1)}%) · ${(v/rtot(l)*100).toFixed(0)}% de los rolados`; } } } },
+      scales:{ x:{stacked:true,grid:{display:false},ticks:{color:'#1F1F1F',font: c => ({size:11, weight: c.index===0 ? '700' : '400'})}},
+        y:{stacked:true,min:0,suggestedMax:110,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780'},title:{display:true,text:'clientes que rolaron a Bkt 2',color:'#888780',font:{size:11}}} } },
+    plugins:[shade(rLabels), { id:'rVals', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.textAlign='center'; c.textBaseline='middle'; c.font='bold 11px -apple-system,sans-serif';
+      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ if (Math.abs(bar.base-bar.y) < 13) return; c.fillStyle = k===0 ? '#fff' : '#6B2A12'; c.fillText(Math.round(ds.data[i]), bar.x, (bar.y+bar.base)/2); }); });
+      const top = ch.getDatasetMeta(ch.data.datasets.length-1).data; c.textBaseline='bottom'; c.fillStyle='#1F1F1F';
+      top.forEach((bar,i)=>{ c.fillText(Math.round(rtot(rLabels[i])), bar.x, bar.y-3); }); c.restore(); } }]
+  });
+
+  // ③b Rolados de más en Jul–Sep: reales vs esperados con tasa Ene–Jun
+  const AS = cs.filter(isPost);
+  const realB = b => AS.reduce((a,c)=>a+D[c][b].roll,0);
+  const espB = b => band(pre,b)/100 * AS.reduce((a,c)=>a+D[c][b].n,0);
+  if (charts.diagRentaExtra) charts.diagRentaExtra.destroy();
+  charts.diagRentaExtra = new Chart(document.getElementById('diagRentaExtraChart'), {
+    type:'bar',
+    data:{ labels: BANDS.map(b=>b.label), datasets:[
+      { label:'Esperados (tasa Ene–Jun)', data:BANDS.map(b=>espB(b.k)), backgroundColor:'#C4C3BD', borderWidth:0, borderRadius:4, barPercentage:0.8, categoryPercentage:0.6 },
+      { label:'Reales Jul–Sep', data:BANDS.map(b=>realB(b.k)), backgroundColor:'#D85A30', borderWidth:0, borderRadius:4, barPercentage:0.8, categoryPercentage:0.6 } ]},
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:26}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ label: ctx => ` ${ctx.dataset.label}: ${Math.round(ctx.parsed.y)} clientes (15-jul + 15-ago + 15-sep)` } } },
+      scales:{ x:{grid:{display:false},ticks:{color:'#1F1F1F',font:{size:12,weight:'600'}}}, y:{min:0,suggestedMax:130,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780'},title:{display:true,text:'clientes que rolaron (15-jul a 15-sep)',color:'#888780',font:{size:11}}} } },
+    plugins:[{ id:'extraVals', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.textAlign='center'; c.font='bold 11px -apple-system,sans-serif';
+      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ c.fillStyle='#1F1F1F'; c.fillText(Math.round(ds.data[i]), bar.x, bar.y-6); }); });
+      const m0 = ch.getDatasetMeta(0).data, m1 = ch.getDatasetMeta(1).data;
+      BANDS.forEach((b,i)=>{ const d = Math.round(realB(b.k) - espB(b.k)); const x = (m0[i].x + m1[i].x)/2, y = Math.min(m0[i].y, m1[i].y) - 22;
+        c.font='bold 13px -apple-system,sans-serif'; c.fillStyle = d > 2 ? '#D85A30' : '#5F5E5A'; c.fillText(d > 0 ? `+${d} de más` : (d === 0 ? 'igual' : `${d} (igual que antes)`), x, y); });
+      c.restore(); } }]
+  });
+  if (!AS.length) { document.getElementById('diagRentaTake').innerHTML = '<strong>Para contarlo:</strong> faltan cortes de Jul–Sep para el filtro elegido.'; }
+  const exB = b => realB(b) - espB(b);
+  const extraLow = exB('bajo') + exB('medio'), extraAlto = exB('alto');
+  const exMonth = (c,b) => D[c][b].roll - band(pre,b)/100*D[c][b].n;
+  const altoJul = inM('jul').reduce((a,c)=>a+exMonth(c,'alto'),0), altoAS = inM('ago','sep').reduce((a,c)=>a+exMonth(c,'alto'),0);
+  const lowNow = D[last].bajo.roll + D[last].medio.roll, lowPre = (rv('Prom Ene–Jun','bajo') + rv('Prom Ene–Jun','medio'));
+  if (AS.length) document.getElementById('diagRentaTake').innerHTML = `<strong>Para contarlo:</strong> en Jul–Sep rolaron ~${Math.round(extraLow+extraAlto)} clientes de más de lo esperado con la tasa de Ene–Jun: ~${Math.round(extraLow)} con renta menor a $13k y ~${Math.round(extraAlto)} con renta mayor a $13k. Los de renta alta de más son casi todos de julio (~${Math.round(altoJul)}, con Fase 1 en 1 gestor + Colektia); en agosto y septiembre las rentas mayores a $13k ya rolaron igual que antes (${Math.round(altoAS) >= 0 ? '+' : ''}${Math.round(altoAS)}), pero las menores a $13k siguieron arriba: de los ${Math.round(rtot(last))} que rolaron en ${last}, ${lowNow} tienen renta menor a $13k (antes ${Math.round(lowPre)} de ${Math.round(rtot('Prom Ene–Jun'))} por corte). Con el equipo saturado se trabaja primero el monto alto (la meta es % de monto) y las cuentas chicas se quedan sin gestión.`;
+
+  // ③c Fase 2 por tamaño de renta y trimestre
+  const BF = Object.assign({}, rolloverDiagBandF2_1, rolloverDiagBandF2);
+  const BF1all = Object.assign({}, rolloverDiagBandF1_1, rolloverDiagBandF1);
+  const Q = { 'Ene–Mar': inM('ene','feb','mar').filter(c=>BF[c]), 'Abr–Jun': inM('abr','may','jun').filter(c=>BF[c]), 'Jul–Sep': inM('jul','ago','sep').filter(c=>BF[c]) };
+  const qRec = (q,b) => { const f2 = Q[q].reduce((a,c)=>a+BF[c][b].f2,0), r = Q[q].reduce((a,c)=>a+BF[c][b].rec,0); return {pct: r/f2*100, r, f2}; };
+  const qs = Object.keys(Q).filter(q => Q[q].length);
+  if (charts.diagBandF2) charts.diagBandF2.destroy();
+  charts.diagBandF2 = new Chart(document.getElementById('diagBandF2Chart'), {
+    type:'bar',
+    data:{ labels: BANDS.map(b=>b.label), datasets: qs.map((q,i) => ({ label:q, data: BANDS.map(b=>qRec(q,b.k).pct), backgroundColor:['rgba(29,158,117,0.30)','rgba(29,158,117,0.60)','#1D9E75'][i], borderWidth:0, borderRadius:4 })) },
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:20}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ label: ctx => { const o = qRec(qs[ctx.datasetIndex], BANDS[ctx.dataIndex].k); return ` ${qs[ctx.datasetIndex]}: ${o.r} de ${o.f2} se recuperaron en Fase 2 (${o.pct.toFixed(1)}%)`; } } } },
+      scales:{ x:{grid:{display:false},ticks:{color:'#1F1F1F',font:{size:12,weight:'600'}}}, y:{min:60,max:95,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',callback:v=>v+'%'},title:{display:true,text:'% que se recupera en Fase 2',color:'#888780',font:{size:11}}} } },
+    plugins:[{ id:'bandF2Vals', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.font='bold 11px -apple-system,sans-serif'; c.textAlign='center'; c.fillStyle='#1F1F1F';
+      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ const o = CKD[csK[i]][GRP[k].k]; const ast = (diagColkM!=='f1' && o && o.partial) ? '*' : ''; c.fillText(ds.data[i].toFixed(1)+'%'+ast, bar.x, bar.y-6); }); }); c.restore(); } }]
+  });
+  if (!Q['Jul–Sep'].length || !Q['Ene–Mar'].length) { document.getElementById('diagBandF2Take').innerHTML = '<strong>Para contarlo:</strong> faltan datos de Jul–Sep o Ene–Mar para el filtro elegido.'; } else {
+  const dB = b => qRec('Jul–Sep',b).pct - qRec('Ene–Mar',b).pct;
+  document.getElementById('diagBandF2Take').innerHTML = `<strong>Para contarlo:</strong> en Fase 2, las rentas mayores a $13k se recuperan igual todo el año (${qRec('Ene–Mar','alto').pct.toFixed(1)}% → ${qRec('Jul–Sep','alto').pct.toFixed(1)}%), mientras las rentas de $9k–$13k bajan ${Math.abs(dB('medio')).toFixed(1)} pts y las menores a $9k bajan ${Math.abs(dB('bajo')).toFixed(1)} pts (${qRec('Ene–Mar','bajo').pct.toFixed(1)}% → ${qRec('Jul–Sep','bajo').pct.toFixed(1)}%). En el primer trimestre las rentas bajas eran las que <em>mejor</em> se recuperaban; hoy son las que peor. La caída es gradual desde febrero, no un golpe en julio: apunta a capacidad y cansancio del equipo de Fase 2, que cada vez prioriza más las cuentas grandes.`; }
+
+  // ③c' Fase 1 por tamaño de renta y trimestre
+  const BF1 = BF1all;
+  const qRec1 = (q,b) => { const n = Q[q].reduce((a,c)=>a+BF1[c][b].n,0), r = Q[q].reduce((a,c)=>a+BF1[c][b].rec,0); return {pct: r/n*100, r, n}; };
+  if (charts.diagBandF1) charts.diagBandF1.destroy();
+  charts.diagBandF1 = new Chart(document.getElementById('diagBandF1Chart'), {
+    type:'bar',
+    data:{ labels: BANDS.map(b=>b.label), datasets: qs.map((q,i) => ({ label:q, data: BANDS.map(b=>qRec1(q,b.k).pct), backgroundColor:['rgba(29,158,117,0.30)','rgba(29,158,117,0.60)','#1D9E75'][i], borderWidth:0, borderRadius:4 })) },
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:20}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ label: ctx => { const o = qRec1(qs[ctx.datasetIndex], BANDS[ctx.dataIndex].k); return ` ${qs[ctx.datasetIndex]}: ${o.r} de ${o.n} se recuperaron en Fase 1 (${o.pct.toFixed(1)}%)`; } } } },
+      scales:{ x:{grid:{display:false},ticks:{color:'#1F1F1F',font:{size:12,weight:'600'}}}, y:{min:30,max:70,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',callback:v=>v+'%'},title:{display:true,text:'% que se recupera en Fase 1',color:'#888780',font:{size:11}}} } },
+    plugins:[{ id:'bandF1Vals', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.font='bold 11px -apple-system,sans-serif'; c.textAlign='center'; c.fillStyle='#1F1F1F';
+      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ const o = CKD[csK[i]][GRP[k].k]; const ast = (diagColkM!=='f1' && o && o.partial) ? '*' : ''; c.fillText(ds.data[i].toFixed(1)+'%'+ast, bar.x, bar.y-6); }); }); c.restore(); } }]
+  });
+  if (!Q['Jul–Sep'].length || !Q['Abr–Jun'].length) { document.getElementById('diagBandF1Take').innerHTML = '<strong>Para contarlo:</strong> faltan datos de Jul–Sep o Abr–Jun para el filtro elegido.'; } else {
+  const d1 = b => qRec1('Jul–Sep',b).pct - qRec1('Abr–Jun',b).pct;
+  document.getElementById('diagBandF1Take').innerHTML = `<strong>Para contarlo:</strong> en Fase 1 no hay priorización por tamaño. En Jul–Sep la recuperación bajó en todas las rentas contra Abr–Jun (menores a $9k ${d1('bajo').toFixed(1)} pts, $9k–$13k ${d1('medio').toFixed(1)} pts, mayores a $13k ${d1('alto').toFixed(1)} pts), incluso un poco más en las grandes. Es una caída pareja por falta de gente (1 gestor + Colektia en julio y agosto), no por elegir qué cuentas trabajar. La priorización de cuentas grandes aparece en Fase 2.`; }
+
+
+  // ⑤ Curva diaria de Fase 2
+  const CV = rolloverDiagCurves, csCv = cs.filter(c => CV[c]);
+  const QM = { 'Ene–Mar':['ene','feb','mar'], 'Abr–Jun':['abr','may','jun'], 'Jul–Sep':['jul','ago','sep'] };
+  const curveOf = q => { const ks = csCv.filter(c => QM[q].includes(monthOf(c))); if (!ks.length) return null;
+    const Lm = Math.min(...ks.map(k => CV[k].days)); const n = ks.reduce((a,k)=>a+CV[k][diagCurveBand].n,0);
+    return { n, pts: Array.from({length:Lm}, (_,i) => ks.reduce((a,k)=>a+CV[k][diagCurveBand].cum[i],0)/n*100) }; };
+  const qsC = Object.keys(QM).filter(q => curveOf(q));
+  const maxL = Math.max(...qsC.map(q => curveOf(q).pts.length));
+  if (charts.diagCurve) charts.diagCurve.destroy();
+  charts.diagCurve = new Chart(document.getElementById('diagCurveChart'), {
+    type:'line',
+    data:{ labels: Array.from({length:maxL}, (_,i) => `Día ${i+1}`), datasets: qsC.map((q,i) => { const o = curveOf(q); return { label:`${q} (${o.n.toLocaleString()} cuentas)`, data:o.pts,
+      borderColor:['rgba(29,158,117,0.35)','rgba(29,158,117,0.65)','#D85A30'][Object.keys(QM).indexOf(q)], backgroundColor:'transparent', borderWidth: q==='Jul–Sep' ? 3 : 2, tension:0.25, pointRadius:2 }; }) },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, layout:{padding:{right:40}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:14,boxHeight:3}},
+        tooltip:{...tip, callbacks:{ label: ctx => ` ${ctx.dataset.label.split(' (')[0]}: ${ctx.parsed.y.toFixed(1)}% recuperado al ${ctx.label.toLowerCase()}` } } },
+      scales:{ x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',font:{size:11}}}, y:{min:0,max:100,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',callback:v=>v+'%'},title:{display:true,text:'% acumulado recuperado de lo que llegó a F2',color:'#888780',font:{size:11}}} } },
+    plugins:[{ id:'curveEnd', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.font='bold 11px -apple-system,sans-serif'; c.textAlign='left';
+      ch.data.datasets.forEach((ds,k)=>{ const m=ch.getDatasetMeta(k).data; const i=ds.data.length-1; if (i<0) return; c.fillStyle=ds.borderColor; c.fillText(ds.data[i].toFixed(0)+'%', m[i].x+6, m[i].y+4); }); c.restore(); } }]
+  });
+  { const a = curveOf('Abr–Jun') || curveOf('Ene–Mar'), b = curveOf('Jul–Sep');
+    if (a && b) { const L2 = Math.min(a.pts.length, b.pts.length); const gap = i => a.pts[i]-b.pts[i];
+      const first5 = Math.max(...[0,1,2,3,4].map(i=>gap(i)));
+      let gi = 0; for (let i=0;i<L2-1;i++) if (gap(i) > gap(gi)) gi = i;
+      const lastJump = b.pts[L2-1]-b.pts[L2-2];
+      document.getElementById('diagCurveTake').innerHTML = `<strong>Para contarlo:</strong> en los primeros 5 días Jul–Sep va casi igual que ${curveOf('Abr–Jun') ? 'Abr–Jun' : 'Ene–Mar'} (brecha máxima de ${first5.toFixed(0)} pts). La brecha se abre en la segunda semana: llega a ${gap(gi).toFixed(0)} pts el día ${gi+1}, y solo se cierra a ${gap(L2-1).toFixed(0)} pts por un brinco de ${lastJump.toFixed(0)} pts el último día. El equipo no arranca peor: pierde tracción en la recta final de la quincena (cuando dicen que se acaba el presupuesto de CC One, se bloquean los WhatsApp y ya entró la siguiente Fase 1) y recupera al final a contrarreloj. Ojo: parte del brinco del último día puede ser fecha de pago puesta por default, como pasó en el 15-ago.`; }
+    else document.getElementById('diagCurveTake').innerHTML = '<strong>Para contarlo:</strong> faltan trimestres para comparar con el filtro elegido.'; }
+
+  // ⑥ Destino de los que rolan
+  const DS = rolloverDiagDest, csD = cs.filter(c => DS[c] && DS[c][diagDestH]);
+  const DSEG = [ {k:'recupero',label:'Regresó a Bkt 1',col:'#1D9E75'}, {k:'sin_dato',label:'Ya no aparece en cobranza',col:'rgba(29,158,117,0.4)'}, {k:'bkt2',label:'Sigue en Bkt 2',col:'#EF9F27'}, {k:'bkt3plus',label:'Empeoró a Bkt 3+',col:'#D85A30'}, {k:'dacion',label:'Dación',col:'#3B3ACA'} ];
+  if (charts.diagDest) charts.diagDest.destroy();
+  charts.diagDest = new Chart(document.getElementById('diagDestChart'), {
+    type:'bar',
+    data:{ labels: csD, datasets: DSEG.map(sg => ({ label:sg.label, data: csD.map(c => DS[c][diagDestH][sg.k]/DS[c][diagDestH].n*100), backgroundColor:sg.col, borderWidth:0, stack:'d', barPercentage:0.72 })) },
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:22}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ title: it => `Rolaron en ${it[0].label}: ${DS[it[0].label][diagDestH].n} clientes · deuda pendiente a ${diagDestH} días $${(DS[it[0].label][diagDestH].deuda/1e6).toFixed(2)}M`,
+          label: ctx => ` ${ctx.dataset.label}: ${DS[csD[ctx.dataIndex]][diagDestH][DSEG[ctx.datasetIndex].k]} clientes (${ctx.parsed.y.toFixed(0)}%)` } } },
+      scales:{ x:{stacked:true,grid:{display:false},ticks:{color:'#1F1F1F',font:{size:11}}}, y:{stacked:true,min:0,max:100,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',callback:v=>v+'%'},title:{display:true,text:'% de los clientes que rolaron',color:'#888780',font:{size:11}}} } },
+    plugins:[shade(csD), { id:'destVals', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.textAlign='center'; c.textBaseline='middle'; c.font='bold 10px -apple-system,sans-serif';
+      ch.data.datasets.forEach((ds,k)=>{ ch.getDatasetMeta(k).data.forEach((bar,i)=>{ if (Math.abs(bar.base-bar.y) < 14) return; c.fillStyle = k===1 ? '#0F5C44' : '#fff'; c.fillText(Math.round(ds.data[i])+'%', bar.x, (bar.y+bar.base)/2); }); });
+      c.textBaseline='bottom'; c.fillStyle='#1F1F1F'; const top = ch.getDatasetMeta(ch.data.datasets.length-1).data; top.forEach((bar,i)=>{ c.fillText(DS[csD[i]][diagDestH].n, bar.x, ch.chartArea.top-4); }); c.restore(); } }]
+  });
+  { const agg = (list,k) => list.reduce((a,c)=>a+DS[c][diagDestH][k],0); const preD = csD.filter(c=>!isPost(c)), postD = csD.filter(isPost);
+    if (csD.length) { const tot = l => agg(l,'n'); const pct = (l,k) => tot(l) ? agg(l,k)/tot(l)*100 : NaN;
+      const deudaPost = postD.reduce((a,c)=>a+DS[c][diagDestH].deuda,0);
+      document.getElementById('diagDestTake').innerHTML = `<strong>Para contarlo:</strong> rolar casi nunca es un retraso de días. A ${diagDestH} días, ${pct(csD,'bkt3plus').toFixed(0)}% de los que rolaron empeoró a Bkt 3+ y solo ${(pct(csD,'recupero')+pct(csD,'sin_dato')).toFixed(0)}% regresó o salió de cobranza. ${postD.length ? (() => { const rp = pct(postD,'recupero')+pct(postD,'sin_dato'), rq = pct(preD,'recupero')+pct(preD,'sin_dato');
+        const comp = rp > rq + 2 ? `En Jul–Sep regresaron más (${rp.toFixed(0)}% vs ${rq.toFixed(0)}% en Ene–Jun): los rolados "de más" eran más recuperables, consistente con cuentas chicas que se dejaron de trabajar a tiempo.` : rp < rq - 2 ? `En Jul–Sep regresaron menos (${rp.toFixed(0)}% vs ${rq.toFixed(0)}% en Ene–Jun).` : `En Jul–Sep regresó una proporción similar (${rp.toFixed(0)}% vs ${rq.toFixed(0)}% en Ene–Jun): rolan más clientes, pero no son más fáciles de recuperar después.`;
+        return comp + ` Los rolados de Jul–Sep siguen debiendo $${(deudaPost/1e6).toFixed(1)}M a ${diagDestH} días.`; })() : ''}`; }
+    else document.getElementById('diagDestTake').innerHTML = '<strong>Para contarlo:</strong> no hay cortes con seguimiento a ese plazo para el filtro elegido.'; }
+
+  // ⑦ Carga del equipo por quincena (ambos cortes, no usa el filtro)
+  const LD = rolloverDiagLoad;
+  if (charts.diagLoad) charts.diagLoad.destroy();
+  charts.diagLoad = new Chart(document.getElementById('diagLoadChart'), {
+    data:{ labels: LD.map(r=>r.q), datasets:[
+      { type:'bar', label:'BKT1 · Fase 1', data:LD.map(r=>r.f1), backgroundColor:'rgba(136,135,128,0.55)', stack:'l', yAxisID:'y', order:2 },
+      { type:'bar', label:'BKT1 · Fase 2', data:LD.map(r=>r.f2), backgroundColor:'rgba(136,135,128,0.30)', stack:'l', yAxisID:'y', order:2 },
+      { type:'bar', label:'Bkt 2 y Bkt 3', data:LD.map(r=>r.b23), backgroundColor:'#EF9F27', stack:'l', yAxisID:'y', order:2 },
+      { type:'line', label:'% que se recupera en la Fase 2 de esa quincena', data:LD.map(r=>r.rec2), yAxisID:'y2', borderColor:'#1D9E75', backgroundColor:'#1D9E75', borderWidth:2.5, tension:0.25, pointRadius:4, order:0 } ]},
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:22}},
+      plugins:{ legend:{display:true,position:'bottom',labels:{color:'#5F5E5A',font:{size:12},boxWidth:12}},
+        tooltip:{...tip, callbacks:{ title: it => `Quincena ${it[0].label} · ${LD[it[0].dataIndex].tot.toLocaleString()} cuentas en gestión`,
+          label: ctx => { const r = LD[ctx.dataIndex]; if (ctx.dataset.type==='line') return ` F2 del ${r.f2k}: ${ctx.parsed.y.toFixed(1)}% recuperado`;
+            return ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} ${ctx.datasetIndex===0 ? '('+r.f1k+')' : ctx.datasetIndex===1 ? '('+r.f2k+')' : ''}`; } } } },
+      scales:{ x:{stacked:true,grid:{display:false},ticks:{color:'#1F1F1F',font:{size:10},maxRotation:60,minRotation:45}},
+        y:{stacked:true,min:0,suggestedMax:2400,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780'},title:{display:true,text:'cuentas en gestión',color:'#888780',font:{size:11}}},
+        y2:{position:'right',min:70,max:100,grid:{display:false},ticks:{color:'#1D9E75',callback:v=>v+'%'}} } },
+    plugins:[{ id:'loadTot', afterDatasetsDraw(ch){ const c=ch.ctx; c.save(); c.font='bold 10px -apple-system,sans-serif'; c.textAlign='center'; c.fillStyle='#1F1F1F';
+      const m = ch.getDatasetMeta(2).data; m.forEach((bar,i)=>{ c.fillText(LD[i].tot.toLocaleString(), bar.x, bar.y-4); }); c.restore(); } }]
+  });
+  { const firstH = LD.slice(1,7), lastH = LD.slice(-6); const av = (a,f) => a.reduce((x,r)=>x+f(r),0)/a.length;
+    document.getElementById('diagLoadTake').innerHTML = `<strong>Para contarlo:</strong> la carga total del equipo creció de ~${Math.round(av(firstH,r=>r.tot)).toLocaleString()} cuentas por quincena (feb–abr) a ~${Math.round(av(lastH,r=>r.tot)).toLocaleString()} (ago–oct), +${((av(lastH,r=>r.tot)/av(firstH,r=>r.tot)-1)*100).toFixed(0)}%. Lo que más creció es Bkt 2 y Bkt 3: de ~${Math.round(av(firstH,r=>r.b23))} a ~${Math.round(av(lastH,r=>r.b23))} (+${((av(lastH,r=>r.b23)/av(firstH,r=>r.b23)-1)*100).toFixed(0)}%), porque los rolados de julio y agosto se acumulan. Comparando quincenas del mismo tipo, cuando la carga sube la recuperación de Fase 2 baja (correlación −0.4 a −0.6). Es un círculo: más rollover → más Bkt 2 → menos capacidad para Fase 2 → más rollover. Para confirmarlo por persona falta la asignación por gestor.`; }
+
+  // ④ Clientes vs monto
+  if (charts.diagMonto) charts.diagMonto.destroy();
+  charts.diagMonto = new Chart(document.getElementById('diagMontoChart'), {
+    type:'line',
+    data:{ labels:cs, datasets:[
+      { label:'Por clientes', data:cs.map(c=>D[c].cnt_pct), borderColor:'#D85A30', backgroundColor:'#D85A30', borderWidth:2.5, tension:0.25, pointRadius:5, pointBackgroundColor:'#D85A30', pointBorderColor:'#fff', pointBorderWidth:1.5 },
+      { label:'Por monto (renta)', data:cs.map(c=>D[c].amt_pct), borderColor:'#3B3ACA', backgroundColor:'#3B3ACA', borderWidth:2.5, borderDash:[6,4], tension:0.25, pointRadius:5, pointBackgroundColor:'#3B3ACA', pointBorderColor:'#fff', pointBorderWidth:1.5 } ]},
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:16}}, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:true,position:'bottom',align:'center',labels:{color:'#5F5E5A',font:{size:12},boxWidth:14,boxHeight:3}},
+        tooltip:{...tip, callbacks:{ label: ctx => { const d = D[cs[ctx.dataIndex]]; return ctx.datasetIndex===0
+          ? ` Por clientes: ${d.rollers} de ${d.cartera_n.toLocaleString()} (${ctx.parsed.y.toFixed(2)}%)`
+          : ` Por monto: $${(d.monto_roll/1e6).toFixed(2)}M de $${(d.cartera_m/1e6).toFixed(1)}M (${ctx.parsed.y.toFixed(2)}%)`; } } } },
+      scales:{ x:gridX, y:{min:0.6,max:1.6,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#888780',callback:v=>v.toFixed(1)+'%'}} } },
+    plugins:[shade(cs), { id:'diagGap', afterDatasetsDraw(ch){
+      const i = cs.length-1, a = ch.getDatasetMeta(0).data[i], b = ch.getDatasetMeta(1).data[i], c = ch.ctx; c.save();
+      c.font='bold 11px -apple-system,sans-serif'; c.textAlign='right';
+      c.fillStyle='#D85A30'; c.fillText(D[cs[i]].cnt_pct.toFixed(2)+'%', a.x-10, a.y-8);
+      c.fillStyle='#3B3ACA'; c.fillText(D[cs[i]].amt_pct.toFixed(2)+'%', b.x-10, b.y+16);
+      const j = 0, a0 = ch.getDatasetMeta(0).data[j]; c.textAlign='left'; c.fillStyle='#5F5E5A'; c.font='10px -apple-system,sans-serif';
+      c.restore(); } }]
+  });
+}
+
+document.addEventListener('click', e => {
+  const cb = e.target.closest('#diagCurveBand button'), dh = e.target.closest('#diagDestH button'), ck = e.target.closest('#diagColkM button');
+  if (ck) { diagColkM = ck.dataset.m; document.querySelectorAll('#diagColkM button').forEach(x => x.classList.toggle('on', x === ck)); buildRolloverDiagCharts(); }
+  if (cb) { diagCurveBand = cb.dataset.b; document.querySelectorAll('#diagCurveBand button').forEach(x => x.classList.toggle('on', x === cb)); buildRolloverDiagCharts(); }
+  if (dh) { diagDestH = dh.dataset.h; document.querySelectorAll('#diagDestH button').forEach(x => x.classList.toggle('on', x === dh)); buildRolloverDiagCharts(); }
+});
+
 function buildRolloverNsCharts() {
+  try { buildRolloverDiagCharts(); } catch (e) { console.error('diag rollover', e); }
   const cortes = getSelectedCortes().filter(c => rolloverData[c]);
 
   // Helper: % rollover según el modo elegido (total o excluyendo dación)
