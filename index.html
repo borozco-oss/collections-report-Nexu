@@ -217,6 +217,13 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
   .section{padding:20px;}
   body{padding:0;}
 }
+
+.fun-row{display:grid;grid-template-columns:150px 1fr 140px;align-items:center;gap:10px;margin:6px 0;font-size:12px;}
+.fun-lbl{color:#5F5E5A;line-height:1.25;}
+.fun-bar{height:24px;border-radius:5px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:700;font-size:11.5px;min-width:2px;white-space:nowrap;}
+.fun-val{text-align:right;color:#1F1F1F;font-weight:700;line-height:1.2;}
+.fun-val span{display:block;font-weight:500;color:#888780;font-size:10.5px;white-space:nowrap;}
+.fun-arrow{margin:2px 0 2px 150px;color:#B5B4AE;font-size:11px;padding-left:10px;}
 </style>
 </head>
 <body>
@@ -1033,107 +1040,48 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
 
 <!-- TAB: MORA TEMPRANA (NORTH STAR #3) -->
 <div class="tab-panel" id="tab-moratemprana">
+
   <div class="section" style="margin-bottom:16px;">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:8px;">
-      <div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-          <span style="font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:#854F0B;background:#FFF8E6;border:0.5px solid #EF9F27;border-radius:4px;padding:2px 8px;">⭐ North Star #3</span>
-        </div>
-        <h2 style="margin:0 0 4px;font-size:18px;">Mora temprana · clientes nuevos en sus primeros 3 pagos</h2>
-        <p class="subtitle" style="margin:0;">De los clientes originados en cada corte, ¿qué porcentaje no pagó su primera, segunda o tercera mensualidad en el periodo correspondiente? Esta métrica combina calidad de originación y efectividad de cobranza temprana.</p>
+    <h2 style="margin-bottom:4px;">Funnel de primeros pagos · de la domi a la recuperación</h2>
+    <p class="subtitle" style="margin-bottom:12px;">Qué pasa con los clientes en su 1ª, 2ª y 3ª mensualidad: cuántos pagan en la domi, cuántos llegan a cobranza, en cuántos días se recuperan y cuántos quedan sin recuperar. Fuente: reporte de primeros pagos del equipo de Riesgos.</p>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:#5F5E5A;font-weight:600;">Segmento:</span>
+        <div class="crec-seg" id="funSeg"><button data-s="all" class="on">M1–M3</button><button data-s="m1">M1 · 1ª renta</button><button data-s="m2">M2 · 2ª renta</button><button data-s="m3">M3 · 3ª renta</button></div></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:#5F5E5A;font-weight:600;">Periodo:</span>
+        <select id="funPer" style="font-size:12px;padding:5px 8px;border:1px solid #D3D1C7;border-radius:6px;background:#fff;"></select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
+      <div style="border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:14px 16px;">
+        <p style="font-size:12.5px;font-weight:700;color:#1F1F1F;margin:0 0 10px;">1 · Domiciliación</p>
+        <div id="funL1"></div>
+      </div>
+      <div style="border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:14px 16px;">
+        <p style="font-size:12.5px;font-weight:700;color:#1F1F1F;margin:0 0 2px;">2 · Cobranza <span style="font-weight:500;color:#888780;">· de los que llegan a cobranza (= 100%)</span></p>
+        <div id="funL2"></div>
       </div>
     </div>
-    <div class="info-box" style="margin-bottom:20px;">
-      <p class="info-title">Cómo se calcula y cómo leerlo</p>
-      <p style="margin:0;"><strong>Mora M1/M2/M3</strong>: % de cada cohorte de originación que no pagó la mensualidad correspondiente al cierre del periodo. Permite ver si una cohorte se está deteriorando más rápido que las anteriores. <strong>Sin Recuperar</strong> (gráfica de alerta): % que terminó completamente sin pagar — la señal más fuerte de pérdida real o potencial fraude.</p>
+    <div style="border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:14px 16px;margin-top:16px;">
+      <p style="font-size:12.5px;font-weight:700;color:#1F1F1F;margin:0 0 10px;">3 · Resultado al final del periodo <span style="font-weight:500;color:#888780;">· % de los créditos del segmento</span></p>
+      <div id="funFinal"></div>
+      <div class="bkt-vals-wrap" id="funFinalTable" style="margin-top:12px;"></div>
     </div>
+    <p style="font-size:13px;font-weight:600;color:#1F1F1F;margin:18px 0 2px;">¿Qué tan rápido se recuperan? · % acumulado de los que llegan a cobranza</p>
+    <div class="chart-wrap-md" style="height:300px;"><canvas id="funCurve"></canvas></div>
+    <p class="meta" id="funNote" style="margin-top:8px;"></p>
   </div>
 
-  <!-- KPIs principales -->
   <div class="section" style="margin-bottom:16px;">
-    <div class="grid-3" style="margin-bottom:8px;">
-      <div class="kpi" style="border-left:3px solid #1D9E75;">
-        <p class="kpi-label">Promedio mora M1</p>
-        <p class="kpi-value" style="color:#1D9E75;" id="moraAvgM1">—</p>
-        <p class="kpi-sub">primera mensualidad</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #3B3ACA;">
-        <p class="kpi-label">Promedio mora M2</p>
-        <p class="kpi-value" style="color:#3B3ACA;" id="moraAvgM2">—</p>
-        <p class="kpi-sub">segunda mensualidad</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #EF9F27;">
-        <p class="kpi-label">Promedio mora M3</p>
-        <p class="kpi-value" style="color:#EF9F27;" id="moraAvgM3">—</p>
-        <p class="kpi-sub">tercera mensualidad</p>
-      </div>
-    </div>
-    <div class="grid-3">
-      <div class="kpi" style="border-left:3px solid #D85A30;">
-        <p class="kpi-label">Sin Recuperar promedio (alerta)</p>
-        <p class="kpi-value" style="color:#D85A30;" id="moraAvgSR">—</p>
-        <p class="kpi-sub">% que no pagó en absoluto (M1+M2+M3)</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #5F5E5A;">
-        <p class="kpi-label">Cohortes analizadas</p>
-        <p class="kpi-value" style="color:#5F5E5A;" id="moraTotalCohortes">—</p>
-        <p class="kpi-sub">cortes en la ventana</p>
-      </div>
-      <div class="kpi" style="border-left:3px solid #5F5E5A;">
-        <p class="kpi-label">Clientes nuevos totales</p>
-        <p class="kpi-value" style="color:#5F5E5A;" id="moraTotalCreditos">—</p>
-        <p class="kpi-sub">suma de M1 (créditos originados)</p>
-      </div>
-    </div>
+    <h2 style="margin-bottom:4px;">Cobrado al final por corte · domi + cobranza</h2>
+    <p class="subtitle" style="margin-bottom:10px;">Para cada corte: qué % de los créditos del segmento pagó en la domi (verde) y cuánto se recuperó en cobranza (azul); arriba, el % cobrado al final del periodo. Las tres gráficas usan la misma escala para compararlas. <strong>El eje empieza en 85%</strong> para que se vean las diferencias.</p>
+    <p style="font-size:13px;font-weight:700;color:#1D9E75;margin:10px 0 2px;">M1 · 1ª renta</p>
+    <div class="chart-wrap" style="height:300px;"><canvas id="finM1"></canvas></div>
+    <p style="font-size:13px;font-weight:700;color:#EF9F27;margin:16px 0 2px;">M2 · 2ª renta</p>
+    <div class="chart-wrap" style="height:300px;"><canvas id="finM2"></canvas></div>
+    <p style="font-size:13px;font-weight:700;color:#D85A30;margin:16px 0 2px;">M3 · 3ª renta</p>
+    <div class="chart-wrap" style="height:300px;"><canvas id="finM3"></canvas></div>
+    <p class="meta" style="margin-top:8px;">Cobrado al final = pagaron en la domi (incluye SPEI en la ventana) + recuperados en cobranza en 30 días; lo que falta para 100% es "sin recuperar". Los cortes en curso (rayados) todavía no terminan su seguimiento, así que su cobranza va a subir. Fuente: reporte de primeros pagos de Riesgos. Respeta el filtro de cortes de arriba.</p>
   </div>
-
-  <!-- Gráfica principal: Tendencia M1/M2/M3 -->
-  <div class="section" style="margin-bottom:16px;">
-    <h2 style="margin-bottom:4px;">Mora por mensualidad · M1, M2 y M3 corte a corte</h2>
-    <p class="subtitle">Tres líneas que comparan cómo paga cada cohorte. Si M1 sube, la calidad de la cartera nueva se está deteriorando. Si M2 o M3 suben sin que M1 lo haga, hay un tema de cobranza posterior.</p>
-    <div class="chart-wrap-md"><canvas id="moraMnChart"></canvas></div>
-    <p style="font-size:11px;color:#888780;margin:6px 0 0;">Eje Y: % no cobrado al cierre del periodo (mes actual). El patrón esperado es M1 &lt; M2 &lt; M3 (deterioro natural por antigüedad de cartera).</p>
-  </div>
-
-  <!-- Gráfica de alerta: Sin Recuperar -->
-  <div class="section" style="margin-bottom:16px;">
-    <h2 style="margin-bottom:4px;">Alerta · % Sin Recuperar (potencial pérdida o fraude)</h2>
-    <p class="subtitle">Esta es la métrica quirúrgica: clientes que al cierre no pagaron en absoluto. Volúmenes chicos pero materialmente importantes — cada cuenta aquí potencialmente se va a pérdida.</p>
-    <div class="chart-wrap-md"><canvas id="moraSRChart"></canvas></div>
-  </div>
-
-  <!-- Tabla -->
-  <div class="section" style="margin-bottom:16px;">
-    <h2 style="margin-bottom:4px;">Detalle por corte</h2>
-    <p class="subtitle">Números absolutos y porcentajes por cohorte. Útil para profundizar en cortes específicos.</p>
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;font-family:-apple-system,sans-serif;">
-        <thead>
-          <tr style="background:#F7F7FC;border-bottom:1px solid rgba(0,0,0,0.08);">
-            <th style="text-align:left;padding:10px 12px;font-weight:600;color:#5F5E5A;">Corte</th>
-            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#1D9E75;">Créditos M1</th>
-            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#1D9E75;">Mora M1</th>
-            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#3B3ACA;">Mora M2</th>
-            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#EF9F27;">Mora M3</th>
-            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#D85A30;">Sin Rec M1</th>
-            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#D85A30;">Sin Rec M2</th>
-            <th style="text-align:right;padding:10px 12px;font-weight:600;color:#D85A30;">Sin Rec M3</th>
-          </tr>
-        </thead>
-        <tbody id="moraTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Note box -->
-  <div class="section">
-    <div class="note-box">
-      <p class="note-title">Cómo accionar este norte</p>
-      <p style="margin:0 0 8px;"><strong>Si sube M1:</strong> probable problema de calidad de originación. Revisar perfil de los clientes recién originados (banco, monto, scoring, canal).</p>
-      <p style="margin:0 0 8px;"><strong>Si sube M2 o M3 sin que M1 lo haga:</strong> problema de cobranza temprana — la cartera entró bien pero se está deteriorando rápido. Aquí entran las iniciativas de Colectia y contacto preventivo intensivo.</p>
-      <p style="margin:0;"><strong>Si sube Sin Recuperar:</strong> revisar caso por caso en la hoja de Leads Alertados — pueden ser señales de fraude (cuentas inexistentes, GPS apagado, no contactabilidad, etc.).</p>
-    </div>
-  </div>
+  <!-- Secciones de mora M1/M2/M3, alerta sin recuperar y detalle eliminadas (10-nov-2026) a pedido de Baruch -->
 </div>
 
 </div><!-- .page -->
@@ -1328,6 +1276,16 @@ h3{font-size:15px;font-weight:500;margin:24px 0 12px;color:#1F1F1F;}
    1-oct) se movieron al 1er intento; 15-oct 238/788 (200 el 15-oct). 01-jul y 01-oct todos BKT1. 01-jul: intentoSplitData, intentoPagoData, extraData.combined,
    curvas bkt1/cartera (clientes y $) y domiIntentos ajustados por delta; D+30 sin cambio. 01-oct: intentoSplitPrevio.
    Regla: el SPEI pertenece al intento cuya fecha es >= la fecha real de pago. Pedir a Finanzas fijar este criterio.
+   *** Mora temprana: se quitaron KPIs, mora M1/M2/M3, alerta sin recuperar y tabla (10-nov-2026); quedan funnel y cobrado al final.
+   *** COBRADO AL FINAL POR CORTE (10-nov-2026): buildMoraFinalCharts() = 3 gráficas (M1, M2, M3), domi + cobranza
+   por corte desde moraTempranaData; eje 85–100%; cortes en curso rayados.
+   *** FUNNEL PRIMEROS PAGOS (10-nov-2026): buildMoraFunnel() usa moraTempranaData (créditos → domiciliados → llegan a
+   cobranza → recuperados por días → sin recuperar); 'Todo el año' excluye cortes en curso. Cierra exacto en los 63 casos.
+   *** MORA TEMPRANA (10-nov-2026): moraTempranaData actualizado con REPORTE_GENERAL_1EROS_PAGOS de Riesgos, 21 cortes
+   (01-ene → 01-nov; 01-nov en curso). Coincide exacto con los 9 cortes previos y con M1/M2/M3 del CPR (p. ej. 01-nov).
+   *** 01-nov PREVIO (9-nov-2026): Domi_01__Resultado (8,191 VIN; intentos 3/4/5/6-nov; 'Mes_num'=10 en el archivo es
+   error de Finanzas). Bucket = 'BKT actualizado al siguiente corte' del Cierre 01-oct. BKT1 previo 84.46%. SPEI del 2do
+   intento alto (4.1% vs 5.9% en el 1ro) -> candidato a auditoría por fecha real. Al llegar el Cierre: correr, cotejar, final.
    *** REGLA PREVIO → FINAL (21-oct-2026): cuando solo hay Resultado de domi, el pago a tiempo se publica como PREVIO
    (pagoATiempoPrevio: bucket = 'BKT ACTUALIZADO AL SIGUIENTE CORTE' del Cierre anterior del mismo día). Al llegar el
    Cierre: correr el pipeline completo, COTEJAR contra el previo (validado: 01-sep 83.96→83.97, 15-sep 83.98→84.01),
@@ -2204,55 +2162,10 @@ const rolloverData = {
 // Mora temprana — primeros 3 pagos por cohorte (REPORTE_GENERAL_1EROS_PAGOS)
 // mora_pct = % no cobrado al cierre del periodo (mes actual)
 // sin_rec / sin_rec_pct = clientes completamente sin pagar (alerta de pérdida o fraude)
-const moraTempranaData = {
-  '01-ene': {
-    m1: {creditos:314, mora_pct:4.14, sin_rec:0, sin_rec_pct:0.0},
-    m2: {creditos:211, mora_pct:7.11, sin_rec:1, sin_rec_pct:0.47},
-    m3: {creditos:228, mora_pct:10.53, sin_rec:2, sin_rec_pct:0.88},
-  },
-  '15-ene': {
-    m1: {creditos:280, mora_pct:4.64, sin_rec:2, sin_rec_pct:0.71},
-    m2: {creditos:275, mora_pct:4.0, sin_rec:1, sin_rec_pct:0.36},
-    m3: {creditos:216, mora_pct:6.02, sin_rec:0, sin_rec_pct:0.0},
-  },
-  '01-feb': {
-    m1: {creditos:347, mora_pct:2.59, sin_rec:3, sin_rec_pct:0.86},
-    m2: {creditos:316, mora_pct:3.8, sin_rec:0, sin_rec_pct:0.0},
-    m3: {creditos:210, mora_pct:5.71, sin_rec:2, sin_rec_pct:0.95},
-  },
-  '15-feb': {
-    m1: {creditos:257, mora_pct:3.11, sin_rec:1, sin_rec_pct:0.39},
-    m2: {creditos:281, mora_pct:5.69, sin_rec:2, sin_rec_pct:0.71},
-    m3: {creditos:273, mora_pct:6.23, sin_rec:2, sin_rec_pct:0.73},
-  },
-  '01-mar': {
-    m1: {creditos:313, mora_pct:5.11, sin_rec:0, sin_rec_pct:0.0},
-    m2: {creditos:347, mora_pct:6.05, sin_rec:3, sin_rec_pct:0.86},
-    m3: {creditos:315, mora_pct:7.62, sin_rec:0, sin_rec_pct:0.0},
-  },
-  '15-mar': {
-    m1: {creditos:335, mora_pct:4.48, sin_rec:1, sin_rec_pct:0.3},
-    m2: {creditos:258, mora_pct:2.71, sin_rec:1, sin_rec_pct:0.39},
-    m3: {creditos:280, mora_pct:7.14, sin_rec:5, sin_rec_pct:1.79},
-  },
-  '01-abr': {
-    m1: {creditos:309, mora_pct:2.59, sin_rec:0, sin_rec_pct:0.0},
-    m2: {creditos:312, mora_pct:4.17, sin_rec:1, sin_rec_pct:0.32},
-    m3: {creditos:346, mora_pct:7.8, sin_rec:3, sin_rec_pct:0.87},
-  },
-  '15-abr': {
-    m1: {creditos:326, mora_pct:6.13, sin_rec:2, sin_rec_pct:0.61},
-    m2: {creditos:334, mora_pct:6.59, sin_rec:3, sin_rec_pct:0.9},
-    m3: {creditos:258, mora_pct:4.65, sin_rec:1, sin_rec_pct:0.39},
-  },
-  '01-may': {
-    m1: {creditos:353, mora_pct:5.38, sin_rec:0, sin_rec_pct:0.0},
-    m2: {creditos:306, mora_pct:5.23, sin_rec:1, sin_rec_pct:0.33},
-    m3: {creditos:312, mora_pct:6.41, sin_rec:2, sin_rec_pct:0.64},
-  },
-  // Nota: 15-may-26 omitido porque su periodo de cobranza aún no cierra (D+30).
-  // Los porcentajes serían artificialmente altos porque muchos clientes todavía van a pagar.
-};
+// Fuente: REPORTE_GENERAL_1EROS_PAGOS (equipo de Riesgos), hojas 'Corte del …'. mora_pct = (créditos − domiciliados)/créditos;
+// sin_rec = 'Sin Recuperar' al cierre del seguimiento; dias = recuperados en 1–5, 6–10, 11–15, 16–20, 21–25 y 26–30 días.
+// en_curso = corte cuyo seguimiento de 30 días aún no termina (sin_rec no es final). Actualizado 10-nov-2026 (ene–01-nov).
+const moraTempranaData = {"01-ene": {"m1": {"creditos": 314, "domiciliados": 301, "no_op": 13, "mora_pct": 4.14, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 13, "dias": [0, 7, 5, 1, 0, 0]}, "m2": {"creditos": 211, "domiciliados": 196, "no_op": 15, "mora_pct": 7.11, "sin_rec": 1, "sin_rec_pct": 0.47, "recup": 14, "dias": [0, 5, 6, 1, 0, 2]}, "m3": {"creditos": 228, "domiciliados": 204, "no_op": 24, "mora_pct": 10.53, "sin_rec": 2, "sin_rec_pct": 0.88, "recup": 22, "dias": [0, 7, 9, 2, 1, 3]}}, "15-ene": {"m1": {"creditos": 280, "domiciliados": 267, "no_op": 13, "mora_pct": 4.64, "sin_rec": 2, "sin_rec_pct": 0.71, "recup": 11, "dias": [0, 1, 7, 3, 0, 0]}, "m2": {"creditos": 275, "domiciliados": 264, "no_op": 11, "mora_pct": 4.0, "sin_rec": 1, "sin_rec_pct": 0.36, "recup": 10, "dias": [0, 1, 6, 3, 0, 0]}, "m3": {"creditos": 216, "domiciliados": 203, "no_op": 13, "mora_pct": 6.02, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 13, "dias": [0, 5, 4, 2, 2, 0]}}, "01-feb": {"m1": {"creditos": 347, "domiciliados": 338, "no_op": 9, "mora_pct": 2.59, "sin_rec": 3, "sin_rec_pct": 0.86, "recup": 6, "dias": [0, 3, 3, 0, 0, 0]}, "m2": {"creditos": 316, "domiciliados": 304, "no_op": 12, "mora_pct": 3.8, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 12, "dias": [0, 5, 3, 2, 1, 1]}, "m3": {"creditos": 210, "domiciliados": 198, "no_op": 12, "mora_pct": 5.71, "sin_rec": 2, "sin_rec_pct": 0.95, "recup": 10, "dias": [0, 2, 3, 4, 0, 1]}}, "15-feb": {"m1": {"creditos": 257, "domiciliados": 249, "no_op": 8, "mora_pct": 3.11, "sin_rec": 1, "sin_rec_pct": 0.39, "recup": 7, "dias": [2, 3, 1, 1, 0, 0]}, "m2": {"creditos": 281, "domiciliados": 265, "no_op": 16, "mora_pct": 5.69, "sin_rec": 2, "sin_rec_pct": 0.71, "recup": 14, "dias": [3, 5, 2, 3, 1, 0]}, "m3": {"creditos": 273, "domiciliados": 256, "no_op": 17, "mora_pct": 6.23, "sin_rec": 2, "sin_rec_pct": 0.73, "recup": 15, "dias": [1, 9, 0, 5, 0, 0]}}, "01-mar": {"m1": {"creditos": 313, "domiciliados": 297, "no_op": 16, "mora_pct": 5.11, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 16, "dias": [0, 7, 6, 3, 0, 0]}, "m2": {"creditos": 347, "domiciliados": 326, "no_op": 21, "mora_pct": 6.05, "sin_rec": 3, "sin_rec_pct": 0.86, "recup": 18, "dias": [0, 9, 4, 5, 0, 0]}, "m3": {"creditos": 315, "domiciliados": 291, "no_op": 24, "mora_pct": 7.62, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 24, "dias": [0, 12, 3, 5, 1, 3]}}, "15-mar": {"m1": {"creditos": 335, "domiciliados": 320, "no_op": 15, "mora_pct": 4.48, "sin_rec": 1, "sin_rec_pct": 0.3, "recup": 14, "dias": [0, 10, 1, 0, 1, 2]}, "m2": {"creditos": 258, "domiciliados": 251, "no_op": 7, "mora_pct": 2.71, "sin_rec": 1, "sin_rec_pct": 0.39, "recup": 6, "dias": [0, 3, 1, 1, 0, 1]}, "m3": {"creditos": 280, "domiciliados": 260, "no_op": 20, "mora_pct": 7.14, "sin_rec": 5, "sin_rec_pct": 1.79, "recup": 15, "dias": [0, 4, 5, 6, 0, 0]}}, "01-abr": {"m1": {"creditos": 309, "domiciliados": 301, "no_op": 8, "mora_pct": 2.59, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 8, "dias": [0, 3, 2, 2, 1, 0]}, "m2": {"creditos": 312, "domiciliados": 299, "no_op": 13, "mora_pct": 4.17, "sin_rec": 1, "sin_rec_pct": 0.32, "recup": 12, "dias": [1, 2, 7, 2, 0, 0]}, "m3": {"creditos": 346, "domiciliados": 319, "no_op": 27, "mora_pct": 7.8, "sin_rec": 3, "sin_rec_pct": 0.87, "recup": 24, "dias": [0, 4, 11, 7, 2, 0]}}, "15-abr": {"m1": {"creditos": 326, "domiciliados": 306, "no_op": 20, "mora_pct": 6.13, "sin_rec": 2, "sin_rec_pct": 0.61, "recup": 18, "dias": [2, 10, 3, 3, 0, 0]}, "m2": {"creditos": 334, "domiciliados": 312, "no_op": 22, "mora_pct": 6.59, "sin_rec": 3, "sin_rec_pct": 0.9, "recup": 19, "dias": [1, 14, 2, 1, 1, 0]}, "m3": {"creditos": 258, "domiciliados": 246, "no_op": 12, "mora_pct": 4.65, "sin_rec": 1, "sin_rec_pct": 0.39, "recup": 11, "dias": [1, 6, 3, 1, 0, 0]}}, "01-may": {"m1": {"creditos": 353, "domiciliados": 334, "no_op": 19, "mora_pct": 5.38, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 19, "dias": [0, 4, 10, 1, 3, 1]}, "m2": {"creditos": 306, "domiciliados": 290, "no_op": 16, "mora_pct": 5.23, "sin_rec": 1, "sin_rec_pct": 0.33, "recup": 15, "dias": [0, 4, 7, 2, 0, 2]}, "m3": {"creditos": 312, "domiciliados": 292, "no_op": 20, "mora_pct": 6.41, "sin_rec": 2, "sin_rec_pct": 0.64, "recup": 18, "dias": [0, 4, 11, 0, 3, 0]}}, "15-may": {"m1": {"creditos": 222, "domiciliados": 209, "no_op": 13, "mora_pct": 5.86, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 13, "dias": [0, 5, 5, 3, 0, 0]}, "m2": {"creditos": 325, "domiciliados": 307, "no_op": 18, "mora_pct": 5.54, "sin_rec": 3, "sin_rec_pct": 0.92, "recup": 15, "dias": [0, 6, 8, 1, 0, 0]}, "m3": {"creditos": 333, "domiciliados": 298, "no_op": 35, "mora_pct": 10.51, "sin_rec": 4, "sin_rec_pct": 1.2, "recup": 31, "dias": [0, 18, 6, 5, 0, 2]}}, "01-jun": {"m1": {"creditos": 269, "domiciliados": 260, "no_op": 9, "mora_pct": 3.35, "sin_rec": 1, "sin_rec_pct": 0.37, "recup": 8, "dias": [0, 5, 1, 2, 0, 0]}, "m2": {"creditos": 352, "domiciliados": 332, "no_op": 20, "mora_pct": 5.68, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 20, "dias": [0, 14, 1, 1, 2, 2]}, "m3": {"creditos": 306, "domiciliados": 285, "no_op": 21, "mora_pct": 6.86, "sin_rec": 1, "sin_rec_pct": 0.33, "recup": 20, "dias": [0, 10, 6, 2, 1, 1]}}, "15-jun": {"m1": {"creditos": 336, "domiciliados": 325, "no_op": 11, "mora_pct": 3.27, "sin_rec": 1, "sin_rec_pct": 0.3, "recup": 10, "dias": [1, 6, 1, 1, 0, 1]}, "m2": {"creditos": 222, "domiciliados": 208, "no_op": 14, "mora_pct": 6.31, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 14, "dias": [2, 5, 0, 4, 2, 1]}, "m3": {"creditos": 325, "domiciliados": 303, "no_op": 22, "mora_pct": 6.77, "sin_rec": 2, "sin_rec_pct": 0.62, "recup": 20, "dias": [6, 8, 4, 0, 1, 1]}}, "01-jul": {"m1": {"creditos": 344, "domiciliados": 336, "no_op": 8, "mora_pct": 2.33, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 8, "dias": [0, 4, 2, 0, 0, 2]}, "m2": {"creditos": 269, "domiciliados": 258, "no_op": 11, "mora_pct": 4.09, "sin_rec": 1, "sin_rec_pct": 0.37, "recup": 10, "dias": [0, 3, 4, 2, 0, 1]}, "m3": {"creditos": 351, "domiciliados": 326, "no_op": 25, "mora_pct": 7.12, "sin_rec": 2, "sin_rec_pct": 0.57, "recup": 23, "dias": [0, 8, 4, 5, 6, 0]}}, "15-jul": {"m1": {"creditos": 297, "domiciliados": 291, "no_op": 6, "mora_pct": 2.02, "sin_rec": 3, "sin_rec_pct": 1.01, "recup": 3, "dias": [0, 2, 1, 0, 0, 0]}, "m2": {"creditos": 336, "domiciliados": 320, "no_op": 16, "mora_pct": 4.76, "sin_rec": 1, "sin_rec_pct": 0.3, "recup": 15, "dias": [0, 6, 0, 3, 1, 5]}, "m3": {"creditos": 221, "domiciliados": 203, "no_op": 18, "mora_pct": 8.14, "sin_rec": 1, "sin_rec_pct": 0.45, "recup": 17, "dias": [0, 4, 8, 2, 1, 2]}}, "01-ago": {"m1": {"creditos": 358, "domiciliados": 350, "no_op": 8, "mora_pct": 2.23, "sin_rec": 2, "sin_rec_pct": 0.56, "recup": 6, "dias": [0, 2, 2, 2, 0, 0]}, "m2": {"creditos": 343, "domiciliados": 331, "no_op": 12, "mora_pct": 3.5, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 12, "dias": [0, 1, 3, 5, 3, 0]}, "m3": {"creditos": 269, "domiciliados": 252, "no_op": 17, "mora_pct": 6.32, "sin_rec": 3, "sin_rec_pct": 1.12, "recup": 14, "dias": [0, 2, 8, 2, 1, 1]}}, "15-ago": {"m1": {"creditos": 321, "domiciliados": 306, "no_op": 15, "mora_pct": 4.67, "sin_rec": 1, "sin_rec_pct": 0.31, "recup": 14, "dias": [0, 3, 4, 3, 1, 3]}, "m2": {"creditos": 297, "domiciliados": 286, "no_op": 11, "mora_pct": 3.7, "sin_rec": 4, "sin_rec_pct": 1.35, "recup": 7, "dias": [0, 3, 1, 1, 1, 1]}, "m3": {"creditos": 336, "domiciliados": 311, "no_op": 25, "mora_pct": 7.44, "sin_rec": 2, "sin_rec_pct": 0.6, "recup": 23, "dias": [0, 10, 3, 9, 0, 1]}}, "01-sep": {"m1": {"creditos": 381, "domiciliados": 366, "no_op": 15, "mora_pct": 3.94, "sin_rec": 2, "sin_rec_pct": 0.52, "recup": 13, "dias": [0, 8, 3, 0, 1, 1]}, "m2": {"creditos": 358, "domiciliados": 336, "no_op": 22, "mora_pct": 6.15, "sin_rec": 2, "sin_rec_pct": 0.56, "recup": 20, "dias": [0, 13, 4, 1, 1, 1]}, "m3": {"creditos": 341, "domiciliados": 323, "no_op": 18, "mora_pct": 5.28, "sin_rec": 3, "sin_rec_pct": 0.88, "recup": 15, "dias": [0, 7, 2, 3, 3, 0]}}, "15-sep": {"m1": {"creditos": 347, "domiciliados": 337, "no_op": 10, "mora_pct": 2.88, "sin_rec": 0, "sin_rec_pct": 0.0, "recup": 10, "dias": [0, 1, 5, 1, 2, 1]}, "m2": {"creditos": 319, "domiciliados": 299, "no_op": 20, "mora_pct": 6.27, "sin_rec": 1, "sin_rec_pct": 0.31, "recup": 19, "dias": [0, 6, 10, 1, 1, 1]}, "m3": {"creditos": 297, "domiciliados": 272, "no_op": 25, "mora_pct": 8.42, "sin_rec": 7, "sin_rec_pct": 2.36, "recup": 18, "dias": [0, 10, 6, 0, 0, 2]}}, "01-oct": {"m1": {"creditos": 405, "domiciliados": 389, "no_op": 16, "mora_pct": 3.95, "sin_rec": 2, "sin_rec_pct": 0.49, "recup": 14, "dias": [0, 7, 4, 1, 1, 1]}, "m2": {"creditos": 381, "domiciliados": 362, "no_op": 19, "mora_pct": 4.99, "sin_rec": 3, "sin_rec_pct": 0.79, "recup": 16, "dias": [0, 6, 6, 2, 0, 2]}, "m3": {"creditos": 356, "domiciliados": 329, "no_op": 27, "mora_pct": 7.58, "sin_rec": 2, "sin_rec_pct": 0.56, "recup": 25, "dias": [0, 12, 8, 3, 1, 1]}}, "15-oct": {"m1": {"creditos": 286, "domiciliados": 275, "no_op": 11, "mora_pct": 3.85, "sin_rec": 1, "sin_rec_pct": 0.35, "recup": 10, "dias": [0, 4, 2, 2, 2, 0]}, "m2": {"creditos": 346, "domiciliados": 324, "no_op": 22, "mora_pct": 6.36, "sin_rec": 2, "sin_rec_pct": 0.58, "recup": 20, "dias": [0, 6, 7, 6, 1, 0]}, "m3": {"creditos": 320, "domiciliados": 296, "no_op": 24, "mora_pct": 7.5, "sin_rec": 3, "sin_rec_pct": 0.94, "recup": 21, "dias": [0, 6, 11, 3, 1, 0]}}, "01-nov": {"m1": {"creditos": 347, "domiciliados": 331, "no_op": 16, "mora_pct": 4.61, "sin_rec": 13, "sin_rec_pct": 3.75, "recup": 3, "dias": [1, 2, 0, 0, 0, 0]}, "m2": {"creditos": 404, "domiciliados": 386, "no_op": 18, "mora_pct": 4.46, "sin_rec": 17, "sin_rec_pct": 4.21, "recup": 1, "dias": [0, 1, 0, 0, 0, 0]}, "m3": {"creditos": 379, "domiciliados": 353, "no_op": 26, "mora_pct": 6.86, "sin_rec": 24, "sin_rec_pct": 6.33, "recup": 2, "dias": [0, 2, 0, 0, 0, 0]}, "en_curso": true}};
 
 const data = {
   '01-ene': {
@@ -4111,6 +4024,7 @@ const tabPanels  = document.querySelectorAll('.tab-panel');
 // agrega normal a allCortes y se borra de aquí.
 const carteraPreliminar = {
   '15-oct': {clientes:8891, money:112060721.29, sinPago:2225},
+  '01-nov': {clientes:8191, money:97571122.49, sinPago:1731},
 };
 // ── Gasto real CCC.uno (facturas UBLU, subtotal sin IVA) · desglose por canal desde reportes BG_PRESTEMOS_SAPI ──
 // Clave = mes de consumo (la factura se emite a inicios del mes siguiente). Para agregar un mes: sumar BILL AMOUNT
@@ -4133,6 +4047,7 @@ const carteraReal = [{"mes": "ene", "total": 13055, "c1": 5762, "c15": 7453, "do
 // 15-sep 83.98 vs 84.01 final. cartera = todos los buckets (comparable con North Star de Recaudación).
 const pagoATiempoPrevio = {
   '15-oct': {bkt1:83.42, bkt1N:7912, cartera:74.97, n:8891, closingDay:5, fuente:'Resultado 15-oct + Cierre 15-sep'},
+  '01-nov': {bkt1:84.46, bkt1N:7621, cartera:78.88, n:8191, closingDay:5, fuente:'Resultado 1-nov + Cierre 01-oct'},
 };
 let crecMetric = 'clientes';
 function buildCrecimientoModule() {
@@ -4670,16 +4585,16 @@ function renderPorBktCortePicker() {
 // ── Pago a tiempo por intento y canal (Domi/SPEI × 4 intentos) ──
 // Desglose PREVIO por intento y canal (solo Resultado de domi; bucket = 'BKT actualizado al siguiente corte' del
 // Cierre anterior del mismo día). Se reemplaza por intentoSplitData al llegar el Cierre (regla previo → final).
-const intentoSplitPrevio = {"15-oct": {"all": {"i1": {"d": 54.45, "s": 4.6}, "i2": {"d": 6.32, "s": 3.61}, "i3": {"d": 2.37, "s": 1.18}, "i4": {"d": 1.05, "s": 1.39}}, "n": {"all": 8891, "bkt1": 7912, "bkt2": 241, "bkt3": 77, "bkt4": 661}, "bkt1": {"i1": {"d": 60.87, "s": 5.03}, "i2": {"d": 7.04, "s": 4.01}, "i3": {"d": 2.58, "s": 1.31}, "i4": {"d": 1.05, "s": 1.53}}, "bkt2": {"i1": {"d": 6.22, "s": 3.73}, "i2": {"d": 0.83, "s": 1.66}, "i3": {"d": 2.07, "s": 0.41}, "i4": {"d": 3.32, "s": 0.83}}, "bkt3": {"i1": {"d": 2.6, "s": 1.3}, "i2": {"d": 0.0, "s": 0.0}, "i3": {"d": 1.3, "s": 0.0}, "i4": {"d": 0.0, "s": 1.3}}, "bkt4": {"i1": {"d": 1.21, "s": 0.15}, "i2": {"d": 0.45, "s": 0.0}, "i3": {"d": 0.15, "s": 0.0}, "i4": {"d": 0.3, "s": 0.0}}}};
+const intentoSplitPrevio = {"15-oct": {"all": {"i1": {"d": 54.45, "s": 4.6}, "i2": {"d": 6.32, "s": 3.61}, "i3": {"d": 2.37, "s": 1.18}, "i4": {"d": 1.05, "s": 1.39}}, "n": {"all": 8891, "bkt1": 7912, "bkt2": 241, "bkt3": 77, "bkt4": 661}, "bkt1": {"i1": {"d": 60.87, "s": 5.03}, "i2": {"d": 7.04, "s": 4.01}, "i3": {"d": 2.58, "s": 1.31}, "i4": {"d": 1.05, "s": 1.53}}, "bkt2": {"i1": {"d": 6.22, "s": 3.73}, "i2": {"d": 0.83, "s": 1.66}, "i3": {"d": 2.07, "s": 0.41}, "i4": {"d": 3.32, "s": 0.83}}, "bkt3": {"i1": {"d": 2.6, "s": 1.3}, "i2": {"d": 0.0, "s": 0.0}, "i3": {"d": 1.3, "s": 0.0}, "i4": {"d": 0.0, "s": 1.3}}, "bkt4": {"i1": {"d": 1.21, "s": 0.15}, "i2": {"d": 0.45, "s": 0.0}, "i3": {"d": 0.15, "s": 0.0}, "i4": {"d": 0.3, "s": 0.0}}}, "01-nov": {"all": {"i1": {"d": 59.2, "s": 5.85}, "i2": {"d": 3.24, "s": 4.13}, "i3": {"d": 1.67, "s": 1.44}, "i4": {"d": 1.09, "s": 2.26}}, "n": {"all": 8191, "bkt1": 7621, "bkt2": 108, "bkt3": 50, "bkt4": 412}, "bkt1": {"i1": {"d": 63.48, "s": 6.29}, "i2": {"d": 3.42, "s": 4.42}, "i3": {"d": 1.76, "s": 1.55}, "i4": {"d": 1.13, "s": 2.41}}, "bkt2": {"i1": {"d": 3.7, "s": 0.0}, "i2": {"d": 0.93, "s": 0.93}, "i3": {"d": 0.93, "s": 0.0}, "i4": {"d": 0.0, "s": 0.0}}, "bkt3": {"i1": {"d": 4.0, "s": 0.0}, "i2": {"d": 2.0, "s": 0.0}, "i3": {"d": 0.0, "s": 0.0}, "i4": {"d": 2.0, "s": 2.0}}, "bkt4": {"i1": {"d": 1.21, "s": 0.0}, "i2": {"d": 0.49, "s": 0.0}, "i3": {"d": 0.49, "s": 0.0}, "i4": {"d": 0.49, "s": 0.0}}}};
 // ── M1 (clientes en su 1ª mensualidad) · pago a tiempo por intento y canal, % de los clientes M1 del corte ──
 // Fuente: Resultado de domi (M1 = clasificación '1° mensualidad (M1)' o Número_mensualidad=1; 15-sep y 15-abr por
 // primera aparición del VIN en 2026). Ene–may: intento por fecha de pago (valida vs publicado ±0.25pp). Incluye la
 // reasignación de SPEI por fecha real de 01-jul, 01-oct y 15-oct. Sin ajuste de Cierre (diferencia típica <0.1pp).
-const m1Split = {"01-ene": {"n": 314, "i1": {"d": 80.25, "s": 4.46}, "i2": {"d": 6.69, "s": 0.32}, "i3": {"d": 0.96, "s": 0.32}, "i4": {"d": 1.27, "s": 1.59}}, "15-ene": {"n": 280, "i1": {"d": 85.71, "s": 3.21}, "i2": {"d": 1.79, "s": 1.43}, "i3": {"d": 1.79, "s": 0.36}, "i4": {"d": 0.71, "s": 0.36}}, "01-feb": {"n": 347, "i1": {"d": 84.15, "s": 4.61}, "i2": {"d": 4.03, "s": 1.15}, "i3": {"d": 1.15, "s": 0.86}, "i4": {"d": 1.15, "s": 0.29}}, "15-feb": {"n": 257, "i1": {"d": 87.94, "s": 1.95}, "i2": {"d": 2.33, "s": 0.39}, "i3": {"d": 0.78, "s": 1.56}, "i4": {"d": 1.56, "s": 0.39}}, "01-mar": {"n": 313, "i1": {"d": 84.98, "s": 3.51}, "i2": {"d": 2.88, "s": 0.64}, "i3": {"d": 1.28, "s": 1.28}, "i4": {"d": 0.32, "s": 0.0}}, "15-mar": {"n": 335, "i1": {"d": 84.18, "s": 1.79}, "i2": {"d": 2.99, "s": 0.6}, "i3": {"d": 2.09, "s": 0.0}, "i4": {"d": 0.0, "s": 3.88}}, "01-abr": {"n": 310, "i1": {"d": 74.19, "s": 14.19}, "i2": {"d": 2.58, "s": 5.81}, "i3": {"d": 0.0, "s": 0.32}, "i4": {"d": 0.0, "s": 0.0}}, "15-abr": {"n": 326, "i1": {"d": 80.98, "s": 0.31}, "i2": {"d": 3.68, "s": 4.91}, "i3": {"d": 3.37, "s": 0.61}, "i4": {"d": 0.0, "s": 0.92}}, "01-may": {"n": 353, "i1": {"d": 80.17, "s": 8.22}, "i2": {"d": 1.7, "s": 0.85}, "i3": {"d": 1.42, "s": 0.0}, "i4": {"d": 0.28, "s": 1.98}}, "15-may": {"n": 222, "i1": {"d": 84.68, "s": 1.35}, "i2": {"d": 4.5, "s": 2.7}, "i3": {"d": 0.9, "s": 0.0}, "i4": {"d": 0.0, "s": 0.9}}, "01-jun": {"n": 269, "i1": {"d": 88.1, "s": 2.97}, "i2": {"d": 1.86, "s": 2.6}, "i3": {"d": 0.37, "s": 0.0}, "i4": {"d": 0.37, "s": 0.37}}, "15-jun": {"n": 336, "i1": {"d": 81.85, "s": 5.65}, "i2": {"d": 3.27, "s": 1.19}, "i3": {"d": 3.27, "s": 0.6}, "i4": {"d": 0.3, "s": 0.6}}, "01-jul": {"n": 344, "i1": {"d": 85.76, "s": 4.94}, "i2": {"d": 2.33, "s": 1.45}, "i3": {"d": 1.74, "s": 0.87}, "i4": {"d": 0.29, "s": 0.29}}, "15-jul": {"n": 297, "i1": {"d": 85.52, "s": 5.05}, "i2": {"d": 4.04, "s": 0.34}, "i3": {"d": 0.67, "s": 1.35}, "i4": {"d": 0.34, "s": 0.67}}, "01-ago": {"n": 358, "i1": {"d": 78.49, "s": 8.1}, "i2": {"d": 5.31, "s": 1.96}, "i3": {"d": 0.84, "s": 1.12}, "i4": {"d": 0.84, "s": 1.12}}, "15-ago": {"n": 321, "i1": {"d": 84.74, "s": 1.25}, "i2": {"d": 3.43, "s": 2.18}, "i3": {"d": 0.62, "s": 0.62}, "i4": {"d": 1.25, "s": 1.25}}, "01-sep": {"n": 381, "i1": {"d": 85.56, "s": 4.72}, "i2": {"d": 1.05, "s": 0.79}, "i3": {"d": 1.57, "s": 0.52}, "i4": {"d": 0.79, "s": 1.05}}, "15-sep": {"n": 344, "i1": {"d": 75.0, "s": 6.4}, "i2": {"d": 10.17, "s": 2.33}, "i3": {"d": 2.33, "s": 0.58}, "i4": {"d": 0.29, "s": 0.0}}, "01-oct": {"n": 405, "i1": {"d": 84.94, "s": 1.73}, "i2": {"d": 4.69, "s": 1.73}, "i3": {"d": 1.23, "s": 0.99}, "i4": {"d": 0.25, "s": 0.49}}, "15-oct": {"n": 286, "i1": {"d": 82.52, "s": 2.8}, "i2": {"d": 3.15, "s": 3.5}, "i3": {"d": 1.75, "s": 0.35}, "i4": {"d": 0.7, "s": 1.4}}};
+const m1Split = {"01-ene": {"n": 314, "i1": {"d": 80.25, "s": 4.46}, "i2": {"d": 6.69, "s": 0.32}, "i3": {"d": 0.96, "s": 0.32}, "i4": {"d": 1.27, "s": 1.59}}, "15-ene": {"n": 280, "i1": {"d": 85.71, "s": 3.21}, "i2": {"d": 1.79, "s": 1.43}, "i3": {"d": 1.79, "s": 0.36}, "i4": {"d": 0.71, "s": 0.36}}, "01-feb": {"n": 347, "i1": {"d": 84.15, "s": 4.61}, "i2": {"d": 4.03, "s": 1.15}, "i3": {"d": 1.15, "s": 0.86}, "i4": {"d": 1.15, "s": 0.29}}, "15-feb": {"n": 257, "i1": {"d": 87.94, "s": 1.95}, "i2": {"d": 2.33, "s": 0.39}, "i3": {"d": 0.78, "s": 1.56}, "i4": {"d": 1.56, "s": 0.39}}, "01-mar": {"n": 313, "i1": {"d": 84.98, "s": 3.51}, "i2": {"d": 2.88, "s": 0.64}, "i3": {"d": 1.28, "s": 1.28}, "i4": {"d": 0.32, "s": 0.0}}, "15-mar": {"n": 335, "i1": {"d": 84.18, "s": 1.79}, "i2": {"d": 2.99, "s": 0.6}, "i3": {"d": 2.09, "s": 0.0}, "i4": {"d": 0.0, "s": 3.88}}, "01-abr": {"n": 310, "i1": {"d": 74.19, "s": 14.19}, "i2": {"d": 2.58, "s": 5.81}, "i3": {"d": 0.0, "s": 0.32}, "i4": {"d": 0.0, "s": 0.0}}, "15-abr": {"n": 326, "i1": {"d": 80.98, "s": 0.31}, "i2": {"d": 3.68, "s": 4.91}, "i3": {"d": 3.37, "s": 0.61}, "i4": {"d": 0.0, "s": 0.92}}, "01-may": {"n": 353, "i1": {"d": 80.17, "s": 8.22}, "i2": {"d": 1.7, "s": 0.85}, "i3": {"d": 1.42, "s": 0.0}, "i4": {"d": 0.28, "s": 1.98}}, "15-may": {"n": 222, "i1": {"d": 84.68, "s": 1.35}, "i2": {"d": 4.5, "s": 2.7}, "i3": {"d": 0.9, "s": 0.0}, "i4": {"d": 0.0, "s": 0.9}}, "01-jun": {"n": 269, "i1": {"d": 88.1, "s": 2.97}, "i2": {"d": 1.86, "s": 2.6}, "i3": {"d": 0.37, "s": 0.0}, "i4": {"d": 0.37, "s": 0.37}}, "15-jun": {"n": 336, "i1": {"d": 81.85, "s": 5.65}, "i2": {"d": 3.27, "s": 1.19}, "i3": {"d": 3.27, "s": 0.6}, "i4": {"d": 0.3, "s": 0.6}}, "01-jul": {"n": 344, "i1": {"d": 85.76, "s": 4.94}, "i2": {"d": 2.33, "s": 1.45}, "i3": {"d": 1.74, "s": 0.87}, "i4": {"d": 0.29, "s": 0.29}}, "15-jul": {"n": 297, "i1": {"d": 85.52, "s": 5.05}, "i2": {"d": 4.04, "s": 0.34}, "i3": {"d": 0.67, "s": 1.35}, "i4": {"d": 0.34, "s": 0.67}}, "01-ago": {"n": 358, "i1": {"d": 78.49, "s": 8.1}, "i2": {"d": 5.31, "s": 1.96}, "i3": {"d": 0.84, "s": 1.12}, "i4": {"d": 0.84, "s": 1.12}}, "15-ago": {"n": 321, "i1": {"d": 84.74, "s": 1.25}, "i2": {"d": 3.43, "s": 2.18}, "i3": {"d": 0.62, "s": 0.62}, "i4": {"d": 1.25, "s": 1.25}}, "01-sep": {"n": 381, "i1": {"d": 85.56, "s": 4.72}, "i2": {"d": 1.05, "s": 0.79}, "i3": {"d": 1.57, "s": 0.52}, "i4": {"d": 0.79, "s": 1.05}}, "15-sep": {"n": 344, "i1": {"d": 75.0, "s": 6.4}, "i2": {"d": 10.17, "s": 2.33}, "i3": {"d": 2.33, "s": 0.58}, "i4": {"d": 0.29, "s": 0.0}}, "01-oct": {"n": 405, "i1": {"d": 84.94, "s": 1.73}, "i2": {"d": 4.69, "s": 1.73}, "i3": {"d": 1.23, "s": 0.99}, "i4": {"d": 0.25, "s": 0.49}}, "15-oct": {"n": 286, "i1": {"d": 82.52, "s": 2.8}, "i2": {"d": 3.15, "s": 3.5}, "i3": {"d": 1.75, "s": 0.35}, "i4": {"d": 0.7, "s": 1.4}}, "01-nov": {"n": 347, "i1": {"d": 83.57, "s": 2.88}, "i2": {"d": 3.46, "s": 3.17}, "i3": {"d": 0.58, "s": 0.58}, "i4": {"d": 0.58, "s": 0.58}}};
 // ── Pago a tiempo por antigüedad del cliente (M1, M2, M3) · domi + SPEI durante domi, % de los clientes del segmento ──
 // Fuente: Resultado de domi (mensualidad = Número_mensualidad o clase '(M#)'; 15-sep y 15-abr inferidas con la mensualidad
 // del corte anterior del mismo día + 1, validado 99.9% vs clase real). Sin ajuste de Cierre. domi = solo cargo de domi.
-const mSegPago = {"01-ene": {"m1": {"n": 314, "pt": 95.86, "domi": 89.17}, "m2": {"n": 211, "pt": 92.89, "domi": 84.83}, "m3": {"n": 228, "pt": 89.47, "domi": 84.65}}, "15-ene": {"m1": {"n": 280, "pt": 95.36, "domi": 90.0}, "m2": {"n": 274, "pt": 95.99, "domi": 89.42}, "m3": {"n": 216, "pt": 93.98, "domi": 84.26}}, "01-feb": {"m1": {"n": 347, "pt": 97.41, "domi": 90.49}, "m2": {"n": 316, "pt": 96.2, "domi": 87.97}, "m3": {"n": 211, "pt": 93.84, "domi": 86.26}}, "15-feb": {"m1": {"n": 257, "pt": 96.89, "domi": 92.61}, "m2": {"n": 281, "pt": 94.31, "domi": 86.83}, "m3": {"n": 273, "pt": 93.77, "domi": 87.91}}, "01-mar": {"m1": {"n": 313, "pt": 94.89, "domi": 89.46}, "m2": {"n": 347, "pt": 93.95, "domi": 82.13}, "m3": {"n": 315, "pt": 92.38, "domi": 85.08}}, "15-mar": {"m1": {"n": 335, "pt": 95.52, "domi": 89.25}, "m2": {"n": 258, "pt": 97.29, "domi": 88.37}, "m3": {"n": 281, "pt": 92.53, "domi": 83.27}}, "01-abr": {"m1": {"n": 310, "pt": 97.1, "domi": 76.77}, "m2": {"n": 312, "pt": 95.83, "domi": 82.05}, "m3": {"n": 346, "pt": 92.2, "domi": 70.81}}, "15-abr": {"m1": {"n": 326, "pt": 94.79, "domi": 88.04}, "m2": {"n": 334, "pt": 95.21, "domi": 88.02}, "m3": {"n": 258, "pt": 96.51, "domi": 89.92}}, "01-may": {"m1": {"n": 353, "pt": 94.62, "domi": 83.57}, "m2": {"n": 306, "pt": 94.77, "domi": 73.53}, "m3": {"n": 312, "pt": 93.59, "domi": 83.01}}, "15-may": {"m1": {"n": 222, "pt": 95.05, "domi": 90.09}, "m2": {"n": 325, "pt": 94.77, "domi": 85.85}, "m3": {"n": 334, "pt": 90.72, "domi": 82.93}}, "01-jun": {"m1": {"n": 269, "pt": 96.65, "domi": 90.71}, "m2": {"n": 353, "pt": 94.05, "domi": 79.6}, "m3": {"n": 306, "pt": 93.14, "domi": 76.8}}, "15-jun": {"m1": {"n": 336, "pt": 96.73, "domi": 88.69}, "m2": {"n": 222, "pt": 93.69, "domi": 86.94}, "m3": {"n": 325, "pt": 93.23, "domi": 84.92}}, "01-jul": {"m1": {"n": 344, "pt": 97.67, "domi": 90.12}, "m2": {"n": 269, "pt": 95.91, "domi": 87.36}, "m3": {"n": 351, "pt": 92.88, "domi": 77.21}}, "15-jul": {"m1": {"n": 297, "pt": 97.98, "domi": 90.57}, "m2": {"n": 336, "pt": 95.24, "domi": 84.82}, "m3": {"n": 221, "pt": 91.86, "domi": 84.16}}, "01-ago": {"m1": {"n": 358, "pt": 97.77, "domi": 85.47}, "m2": {"n": 343, "pt": 96.5, "domi": 86.01}, "m3": {"n": 269, "pt": 93.68, "domi": 84.39}}, "15-ago": {"m1": {"n": 321, "pt": 95.33, "domi": 90.03}, "m2": {"n": 297, "pt": 96.3, "domi": 87.54}, "m3": {"n": 336, "pt": 92.56, "domi": 81.25}}, "01-sep": {"m1": {"n": 381, "pt": 96.06, "domi": 88.98}, "m2": {"n": 358, "pt": 93.85, "domi": 82.68}, "m3": {"n": 341, "pt": 94.72, "domi": 83.87}}, "15-sep": {"m1": {"n": 344, "pt": 97.09, "domi": 87.79}, "m2": {"n": 321, "pt": 93.77, "domi": 86.92}, "m3": {"n": 297, "pt": 91.58, "domi": 81.82}}, "01-oct": {"m1": {"n": 405, "pt": 96.05, "domi": 91.11}, "m2": {"n": 381, "pt": 95.01, "domi": 88.71}, "m3": {"n": 356, "pt": 92.42, "domi": 80.06}}, "15-oct": {"m1": {"n": 286, "pt": 96.15, "domi": 88.11}, "m2": {"n": 346, "pt": 93.64, "domi": 85.26}, "m3": {"n": 319, "pt": 92.48, "domi": 83.7}}};
+const mSegPago = {"01-ene": {"m1": {"n": 314, "pt": 95.86, "domi": 89.17}, "m2": {"n": 211, "pt": 92.89, "domi": 84.83}, "m3": {"n": 228, "pt": 89.47, "domi": 84.65}}, "15-ene": {"m1": {"n": 280, "pt": 95.36, "domi": 90.0}, "m2": {"n": 274, "pt": 95.99, "domi": 89.42}, "m3": {"n": 216, "pt": 93.98, "domi": 84.26}}, "01-feb": {"m1": {"n": 347, "pt": 97.41, "domi": 90.49}, "m2": {"n": 316, "pt": 96.2, "domi": 87.97}, "m3": {"n": 211, "pt": 93.84, "domi": 86.26}}, "15-feb": {"m1": {"n": 257, "pt": 96.89, "domi": 92.61}, "m2": {"n": 281, "pt": 94.31, "domi": 86.83}, "m3": {"n": 273, "pt": 93.77, "domi": 87.91}}, "01-mar": {"m1": {"n": 313, "pt": 94.89, "domi": 89.46}, "m2": {"n": 347, "pt": 93.95, "domi": 82.13}, "m3": {"n": 315, "pt": 92.38, "domi": 85.08}}, "15-mar": {"m1": {"n": 335, "pt": 95.52, "domi": 89.25}, "m2": {"n": 258, "pt": 97.29, "domi": 88.37}, "m3": {"n": 281, "pt": 92.53, "domi": 83.27}}, "01-abr": {"m1": {"n": 310, "pt": 97.1, "domi": 76.77}, "m2": {"n": 312, "pt": 95.83, "domi": 82.05}, "m3": {"n": 346, "pt": 92.2, "domi": 70.81}}, "15-abr": {"m1": {"n": 326, "pt": 94.79, "domi": 88.04}, "m2": {"n": 334, "pt": 95.21, "domi": 88.02}, "m3": {"n": 258, "pt": 96.51, "domi": 89.92}}, "01-may": {"m1": {"n": 353, "pt": 94.62, "domi": 83.57}, "m2": {"n": 306, "pt": 94.77, "domi": 73.53}, "m3": {"n": 312, "pt": 93.59, "domi": 83.01}}, "15-may": {"m1": {"n": 222, "pt": 95.05, "domi": 90.09}, "m2": {"n": 325, "pt": 94.77, "domi": 85.85}, "m3": {"n": 334, "pt": 90.72, "domi": 82.93}}, "01-jun": {"m1": {"n": 269, "pt": 96.65, "domi": 90.71}, "m2": {"n": 353, "pt": 94.05, "domi": 79.6}, "m3": {"n": 306, "pt": 93.14, "domi": 76.8}}, "15-jun": {"m1": {"n": 336, "pt": 96.73, "domi": 88.69}, "m2": {"n": 222, "pt": 93.69, "domi": 86.94}, "m3": {"n": 325, "pt": 93.23, "domi": 84.92}}, "01-jul": {"m1": {"n": 344, "pt": 97.67, "domi": 90.12}, "m2": {"n": 269, "pt": 95.91, "domi": 87.36}, "m3": {"n": 351, "pt": 92.88, "domi": 77.21}}, "15-jul": {"m1": {"n": 297, "pt": 97.98, "domi": 90.57}, "m2": {"n": 336, "pt": 95.24, "domi": 84.82}, "m3": {"n": 221, "pt": 91.86, "domi": 84.16}}, "01-ago": {"m1": {"n": 358, "pt": 97.77, "domi": 85.47}, "m2": {"n": 343, "pt": 96.5, "domi": 86.01}, "m3": {"n": 269, "pt": 93.68, "domi": 84.39}}, "15-ago": {"m1": {"n": 321, "pt": 95.33, "domi": 90.03}, "m2": {"n": 297, "pt": 96.3, "domi": 87.54}, "m3": {"n": 336, "pt": 92.56, "domi": 81.25}}, "01-sep": {"m1": {"n": 381, "pt": 96.06, "domi": 88.98}, "m2": {"n": 358, "pt": 93.85, "domi": 82.68}, "m3": {"n": 341, "pt": 94.72, "domi": 83.87}}, "15-sep": {"m1": {"n": 344, "pt": 97.09, "domi": 87.79}, "m2": {"n": 321, "pt": 93.77, "domi": 86.92}, "m3": {"n": 297, "pt": 91.58, "domi": 81.82}}, "01-oct": {"m1": {"n": 405, "pt": 96.05, "domi": 91.11}, "m2": {"n": 381, "pt": 95.01, "domi": 88.71}, "m3": {"n": 356, "pt": 92.42, "domi": 80.06}}, "15-oct": {"m1": {"n": 286, "pt": 96.15, "domi": 88.11}, "m2": {"n": 346, "pt": 93.64, "domi": 85.26}, "m3": {"n": 319, "pt": 92.48, "domi": 83.7}}, "01-nov": {"m1": {"n": 347, "pt": 95.39, "domi": 88.18}, "m2": {"n": 404, "pt": 95.54, "domi": 86.39}, "m3": {"n": 379, "pt": 93.14, "domi": 84.7}}};
 // ── Generaciones (cohortes): clientes que entraron (M1) el mismo mes; pago a tiempo en su M1, M2, M3… (Resultado de domi) ──
 // all = corte 1 + corte 15; day1/day15 = solo ese corte. n = clientes de la generación domiciliados en esa mensualidad.
 const cohortPago = {"all": {"ene": {"n0": 594, "serie": [{"n": 594, "pt": 95.62}, {"n": 591, "pt": 95.77}, {"n": 588, "pt": 93.2}, {"n": 583, "pt": 92.97}, {"n": 580, "pt": 91.03}, {"n": 574, "pt": 89.37}, {"n": 567, "pt": 90.48}, {"n": 556, "pt": 87.95}, {"n": 553, "pt": 88.61}, {"n": 551, "pt": 85.84}]}, "feb": {"n0": 604, "serie": [{"n": 604, "pt": 97.19}, {"n": 604, "pt": 95.36}, {"n": 603, "pt": 94.03}, {"n": 600, "pt": 91.83}, {"n": 597, "pt": 88.94}, {"n": 592, "pt": 88.85}, {"n": 580, "pt": 88.28}, {"n": 574, "pt": 86.59}, {"n": 571, "pt": 85.29}]}, "mar": {"n0": 648, "serie": [{"n": 648, "pt": 95.22}, {"n": 646, "pt": 95.51}, {"n": 646, "pt": 92.11}, {"n": 643, "pt": 90.05}, {"n": 637, "pt": 89.48}, {"n": 632, "pt": 88.92}, {"n": 627, "pt": 87.4}, {"n": 626, "pt": 86.1}]}, "abr": {"n0": 636, "serie": [{"n": 636, "pt": 95.91}, {"n": 632, "pt": 94.78}, {"n": 632, "pt": 93.2}, {"n": 630, "pt": 92.54}, {"n": 624, "pt": 91.51}, {"n": 619, "pt": 89.82}, {"n": 617, "pt": 88.98}]}, "may": {"n0": 575, "serie": [{"n": 575, "pt": 94.78}, {"n": 575, "pt": 93.91}, {"n": 572, "pt": 92.48}, {"n": 570, "pt": 88.42}, {"n": 564, "pt": 88.48}, {"n": 561, "pt": 85.38}]}, "jun": {"n0": 605, "serie": [{"n": 605, "pt": 96.69}, {"n": 605, "pt": 95.54}, {"n": 605, "pt": 93.06}, {"n": 603, "pt": 91.21}, {"n": 597, "pt": 90.28}]}, "jul": {"n0": 641, "serie": [{"n": 641, "pt": 97.82}, {"n": 640, "pt": 96.41}, {"n": 638, "pt": 93.26}, {"n": 638, "pt": 91.38}]}, "ago": {"n0": 679, "serie": [{"n": 679, "pt": 96.61}, {"n": 679, "pt": 93.81}, {"n": 677, "pt": 92.17}]}, "sep": {"n0": 725, "serie": [{"n": 725, "pt": 96.55}, {"n": 725, "pt": 94.62}]}, "oct": {"n0": 691, "serie": [{"n": 691, "pt": 96.09}]}}, "day1": {"ene": {"n0": 314, "serie": [{"n": 314, "pt": 95.86}, {"n": 314, "pt": 96.5}, {"n": 313, "pt": 92.97}, {"n": 312, "pt": 93.91}, {"n": 311, "pt": 91.0}, {"n": 309, "pt": 89.64}, {"n": 306, "pt": 89.54}, {"n": 301, "pt": 87.38}, {"n": 300, "pt": 88.33}, {"n": 300, "pt": 86.0}]}, "feb": {"n0": 347, "serie": [{"n": 347, "pt": 97.41}, {"n": 347, "pt": 93.95}, {"n": 346, "pt": 92.2}, {"n": 344, "pt": 91.86}, {"n": 342, "pt": 88.01}, {"n": 339, "pt": 87.61}, {"n": 331, "pt": 86.71}, {"n": 328, "pt": 85.06}, {"n": 328, "pt": 83.84}]}, "mar": {"n0": 313, "serie": [{"n": 313, "pt": 94.89}, {"n": 312, "pt": 95.83}, {"n": 312, "pt": 93.59}, {"n": 310, "pt": 90.32}, {"n": 308, "pt": 89.29}, {"n": 305, "pt": 90.16}, {"n": 302, "pt": 87.75}, {"n": 301, "pt": 86.71}]}, "abr": {"n0": 310, "serie": [{"n": 310, "pt": 97.1}, {"n": 307, "pt": 94.79}, {"n": 307, "pt": 93.16}, {"n": 306, "pt": 92.48}, {"n": 303, "pt": 91.42}, {"n": 301, "pt": 90.7}, {"n": 300, "pt": 90.0}]}, "may": {"n0": 353, "serie": [{"n": 353, "pt": 94.62}, {"n": 353, "pt": 94.05}, {"n": 351, "pt": 92.88}, {"n": 349, "pt": 87.68}, {"n": 347, "pt": 87.61}, {"n": 345, "pt": 84.06}]}, "jun": {"n0": 269, "serie": [{"n": 269, "pt": 96.65}, {"n": 269, "pt": 95.91}, {"n": 269, "pt": 93.68}, {"n": 268, "pt": 90.3}, {"n": 266, "pt": 92.48}]}, "jul": {"n0": 344, "serie": [{"n": 344, "pt": 97.67}, {"n": 343, "pt": 96.5}, {"n": 341, "pt": 94.72}, {"n": 341, "pt": 94.43}]}, "ago": {"n0": 358, "serie": [{"n": 358, "pt": 97.77}, {"n": 358, "pt": 93.85}, {"n": 356, "pt": 92.42}]}, "sep": {"n0": 381, "serie": [{"n": 381, "pt": 96.06}, {"n": 381, "pt": 95.01}]}, "oct": {"n0": 405, "serie": [{"n": 405, "pt": 96.05}]}}, "day15": {"ene": {"n0": 280, "serie": [{"n": 280, "pt": 95.36}, {"n": 277, "pt": 94.95}, {"n": 275, "pt": 93.45}, {"n": 271, "pt": 91.88}, {"n": 269, "pt": 91.08}, {"n": 265, "pt": 89.06}, {"n": 261, "pt": 91.57}, {"n": 255, "pt": 88.63}, {"n": 253, "pt": 88.93}, {"n": 251, "pt": 85.66}]}, "feb": {"n0": 257, "serie": [{"n": 257, "pt": 96.89}, {"n": 257, "pt": 97.28}, {"n": 257, "pt": 96.5}, {"n": 256, "pt": 91.8}, {"n": 255, "pt": 90.2}, {"n": 253, "pt": 90.51}, {"n": 249, "pt": 90.36}, {"n": 246, "pt": 88.62}, {"n": 243, "pt": 87.24}]}, "mar": {"n0": 335, "serie": [{"n": 335, "pt": 95.52}, {"n": 334, "pt": 95.21}, {"n": 334, "pt": 90.72}, {"n": 333, "pt": 89.79}, {"n": 329, "pt": 89.67}, {"n": 327, "pt": 87.77}, {"n": 325, "pt": 87.08}, {"n": 325, "pt": 85.54}]}, "abr": {"n0": 326, "serie": [{"n": 326, "pt": 94.79}, {"n": 325, "pt": 94.77}, {"n": 325, "pt": 93.23}, {"n": 324, "pt": 92.59}, {"n": 321, "pt": 91.59}, {"n": 318, "pt": 88.99}, {"n": 317, "pt": 88.01}]}, "may": {"n0": 222, "serie": [{"n": 222, "pt": 95.05}, {"n": 222, "pt": 93.69}, {"n": 221, "pt": 91.86}, {"n": 221, "pt": 89.59}, {"n": 217, "pt": 89.86}, {"n": 216, "pt": 87.5}]}, "jun": {"n0": 336, "serie": [{"n": 336, "pt": 96.73}, {"n": 336, "pt": 95.24}, {"n": 336, "pt": 92.56}, {"n": 335, "pt": 91.94}, {"n": 331, "pt": 88.52}]}, "jul": {"n0": 297, "serie": [{"n": 297, "pt": 97.98}, {"n": 297, "pt": 96.3}, {"n": 297, "pt": 91.58}, {"n": 297, "pt": 87.88}]}, "ago": {"n0": 321, "serie": [{"n": 321, "pt": 95.33}, {"n": 321, "pt": 93.77}, {"n": 321, "pt": 91.9}]}, "sep": {"n0": 344, "serie": [{"n": 344, "pt": 97.09}, {"n": 344, "pt": 94.19}]}, "oct": {"n0": 286, "serie": [{"n": 286, "pt": 96.15}]}}};
@@ -5808,166 +5723,115 @@ function buildRolloverNsCharts() {
   }).join('');
 }
 
+
+// ── Funnel de primeros pagos (Riesgos) ──
+let funSeg = 'all', funPer = 'year';
+function buildMoraFunnel() {
+  const dayOk = c => currentFilter === 'all' || (currentFilter === 'day1') === (c.slice(0, 2) === '01');
+  const C = Object.keys(moraTempranaData).filter(dayOk);
+  const sel = document.getElementById('funPer');
+  const closed = C.filter(c => !moraTempranaData[c].en_curso);
+  const opts = [['year', `Todo el año · ${closed.length} cortes cerrados`], ...C.slice().reverse().map(c => [c, c + (moraTempranaData[c].en_curso ? ' (en curso)' : '')])];
+  if (!opts.some(o => o[0] === funPer)) funPer = 'year';
+  sel.innerHTML = opts.map(([v, t]) => `<option value="${v}"${v === funPer ? ' selected' : ''}>${t}</option>`).join('');
+  sel.onchange = () => { funPer = sel.value; buildMoraFunnel(); };
+  document.querySelectorAll('#funSeg button').forEach(b => { b.classList.toggle('on', b.dataset.s === funSeg); b.onclick = () => { funSeg = b.dataset.s; buildMoraFunnel(); }; });
+  const cortes = funPer === 'year' ? closed : [funPer];
+  const segs = funSeg === 'all' ? ['m1', 'm2', 'm3'] : [funSeg];
+  const agg = (ss) => { const a = { cr: 0, dom: 0, lleg: 0, dias: [0, 0, 0, 0, 0, 0], sr: 0 };
+    cortes.forEach(c => ss.forEach(s => { const v = moraTempranaData[c][s]; a.cr += v.creditos; a.dom += v.domiciliados; a.lleg += v.creditos - v.domiciliados; v.dias.forEach((x, i) => a.dias[i] += x); a.sr += v.sin_rec; }));
+    a.dias = [a.dias[0] + a.dias[1], ...a.dias.slice(2)];   // 1–5 y 6–10 días unificados en 1–10 días
+    return a; };
+  const A = agg(segs), nf = x => x.toLocaleString('es-MX'), pc = (x, b) => b ? (x / b * 100).toFixed(1) + '%' : '—';
+  const LIGHT = ['#86D3B5', '#A9DFC8', '#5CC39D', '#3FAE87'];
+  const row = (lbl, n, base, col, w, sub) => { const inside = w > 32, txt = pc(n, base), outCol = LIGHT.includes(col) ? '#0B5E44' : col;
+    return `<div class="fun-row"><div class="fun-lbl">${lbl}</div><div style="display:flex;align-items:center;gap:6px;min-width:0;">`
+      + `<div class="fun-bar" style="width:${Math.max(w, 0.6)}%;flex:0 0 auto;background:${col};justify-content:flex-start;">${inside ? txt : ''}</div>`
+      + `${inside ? '' : `<span style="font-size:11.5px;font-weight:700;color:${outCol};white-space:nowrap;">${txt}</span>`}</div>`
+      + `<div class="fun-val">${nf(n)}<span>${sub}</span></div></div>`; };
+  document.getElementById('funL1').innerHTML =
+    row('Créditos del segmento', A.cr, A.cr, '#5F5E5A', 100, '') +
+    `<div class="fun-arrow">↓</div>` +
+    row('Pagan en la domi<br><span style="font-size:10.5px;color:#888780;">(domi + SPEI en la ventana)</span>', A.dom, A.cr, '#1D9E75', A.dom / A.cr * 100, '') +
+    row('<strong>Llegan a cobranza</strong><br><span style="font-size:10.5px;color:#888780;">(no pagaron en la domi)</span>', A.lleg, A.cr, '#D85A30', A.lleg / A.cr * 100, '');
+  const L = ['1–10 días', '11–15 días', '16–20 días', '21–25 días', '26–30 días'], COLS = ['#0B5E44', '#1D9E75', '#5CC39D', '#86D3B5', '#A9DFC8'];
+  let acum = 0, l2 = '';
+  A.dias.forEach((n, i) => { acum += n; l2 += row(`Recuperan en ${L[i]}`, n, A.lleg, COLS[i], A.lleg ? n / A.lleg * 100 : 0, `acum. cobranza ${pc(acum, A.lleg)}<br><strong style="color:#0B5E44;">total cobrado ${pc(A.dom + acum, A.cr)}</strong>`); });
+  l2 += `<div class="fun-arrow">↓</div>` + row('<strong>Sin recuperar</strong><br><span style="font-size:10.5px;color:#888780;">(al cierre del seguimiento)</span>', A.sr, A.lleg, '#8B2E1A', A.lleg ? A.sr / A.lleg * 100 : 0, `${pc(A.sr, A.cr)} de los créditos`);
+  document.getElementById('funL2').innerHTML = l2;
+  // ── 3 · Resultado al final: domi + cobranza = cobrado ──
+  const fin = a => { const rec = a.lleg - a.sr; return { domi: a.dom / a.cr * 100, cob: rec / a.cr * 100, tot: (a.dom + rec) / a.cr * 100, sr: a.sr / a.cr * 100, recDeLleg: a.lleg ? rec / a.lleg * 100 : 0, n: a.cr, rec }; };
+  const F = fin(A), f2 = v => v.toFixed(1) + '%';
+  const box = (t, v, sub, col, big) => `<div style="flex:1;min-width:150px;padding:12px 14px;border-radius:8px;background:${col}12;border:1px solid ${col}40;">
+      <div style="font-size:11.5px;color:#5F5E5A;font-weight:600;">${t}</div><div style="font-size:${big ? 26 : 22}px;font-weight:800;color:${col};line-height:1.2;margin:2px 0;">${v}</div><div style="font-size:10.5px;color:#888780;">${sub}</div></div>`;
+  const op = s => `<div style="align-self:center;font-size:22px;font-weight:800;color:#B5B4AE;">${s}</div>`;
+  document.getElementById('funFinal').innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+      ${box('Pagaron en la domi', f2(F.domi), nf(A.dom) + ' de ' + nf(A.cr) + ' créditos', '#1D9E75')}${op('+')}
+      ${box('Recuperados en cobranza', f2(F.cob), nf(F.rec) + ' créditos · ' + f2(F.recDeLleg) + ' de los que llegaron', '#3B3ACA')}${op('=')}
+      ${box('Cobrado al final del periodo', f2(F.tot), 'quedan ' + nf(A.sr) + ' sin recuperar (' + f2(F.sr) + ')', '#0B5E44', true)}</div>`;
+  const SEGS = [['m1', 'M1 · 1ª renta'], ['m2', 'M2 · 2ª renta'], ['m3', 'M3 · 3ª renta'], ['all', 'M1–M3']];
+  document.getElementById('funFinalTable').innerHTML = `<table class="bkt-vals"><thead><tr><th class="lbl">Segmento</th><th>Créditos</th><th>Pagaron en la domi</th><th>+ Recuperados en cobranza</th><th>= Cobrado al final</th><th>Sin recuperar</th></tr></thead><tbody>${
+    SEGS.map(([k, l]) => { const r = fin(agg(k === 'all' ? ['m1', 'm2', 'm3'] : [k])); const on = k === funSeg;
+      return `<tr class="${k === 'all' ? 'tot-row' : ''}"${on ? ' style="outline:2px solid #3B3ACA;outline-offset:-2px;"' : ''}><td class="lbl">${l}</td><td>${nf(r.n)}</td><td>${f2(r.domi)}</td><td>${f2(r.cob)}</td><td><strong>${f2(r.tot)}</strong></td><td>${f2(r.sr)}</td></tr>`; }).join('')}</tbody></table>`;
+  // curva de recuperación acumulada por segmento
+  const curve = s => { const a = agg([s]); let x = 0; return [0, ...a.dias.map(n => { x += n; return a.lleg ? Math.round(x / a.lleg * 1000) / 10 : 0; })]; };
+  const SER = [['m1', 'M1 · 1ª renta', '#1D9E75'], ['m2', 'M2 · 2ª renta', '#EF9F27'], ['m3', 'M3 · 3ª renta', '#D85A30']];
+  if (charts.funCurve) charts.funCurve.destroy();
+  charts.funCurve = new Chart(document.getElementById('funCurve'), {
+    type: 'line',
+    data: { labels: ['Día 0', '10 días', '15 días', '20 días', '25 días', '30 días'],
+      datasets: [...(funSeg === 'all' ? [{ label: 'M1–M3', data: (() => { let x = 0; return [0, ...A.dias.map(n => { x += n; return A.lleg ? Math.round(x / A.lleg * 1000) / 10 : 0; })]; })(),
+          borderColor: '#3B3ACA', backgroundColor: '#3B3ACA', borderWidth: 3.5, pointRadius: 4, tension: 0.25, _lbl: true }] : []),
+        ...SER.map(([k, l, c]) => ({ label: l, data: curve(k), borderColor: c, backgroundColor: c, borderWidth: funSeg === k ? 3 : 1.4, pointRadius: funSeg === k ? 3.5 : 2, tension: 0.25,
+          borderDash: funSeg === k ? undefined : [4, 4], _lbl: funSeg === k }))] },
+    options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 18, right: 12 } },
+      plugins: { legend: { position: 'top', labels: { color: '#5F5E5A', font: { size: 11.5 }, boxWidth: 12 } },
+        tooltip: { mode: 'index', intersect: false, callbacks: { label: x => ` ${x.dataset.label}: ${x.parsed.y.toFixed(1)}% recuperado` } } },
+      scales: { x: { grid: { display: false }, ticks: { color: '#888780' } }, y: { min: 0, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#888780', callback: v => v + '%' } } } },
+    plugins: [{ id: 'funLbl', afterDatasetsDraw(ch) { const x = ch.ctx; x.save(); x.font = 'bold 10.5px -apple-system,sans-serif'; x.textAlign = 'center';
+      ch.data.datasets.forEach((d, di) => { if (!d._lbl || !ch.isDatasetVisible(di)) return; ch.getDatasetMeta(di).data.forEach((p, i) => { if (i === 0) return; x.fillStyle = d.borderColor; x.fillText(d.data[i].toFixed(0) + '%', p.x, p.y - 9); }); }); x.restore(); } }]
+  });
+  const per = funPer === 'year' ? `todo el año (${closed.length} cortes cerrados, ${closed[0]} a ${closed[closed.length - 1]})` : funPer;
+  document.getElementById('funNote').innerHTML = `Periodo: ${per}. "Pagan en la domi" incluye SPEI durante la ventana de domi (igual que el pago a tiempo del CPR). Los cortes en curso no entran en "Todo el año" porque su seguimiento de 30 días no ha terminado; si eliges uno en curso, su "sin recuperar" todavía va a bajar. Respeta el filtro de cortes de arriba.`;
+}
+
+// ── Cobrado al final por corte (domi + cobranza) · una gráfica por segmento ──
+function buildMoraFinalCharts() {
+  const dayOk = c => currentFilter === 'all' || (currentFilter === 'day1') === (c.slice(0, 2) === '01');
+  const C = Object.keys(moraTempranaData).filter(dayOk);
+  [['m1', 'finM1'], ['m2', 'finM2'], ['m3', 'finM3']].forEach(([k, id]) => {
+    const R = C.map(c => { const v = moraTempranaData[c][k], rec = v.creditos - v.domiciliados - v.sin_rec;
+      return { c, n: v.creditos, domi: v.domiciliados / v.creditos * 100, cob: rec / v.creditos * 100, sr: v.sin_rec / v.creditos * 100, enc: !!moraTempranaData[c].en_curso, rec, srN: v.sin_rec }; });
+    const key = 'fin_' + k; if (charts[key]) charts[key].destroy();
+    charts[key] = new Chart(document.getElementById(id), {
+      type: 'bar',
+      data: { labels: R.map(r => r.c + (r.enc ? ' · en curso' : '')), datasets: [
+        { label: 'Pagaron en la domi', data: R.map(r => r.domi), backgroundColor: '#1D9E75', stack: 's' },
+        { label: 'Recuperados en cobranza', data: R.map(r => r.cob), backgroundColor: '#3B3ACA', stack: 's' } ] },
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 8 } },
+        plugins: { legend: { position: 'top', align: 'end', labels: { color: '#5F5E5A', font: { size: 11 }, boxWidth: 12, padding: 18 } },
+          tooltip: { mode: 'index', intersect: false, callbacks: { title: it => R[it[0].dataIndex].c, label: x => ` ${x.dataset.label}: ${x.parsed.y.toFixed(1)}%`,
+              footer: it => { const r = R[it[0].dataIndex]; return `Cobrado al final: ${(r.domi + r.cob).toFixed(1)}% · sin recuperar ${r.srN} (${r.sr.toFixed(1)}%) · ${r.n} créditos` + (r.enc ? '\nEN CURSO: el seguimiento de 30 días no ha terminado' : ''); } },
+            backgroundColor: 'rgba(31,31,31,0.95)', padding: 10, cornerRadius: 6 } },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { color: '#888780', font: { size: 10.5 } } },
+                  y: { stacked: true, min: 85, max: 101.5, grid: { color: c => c.tick.value > 100 ? 'transparent' : 'rgba(0,0,0,0.04)' }, ticks: { color: '#888780', stepSize: 5, callback: v => v <= 100 ? v + '%' : '' } } } },
+      plugins: [{ id: 'finLbl', afterDatasetsDraw(ch) {
+        const x = ch.ctx; x.save(); x.textAlign = 'center';
+        R.forEach((r, i) => {
+          const bd = ch.getDatasetMeta(0).data[i], bc = ch.getDatasetMeta(1).data[i];
+          if (r.enc) { const top = bc.y, base = Math.min(bd.base, ch.chartArea.bottom), w = bd.width; x.save(); x.beginPath(); x.rect(bd.x - w / 2, top, w, base - top); x.clip();
+            x.strokeStyle = 'rgba(255,255,255,0.4)'; x.lineWidth = 3; for (let q = -(base - top); q < w + (base - top); q += 10) { x.beginPath(); x.moveTo(bd.x - w / 2 + q, base); x.lineTo(bd.x - w / 2 + q + (base - top), top); x.stroke(); } x.restore(); }
+          x.fillStyle = '#fff'; x.font = 'bold 10px -apple-system,sans-serif'; x.fillText(r.domi.toFixed(1), bd.x, (bd.y + Math.min(bd.base, ch.chartArea.bottom)) / 2 + 4);
+          if (Math.abs(bc.base - bc.y) > 12) { x.font = 'bold 9.5px -apple-system,sans-serif'; x.fillText(r.cob.toFixed(1), bc.x, (bc.y + bc.base) / 2 + 3.5); }
+          x.font = 'bold 10.5px -apple-system,sans-serif'; x.fillStyle = r.enc ? '#8A6A12' : '#0B5E44'; x.fillText((r.domi + r.cob).toFixed(1) + '%', bc.x, bc.y - 6);
+        });
+        x.restore(); } }]
+    });
+  });
+}
 function buildMoraTempranaCharts() {
-  // Source cortes from moraTempranaData itself (independent universe — includes 15-may)
-  const allMoraCortes = Object.keys(moraTempranaData);
-  const cortes = allMoraCortes.filter(c => {
-    if (currentFilter === 'all') return true;
-    const isDay1 = c.startsWith('01-');
-    return (currentFilter === 'day1' && isDay1) || (currentFilter === 'day15' && !isDay1);
-  });
-
-  if (cortes.length === 0) return;
-
-  // ── KPIs ─────────────────────────────────────────────────
-  const avgM1 = cortes.reduce((a,c)=>a+moraTempranaData[c].m1.mora_pct,0)/cortes.length;
-  const avgM2 = cortes.reduce((a,c)=>a+moraTempranaData[c].m2.mora_pct,0)/cortes.length;
-  const avgM3 = cortes.reduce((a,c)=>a+moraTempranaData[c].m3.mora_pct,0)/cortes.length;
-  const avgSR = cortes.reduce((a,c)=>{
-    const d = moraTempranaData[c];
-    return a + (d.m1.sin_rec_pct + d.m2.sin_rec_pct + d.m3.sin_rec_pct)/3;
-  },0)/cortes.length;
-  const totalCreditos = cortes.reduce((a,c)=>a+moraTempranaData[c].m1.creditos,0);
-
-  document.getElementById('moraAvgM1').textContent = avgM1.toFixed(2)+'%';
-  document.getElementById('moraAvgM2').textContent = avgM2.toFixed(2)+'%';
-  document.getElementById('moraAvgM3').textContent = avgM3.toFixed(2)+'%';
-  document.getElementById('moraAvgSR').textContent = avgSR.toFixed(2)+'%';
-  document.getElementById('moraTotalCohortes').textContent = cortes.length;
-  document.getElementById('moraTotalCreditos').textContent = totalCreditos.toLocaleString();
-
-  // ── Main chart: 3 lines M1/M2/M3 mora ───────────────────
-  const moraDatasets = [
-    {
-      label: 'Mora M1', data: cortes.map(c => moraTempranaData[c].m1.mora_pct),
-      borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.04)',
-      borderWidth: 2.5, tension: 0.3,
-      pointRadius: 5, pointHoverRadius: 7,
-      pointBackgroundColor: '#1D9E75', pointBorderColor: '#fff', pointBorderWidth: 2,
-    },
-    {
-      label: 'Mora M2', data: cortes.map(c => moraTempranaData[c].m2.mora_pct),
-      borderColor: '#3B3ACA', backgroundColor: 'rgba(59,58,202,0.04)',
-      borderWidth: 2.5, tension: 0.3, borderDash: [6,4],
-      pointRadius: 5, pointHoverRadius: 7,
-      pointBackgroundColor: '#3B3ACA', pointBorderColor: '#fff', pointBorderWidth: 2,
-    },
-    {
-      label: 'Mora M3', data: cortes.map(c => moraTempranaData[c].m3.mora_pct),
-      borderColor: '#EF9F27', backgroundColor: 'rgba(239,159,39,0.04)',
-      borderWidth: 2.5, tension: 0.3, borderDash: [2,3],
-      pointRadius: 5, pointHoverRadius: 7,
-      pointBackgroundColor: '#EF9F27', pointBorderColor: '#fff', pointBorderWidth: 2,
-    },
-  ];
-
-  if (charts.moraMn) charts.moraMn.destroy();
-  charts.moraMn = new Chart(document.getElementById('moraMnChart'), {
-    type: 'line',
-    data: { labels: cortes, datasets: moraDatasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          display: true, position: 'top', align: 'end',
-          labels: { color:'#5F5E5A', font:{size:12}, boxWidth:14, boxHeight:3, padding:14 }
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const c = cortes[ctx.dataIndex];
-              const key = ctx.dataset.label === 'Mora M1' ? 'm1' :
-                          ctx.dataset.label === 'Mora M2' ? 'm2' : 'm3';
-              const d = moraTempranaData[c][key];
-              return ` ${ctx.dataset.label}: ${ctx.parsed.y}% de ${d.creditos} créditos`;
-            }
-          },
-          backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
-        }
-      },
-      scales: {
-        x: { grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#888780',font:{size:12}} },
-        y: { min:0, max:12, grid:{color:'rgba(0,0,0,0.04)'},
-             ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'},
-             title:{display:true,text:'% mora (no cobrado)',color:'#888780',font:{size:11}} }
-      }
-    }
-  });
-
-  // ── Sin Recuperar chart: 3 lines M1/M2/M3 ──────────────
-  const srDatasets = [
-    {
-      label: 'Sin Rec M1', data: cortes.map(c => moraTempranaData[c].m1.sin_rec_pct),
-      borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.04)',
-      borderWidth: 2, tension: 0.3, pointRadius: 4, pointHoverRadius: 6,
-      pointBackgroundColor: '#1D9E75',
-    },
-    {
-      label: 'Sin Rec M2', data: cortes.map(c => moraTempranaData[c].m2.sin_rec_pct),
-      borderColor: '#3B3ACA', backgroundColor: 'rgba(59,58,202,0.04)',
-      borderWidth: 2, tension: 0.3, borderDash: [6,4],
-      pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#3B3ACA',
-    },
-    {
-      label: 'Sin Rec M3', data: cortes.map(c => moraTempranaData[c].m3.sin_rec_pct),
-      borderColor: '#EF9F27', backgroundColor: 'rgba(239,159,39,0.04)',
-      borderWidth: 2, tension: 0.3, borderDash: [2,3],
-      pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#EF9F27',
-    },
-  ];
-
-  if (charts.moraSR) charts.moraSR.destroy();
-  charts.moraSR = new Chart(document.getElementById('moraSRChart'), {
-    type: 'line',
-    data: { labels: cortes, datasets: srDatasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          display: true, position: 'top', align: 'end',
-          labels: { color:'#5F5E5A', font:{size:12}, boxWidth:14, boxHeight:3, padding:14 }
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const c = cortes[ctx.dataIndex];
-              const key = ctx.dataset.label === 'Sin Rec M1' ? 'm1' :
-                          ctx.dataset.label === 'Sin Rec M2' ? 'm2' : 'm3';
-              const d = moraTempranaData[c][key];
-              return ` ${ctx.dataset.label}: ${d.sin_rec} de ${d.creditos} (${ctx.parsed.y}%)`;
-            }
-          },
-          backgroundColor:'rgba(31,31,31,0.95)', padding:10, cornerRadius:6
-        }
-      },
-      scales: {
-        x: { grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#888780',font:{size:12}} },
-        y: { min:0, max:2.5, grid:{color:'rgba(0,0,0,0.04)'},
-             ticks:{color:'#888780',font:{size:12},callback:v=>v+'%'},
-             title:{display:true,text:'% sin recuperar',color:'#888780',font:{size:11}} }
-      }
-    }
-  });
-
-  // ── Table ──
-  const tbody = document.getElementById('moraTableBody');
-  const colorMora = v => v < 4 ? '#1D9E75' : v < 6 ? '#EF9F27' : '#D85A30';
-  const colorSR = v => v < 0.5 ? '#5F5E5A' : v < 1.0 ? '#EF9F27' : '#D85A30';
-  tbody.innerHTML = cortes.map(c => {
-    const d = moraTempranaData[c];
-    return `<tr style="border-bottom:1px solid rgba(0,0,0,0.04);">
-      <td style="padding:9px 12px;font-weight:500;">${c}</td>
-      <td style="padding:9px 12px;text-align:right;color:#5F5E5A;">${d.m1.creditos}</td>
-      <td style="padding:9px 12px;text-align:right;color:${colorMora(d.m1.mora_pct)};font-weight:500;">${d.m1.mora_pct}%</td>
-      <td style="padding:9px 12px;text-align:right;color:${colorMora(d.m2.mora_pct)};font-weight:500;">${d.m2.mora_pct}%</td>
-      <td style="padding:9px 12px;text-align:right;color:${colorMora(d.m3.mora_pct)};font-weight:500;">${d.m3.mora_pct}%</td>
-      <td style="padding:9px 12px;text-align:right;color:${colorSR(d.m1.sin_rec_pct)};">${d.m1.sin_rec} (${d.m1.sin_rec_pct}%)</td>
-      <td style="padding:9px 12px;text-align:right;color:${colorSR(d.m2.sin_rec_pct)};">${d.m2.sin_rec} (${d.m2.sin_rec_pct}%)</td>
-      <td style="padding:9px 12px;text-align:right;color:${colorSR(d.m3.sin_rec_pct)};">${d.m3.sin_rec} (${d.m3.sin_rec_pct}%)</td>
-    </tr>`;
-  }).join('');
+  buildMoraFunnel();
+  buildMoraFinalCharts();
 }
 
 
